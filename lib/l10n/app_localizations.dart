@@ -1,0 +1,1305 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('es'),
+    Locale('pt'),
+    Locale('ru')
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastable'**
+  String get appTitle;
+
+  /// No description provided for @dashboardToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get dashboardToday;
+
+  /// No description provided for @dashboardOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get dashboardOverview;
+
+  /// No description provided for @navTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer'**
+  String get navTimer;
+
+  /// No description provided for @navHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get navHistory;
+
+  /// No description provided for @navStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get navStats;
+
+  /// No description provided for @navLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get navLearn;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get navProfile;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// No description provided for @navAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get navAchievements;
+
+  /// No description provided for @navPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastable PRO'**
+  String get navPro;
+
+  /// No description provided for @fastingPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Phase'**
+  String get fastingPhase;
+
+  /// No description provided for @eatingWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating Window'**
+  String get eatingWindow;
+
+  /// No description provided for @readyToFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to Fast'**
+  String get readyToFast;
+
+  /// No description provided for @autophagyZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Autophagy Zone'**
+  String get autophagyZone;
+
+  /// No description provided for @startFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Fasting'**
+  String get startFast;
+
+  /// No description provided for @endFast.
+  ///
+  /// In en, this message translates to:
+  /// **'End Fasting'**
+  String get endFast;
+
+  /// No description provided for @endCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'End Cycle'**
+  String get endCycle;
+
+  /// No description provided for @remaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get remaining;
+
+  /// No description provided for @targetGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Target Goal'**
+  String get targetGoal;
+
+  /// No description provided for @waterTracker.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Tracker'**
+  String get waterTracker;
+
+  /// No description provided for @waterCups.
+  ///
+  /// In en, this message translates to:
+  /// **'cups'**
+  String get waterCups;
+
+  /// No description provided for @addWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Water'**
+  String get addWater;
+
+  /// No description provided for @waterToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Water'**
+  String get waterToday;
+
+  /// No description provided for @waterIntake.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Intake'**
+  String get waterIntake;
+
+  /// No description provided for @cups.
+  ///
+  /// In en, this message translates to:
+  /// **'cups'**
+  String get cups;
+
+  /// No description provided for @cupsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'cups'**
+  String get cupsUnit;
+
+  /// No description provided for @weightTracker.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Tracker'**
+  String get weightTracker;
+
+  /// No description provided for @logWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Weight'**
+  String get logWeight;
+
+  /// No description provided for @saveWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Weight'**
+  String get saveWeight;
+
+  /// No description provided for @weightJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Journey'**
+  String get weightJourney;
+
+  /// No description provided for @last7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 Days'**
+  String get last7Days;
+
+  /// No description provided for @fastingHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Hours'**
+  String get fastingHours;
+
+  /// No description provided for @currentWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get currentWeight;
+
+  /// No description provided for @goalWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get goalWeight;
+
+  /// No description provided for @startWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get startWeight;
+
+  /// No description provided for @addWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Weight'**
+  String get addWeight;
+
+  /// No description provided for @enterWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter weight'**
+  String get enterWeight;
+
+  /// No description provided for @unitKg.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get unitKg;
+
+  /// No description provided for @unitCm.
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get unitCm;
+
+  /// No description provided for @weightProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Progress'**
+  String get weightProgress;
+
+  /// No description provided for @chartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two weight entries to see a graph.'**
+  String get chartEmpty;
+
+  /// No description provided for @proBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastable PRO'**
+  String get proBannerTitle;
+
+  /// No description provided for @proBannerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock analytics'**
+  String get proBannerDesc;
+
+  /// No description provided for @premiumContentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Content'**
+  String get premiumContentTitle;
+
+  /// No description provided for @premiumContentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock full access to all articles and features.'**
+  String get premiumContentDesc;
+
+  /// No description provided for @getPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Get PRO Access'**
+  String get getPro;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Purchases'**
+  String get restorePurchases;
+
+  /// No description provided for @proTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get PRO Access'**
+  String get proTitle;
+
+  /// No description provided for @proMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Subscription'**
+  String get proMonthly;
+
+  /// No description provided for @proAnnual.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual Subscription (40% Off)'**
+  String get proAnnual;
+
+  /// No description provided for @unlockAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock PRO'**
+  String get unlockAll;
+
+  /// No description provided for @accessStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Access'**
+  String get accessStatus;
+
+  /// No description provided for @statusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active until {date}'**
+  String statusActive(Object date);
+
+  /// No description provided for @statusFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get statusFree;
+
+  /// No description provided for @proRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A PRO subscription is required to view this content'**
+  String get proRequired;
+
+  /// No description provided for @proComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO version is coming soon! Stay tuned.'**
+  String get proComingSoon;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'year'**
+  String get year;
+
+  /// No description provided for @month.
+  ///
+  /// In en, this message translates to:
+  /// **'mo.'**
+  String get month;
+
+  /// No description provided for @discount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get discount;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTitle;
+
+  /// No description provided for @historyCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get historyCalendar;
+
+  /// No description provided for @historyLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get historyLog;
+
+  /// No description provided for @historyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed fasts yet. Your history will show up here!'**
+  String get historyEmpty;
+
+  /// No description provided for @fastComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Complete!'**
+  String get fastComplete;
+
+  /// No description provided for @fastCompleteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You have successfully fasted for {duration}. Save this record?'**
+  String fastCompleteDesc(String duration);
+
+  /// No description provided for @noFastsOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No fasts completed on this day.'**
+  String get noFastsOnDay;
+
+  /// No description provided for @detailsFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Details for'**
+  String get detailsFor;
+
+  /// No description provided for @endCyclePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'End Eating Window?'**
+  String get endCyclePrompt;
+
+  /// No description provided for @endCyclePromptDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This will finish your current cycle and reset the timer.'**
+  String get endCyclePromptDesc;
+
+  /// No description provided for @endFastPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'End your current cycle to change the plan.'**
+  String get endFastPrompt;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @finish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get finish;
+
+  /// No description provided for @attention.
+  ///
+  /// In en, this message translates to:
+  /// **'Attention'**
+  String get attention;
+
+  /// No description provided for @continueAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueAction;
+
+  /// No description provided for @settingLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingLanguage;
+
+  /// No description provided for @settingWaterGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Water Goal'**
+  String get settingWaterGoal;
+
+  /// No description provided for @settingHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get settingHeight;
+
+  /// No description provided for @settingGoalWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Weight'**
+  String get settingGoalWeight;
+
+  /// No description provided for @settingTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingTheme;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @settingsHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get settingsHealthConnect;
+
+  /// No description provided for @settingsSyncWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync weight & steps'**
+  String get settingsSyncWeight;
+
+  /// No description provided for @healthConnectSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with Health Connect'**
+  String get healthConnectSyncTitle;
+
+  /// No description provided for @healthConnectDisclosureIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastable requests READ and WRITE access to WEIGHT data via Health Connect.'**
+  String get healthConnectDisclosureIntro;
+
+  /// No description provided for @healthConnectDisclosureRead.
+  ///
+  /// In en, this message translates to:
+  /// **'We use READ access to display your weight progress chart and stats based on historical data.'**
+  String get healthConnectDisclosureRead;
+
+  /// No description provided for @healthConnectDisclosureWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'We use WRITE access so you can save weight entries from Fastable to your phone\'s central database.'**
+  String get healthConnectDisclosureWrite;
+
+  /// No description provided for @healthConnectDisclosureSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Data is stored locally and used only for weight tracking. You can revoke permissions at any time.'**
+  String get healthConnectDisclosureSecure;
+
+  /// No description provided for @healthConnectConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect connected!'**
+  String get healthConnectConnected;
+
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// No description provided for @notifyWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Reminders'**
+  String get notifyWater;
+
+  /// No description provided for @notifyWaterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminded to drink water'**
+  String get notifyWaterDesc;
+
+  /// No description provided for @notifyWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Reminder'**
+  String get notifyWeight;
+
+  /// No description provided for @notifyWeightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminder to weigh in'**
+  String get notifyWeightDesc;
+
+  /// No description provided for @notifyFastingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Start'**
+  String get notifyFastingStart;
+
+  /// No description provided for @notifyFastingStartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when fasting window starts'**
+  String get notifyFastingStartDesc;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @errorOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open link'**
+  String get errorOpenLink;
+
+  /// No description provided for @errorLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading data'**
+  String get errorLoading;
+
+  /// No description provided for @noArticlesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles found'**
+  String get noArticlesFound;
+
+  /// No description provided for @tabFasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting'**
+  String get tabFasting;
+
+  /// No description provided for @tabKeto.
+  ///
+  /// In en, this message translates to:
+  /// **'Keto'**
+  String get tabKeto;
+
+  /// No description provided for @tabPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner'**
+  String get tabPartner;
+
+  /// No description provided for @guestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get guestUser;
+
+  /// No description provided for @defaultUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get defaultUser;
+
+  /// No description provided for @anonymousLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous Login'**
+  String get anonymousLogin;
+
+  /// No description provided for @dataOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Data saved on device'**
+  String get dataOnDevice;
+
+  /// No description provided for @connectGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google Account'**
+  String get connectGoogle;
+
+  /// No description provided for @saveProgressCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Save progress to cloud'**
+  String get saveProgressCloud;
+
+  /// No description provided for @accountLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Account successfully linked!'**
+  String get accountLinked;
+
+  /// No description provided for @linkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error linking account'**
+  String get linkError;
+
+  /// No description provided for @resetAndExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Data & Exit'**
+  String get resetAndExit;
+
+  /// No description provided for @deleteAndExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete & Exit'**
+  String get deleteAndExit;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// No description provided for @confirmLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to sign out?'**
+  String get confirmLogout;
+
+  /// No description provided for @guestLogoutWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You are using a Guest account. If you sign out, all local data will be deleted permanently.'**
+  String get guestLogoutWarning;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure? This will permanently delete all your data.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @authWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Modern Fasting'**
+  String get authWelcome;
+
+  /// No description provided for @authSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync your progress and reach your goals.'**
+  String get authSubtitle;
+
+  /// No description provided for @signInGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get signInGoogle;
+
+  /// No description provided for @continueGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as Guest'**
+  String get continueGuest;
+
+  /// No description provided for @signInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in failed. Please try again.'**
+  String get signInFailed;
+
+  /// No description provided for @welcomeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to your fasting app!'**
+  String get welcomeMessage;
+
+  /// No description provided for @choosePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Plan'**
+  String get choosePlan;
+
+  /// No description provided for @fastingPlan16_8.
+  ///
+  /// In en, this message translates to:
+  /// **'16:8 Intermittent Fast'**
+  String get fastingPlan16_8;
+
+  /// No description provided for @fastingPlan18_6.
+  ///
+  /// In en, this message translates to:
+  /// **'18:6 Intermittent Fast'**
+  String get fastingPlan18_6;
+
+  /// No description provided for @fastingPlan20_4.
+  ///
+  /// In en, this message translates to:
+  /// **'20:4 The Warrior Diet'**
+  String get fastingPlan20_4;
+
+  /// No description provided for @fastingPlanEatStopEat.
+  ///
+  /// In en, this message translates to:
+  /// **'Eat-Stop-Eat (24h)'**
+  String get fastingPlanEatStopEat;
+
+  /// No description provided for @bmiCalculator.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI Calculator'**
+  String get bmiCalculator;
+
+  /// No description provided for @bmiCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get bmiCategory;
+
+  /// No description provided for @bmiUnderweight.
+  ///
+  /// In en, this message translates to:
+  /// **'Underweight'**
+  String get bmiUnderweight;
+
+  /// No description provided for @bmiNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get bmiNormal;
+
+  /// No description provided for @bmiOverweight.
+  ///
+  /// In en, this message translates to:
+  /// **'Overweight'**
+  String get bmiOverweight;
+
+  /// No description provided for @bmiObese.
+  ///
+  /// In en, this message translates to:
+  /// **'Obese'**
+  String get bmiObese;
+
+  /// No description provided for @enterHeightCm.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter height (cm)'**
+  String get enterHeightCm;
+
+  /// No description provided for @enterGoalWeightKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter goal weight (kg)'**
+  String get enterGoalWeightKg;
+
+  /// No description provided for @fastingStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Stats'**
+  String get fastingStats;
+
+  /// No description provided for @fastingStatsCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get fastingStatsCurrentStreak;
+
+  /// No description provided for @fastingStatsDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get fastingStatsDay;
+
+  /// No description provided for @fastingStatsDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get fastingStatsDays;
+
+  /// No description provided for @fastingStatsTotalFasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Fasts'**
+  String get fastingStatsTotalFasts;
+
+  /// No description provided for @fastingStatsTotalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Hours'**
+  String get fastingStatsTotalHours;
+
+  /// No description provided for @fastingStatsAvgFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Fast'**
+  String get fastingStatsAvgFast;
+
+  /// No description provided for @fastingStatsHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get fastingStatsHours;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome!'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your journey to health. Let\'s set up your profile.'**
+  String get onboardingWelcomeDesc;
+
+  /// No description provided for @onboardingGoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What are your goals?'**
+  String get onboardingGoalTitle;
+
+  /// No description provided for @onboardingGoalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your height and goal weight so we can calculate your BMI.'**
+  String get onboardingGoalDesc;
+
+  /// No description provided for @onboardingPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your plan'**
+  String get onboardingPlanTitle;
+
+  /// No description provided for @onboardingPlanDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Which fasting plan would you like to start with? You can always change it later.'**
+  String get onboardingPlanDesc;
+
+  /// No description provided for @onboardingCurrentWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current weight'**
+  String get onboardingCurrentWeight;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @currentStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Stage'**
+  String get currentStage;
+
+  /// No description provided for @nextStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nextStage;
+
+  /// No description provided for @stageAnabolicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Anabolic (Fed)'**
+  String get stageAnabolicTitle;
+
+  /// No description provided for @stageAnabolicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body is digesting and using glucose for energy. Cell growth is active.'**
+  String get stageAnabolicDesc;
+
+  /// No description provided for @stageCatabolicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Catabolic'**
+  String get stageCatabolicTitle;
+
+  /// No description provided for @stageCatabolicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood sugar levels fall. Your body begins to use stored glycogen from the liver.'**
+  String get stageCatabolicDesc;
+
+  /// No description provided for @stageKetosisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ketosis'**
+  String get stageKetosisTitle;
+
+  /// No description provided for @stageKetosisDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Glycogen stores are depleted. Your body switches to burning fat as its primary fuel.'**
+  String get stageKetosisDesc;
+
+  /// No description provided for @stageAutophagyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Autophagy'**
+  String get stageAutophagyTitle;
+
+  /// No description provided for @stageAutophagyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The cellular cleanup process begins. Your body recycles old and damaged cell components.'**
+  String get stageAutophagyDesc;
+
+  /// No description provided for @stagePeakAutophagyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak Autophagy'**
+  String get stagePeakAutophagyTitle;
+
+  /// No description provided for @stagePeakAutophagyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The autophagy process reaches its peak, maximizing cellular renewal.'**
+  String get stagePeakAutophagyDesc;
+
+  /// No description provided for @achievementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievementsTitle;
+
+  /// No description provided for @achievementsUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked'**
+  String get achievementsUnlocked;
+
+  /// No description provided for @achievementsLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get achievementsLocked;
+
+  /// No description provided for @achEarnedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned on {date}'**
+  String achEarnedOn(Object date);
+
+  /// No description provided for @achFirstFastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First Fast!'**
+  String get achFirstFastTitle;
+
+  /// No description provided for @achFirstFastDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your first fast.'**
+  String get achFirstFastDesc;
+
+  /// No description provided for @achStreak3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Started'**
+  String get achStreak3Title;
+
+  /// No description provided for @achStreak3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a 3-day streak.'**
+  String get achStreak3Desc;
+
+  /// No description provided for @achStreak7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistent'**
+  String get achStreak7Title;
+
+  /// No description provided for @achStreak7Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a 7-day streak.'**
+  String get achStreak7Desc;
+
+  /// No description provided for @achTotal10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Novice'**
+  String get achTotal10Title;
+
+  /// No description provided for @achTotal10Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 fasts.'**
+  String get achTotal10Desc;
+
+  /// No description provided for @achTotalHours100Title.
+  ///
+  /// In en, this message translates to:
+  /// **'100 Hour Club'**
+  String get achTotalHours100Title;
+
+  /// No description provided for @achTotalHours100Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast for a total of 100 hours.'**
+  String get achTotalHours100Desc;
+
+  /// No description provided for @journalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal Note'**
+  String get journalTitle;
+
+  /// No description provided for @journalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How did you feel during this fast?'**
+  String get journalHint;
+
+  /// No description provided for @addNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Note'**
+  String get addNote;
+
+  /// No description provided for @editNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Note'**
+  String get editNote;
+
+  /// No description provided for @noteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note saved'**
+  String get noteSaved;
+
+  /// No description provided for @syncHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with Health App'**
+  String get syncHealthTitle;
+
+  /// No description provided for @syncHealthDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically write fasting data and read weight.'**
+  String get syncHealthDesc;
+
+  /// No description provided for @shareProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Progress'**
+  String get shareProgress;
+}
+
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) => <String>['en', 'es', 'pt', 'ru'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en': return AppLocalizationsEn();
+    case 'es': return AppLocalizationsEs();
+    case 'pt': return AppLocalizationsPt();
+    case 'ru': return AppLocalizationsRu();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
+}
