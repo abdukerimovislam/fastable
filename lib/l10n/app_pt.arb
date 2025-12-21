@@ -224,5 +224,78 @@
   "noteSaved": "Nota salva",
   "syncHealthTitle": "Sincronizar saúde",
   "syncHealthDesc": "Gravar jejuns e ler peso automaticamente.",
-  "shareProgress": "Compartilhar progresso"
+  "shareProgress": "Compartilhar progresso",
+    "fastComplete": "Jejum concluído! 🎉",
+    "fastCompleteDesc": "Você jejuou por {time}. Deseja salvar este registro?",
+    "@fastCompleteDesc": {
+      "placeholders": {
+        "time": { "type": "String" }
+      }
+    },
+    "discard": "Descartar",
+    "save": "Salvar",
+    "endCyclePrompt": "Encerrar janela de alimentação?",
+    "endCyclePromptDesc": "Isso irá parar o temporizador de alimentação e reiniciar o ciclo.",
+    "cancel": "Cancelar",
+    "logWeight": "Registrar peso",
+    "saveWeight": "Salvar peso",
+
+    "metricPhase": "Fase",
+    "metricStreak": "Sequência",
+    "metricStatus": "Status",
+
+    "statusDigesting": "Digestão",
+    "statusStable": "Estável",
+    "statusFatBurn": "Queima de gordura",
+    "statusKetosis": "Cetose",
+    "statusNormal": "Normal",
+
+    "titleCurrentPhase": "Fase atual",
+    "valFastingZone": "Zona de jejum",
+    "valEatingWindow": "Janela de alimentação",
+    "descFastingZone": "Você está atualmente na janela de jejum. Nenhuma caloria deve ser consumida.",
+    "descEatingWindow": "Você está na sua janela de alimentação. Foque em alimentos nutritivos.",
+
+    "titleConsistencyStreak": "Sequência de consistência",
+    "valStreakDays": "{days} dias 🔥",
+    "@valStreakDays": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    },
+    "descStreak": "Você atingiu sua meta de jejum por {days} dias consecutivos. Continue assim para criar o hábito!",
+    "@descStreak": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    },
+
+    "titleBodyStatus": "Estado do corpo",
+    "descDigesting": "Seu corpo está digerindo alimentos e repondo as reservas de glicogênio. Os níveis de insulina estão aumentando.",
+    "descStable": "Os níveis de açúcar no sangue estão se normalizando. O corpo está se preparando para mudar da glicose para a gordura como fonte de energia.",
+    "descFatBurn": "Ótimo trabalho! Seu corpo está começando a queimar gordura armazenada para obter energia. Os níveis do hormônio do crescimento podem aumentar.",
+    "descKetosis": "Cetose profunda! Seu corpo está queimando gordura de forma eficiente. A autofagia pode começar em breve.",
+
+    "btnGotIt": "Entendi!",
+    "navFood": "Alimentação",
+      "navProfile": "Perfil",
+      "tabRecipes": "Receitas",
+        "tabKnowledge": "Conhecimento",
+
+        "categoryAll": "Todos",
+        "categoryKeto": "Keto",
+        "categoryFitness": "Fitness",
+        "categoryVegan": "Vegano",
+
+        "recipeTime": "{minutes} min",
+        "@recipeTime": {
+          "placeholders": {
+            "minutes": {
+              "type": "int"
+            }
+          }
+        }
+
+
+
 }

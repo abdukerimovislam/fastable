@@ -48,7 +48,7 @@ class NotificationService {
         ?.requestNotificationsPermission();
   }
 
-  // --- Базовые уведомления (уже были) ---
+  // --- УВЕДОМЛЕНИЯ О ГОЛОДАНИИ ---
 
   Future<void> scheduleFastCompletion(
       DateTime scheduledTime, String fastType) async {
@@ -56,7 +56,7 @@ class NotificationService {
 
     await _scheduleNotification(
       id: 0,
-      title: 'Fast Complete!',
+      title: 'Fast Complete! 🎉',
       body: "Congratulations! You've completed your $fastType.",
       scheduledTime: scheduledTime,
     );
@@ -67,15 +67,15 @@ class NotificationService {
 
     await _scheduleNotification(
       id: 1,
-      title: 'Eating Window Over',
+      title: 'Eating Window Over 🛑',
       body: 'Your eating window is complete. Time to start your next fast!',
       scheduledTime: scheduledTime,
     );
   }
 
-  // --- НОВЫЕ УМНЫЕ УВЕДОМЛЕНИЯ ---
+  // --- УМНЫЕ УВЕДОМЛЕНИЯ ---
 
-  // 1. Напоминание о воде (каждые 2 часа)
+  // 1. Напоминание о воде
   Future<void> scheduleWaterReminder() async {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'water_channel_id',
@@ -87,15 +87,12 @@ class NotificationService {
     const NotificationDetails details = NotificationDetails(
         android: androidDetails, iOS: DarwinNotificationDetails());
 
+    // ИСПРАВЛЕНО: Changed from everyMinute to hourly
     await _flutterLocalNotificationsPlugin.periodicallyShow(
       10, // ID
       'Time to Hydrate! 💧',
       'Drink a glass of water to stay energized.',
-      RepeatInterval.everyMinute, // Для ТЕСТА используем минуту. В релизе: RepeatInterval.hourly (библиотека ограничена) или кастомная логика
-      // Примечание: библиотека не поддерживает "каждые 2 часа" из коробки просто так.
-      // Для простоты пока поставим 'hourly' (каждый час) или оставим минуту для теста.
-      // Давайте поставим 'hourly' для реального использования.
-      // RepeatInterval.hourly,
+      RepeatInterval.hourly,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
@@ -176,7 +173,8 @@ class NotificationService {
     required int minute,
   }) async {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var scheduledDate =
+    tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
 
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
@@ -201,7 +199,7 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
       UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time, // Повторять каждый день в это время
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 

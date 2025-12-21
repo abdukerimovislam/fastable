@@ -223,5 +223,93 @@
   "noteSaved": "Note saved",
   "syncHealthTitle": "Sync with Health App",
   "syncHealthDesc": "Automatically write fasting data and read weight.",
-  "shareProgress": "Share Progress"
+  "shareProgress": "Share Progress",
+  "fastComplete": "Fast Complete! 🎉",
+    "fastCompleteDesc": "You have fasted for {time}. Save this record?",
+    "@fastCompleteDesc": {
+      "placeholders": {
+        "time": { "type": "String" }
+      }
+    },
+    "discard": "Discard",
+    "save": "Save",
+    "endCyclePrompt": "End Eating Window?",
+    "endCyclePromptDesc": "This will stop the eating timer and reset the cycle.",
+    "cancel": "Cancel",
+    "logWeight": "Log Weight",
+    "saveWeight": "Save Weight",
+
+    "metricPhase": "Phase",
+    "metricStreak": "Streak",
+    "metricStatus": "Status",
+
+    "statusDigesting": "Digesting",
+    "statusStable": "Stable",
+    "statusFatBurn": "Fat Burn",
+    "statusKetosis": "Ketosis",
+    "statusNormal": "Normal",
+
+    "titleCurrentPhase": "Current Phase",
+    "valFastingZone": "Fasting Zone",
+    "valEatingWindow": "Eating Window",
+    "descFastingZone": "You are currently in the fasting window. No calories should be consumed.",
+    "descEatingWindow": "You are in your eating window. Focus on nutrient-dense foods.",
+
+    "titleConsistencyStreak": "Consistency Streak",
+    "valStreakDays": "{days} Days 🔥",
+    "@valStreakDays": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    },
+    "descStreak": "You've hit your fasting goal for {days} consecutive days. Keep it up to build a habit!",
+    "@descStreak": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    },
+
+    "titleBodyStatus": "Body Status",
+    "descDigesting": "Your body is currently digesting food and replenishing glycogen stores. Insulin levels are rising.",
+    "descStable": "Your blood sugar levels are normalizing. The body is preparing to switch from glucose to fat for fuel.",
+    "descFatBurn": "Great job! Your body is starting to burn stored fat for energy. Growth hormone levels may start to increase.",
+    "descKetosis": "Deep Ketosis! Your body is efficiently burning fat. Autophagy (cell cleaning) may be starting soon.",
+
+    "btnGotIt": "Got it!",
+    "stage0_4": "Blood Sugar Rise",
+      "stage0_4_desc": "Your body is digesting your last meal. Blood sugar and insulin levels go up.",
+      "stage4_8": "Blood Sugar Drop",
+      "stage4_8_desc": "Insulin levels start to drop. Your body begins to use up stored glucose.",
+      "stage8_12": "Normalization",
+      "stage8_12_desc": "Digestive system rests. Your body starts healing and cleaning itself.",
+      "stage12_16": "Fat Burning",
+      "stage12_16_desc": "Insulin is low. Your body starts burning stored fat for energy.",
+      "stage16_18": "Ketosis",
+      "stage16_18_desc": "Fat burning accelerates. You are in full fat-burning mode.",
+      "stage18_24": "Autophagy",
+      "stage18_24_desc": "Cellular cleanup begins. Your body recycles old and damaged cells.",
+      "stage24_plus": "Deep Repair",
+      "stage24_plus_desc": "Growth hormone levels increase. Significant cellular regeneration occurs.",
+      "viewTimeline": "View Body Timeline",
+      "navFood": "Food",
+        "navProfile": "Profile",
+        "circadianEnabled": "Circadian mode enabled",
+          "circadianDisabled": "Circadian mode disabled",
+
+          "tabRecipes": "Recipes",
+          "tabKnowledge": "Knowledge",
+
+          "categoryAll": "All",
+          "categoryKeto": "Keto",
+          "categoryFitness": "Fitness",
+          "categoryVegan": "Vegan",
+
+          "recipeTime": "{minutes} min",
+          "@recipeTime": {
+            "placeholders": {
+              "minutes": {
+                "type": "int"
+              }
+            }
+          }
 }

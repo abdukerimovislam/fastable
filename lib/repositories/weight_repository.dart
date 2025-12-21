@@ -7,13 +7,11 @@ class WeightRecord {
 
   WeightRecord({required this.date, required this.weight});
 
-  // Преобразование в JSON для сохранения
   Map<String, dynamic> toJson() => {
     'date': date.toIso8601String(),
     'weight': weight,
   };
 
-  // Создание из JSON
   factory WeightRecord.fromJson(Map<String, dynamic> json) {
     return WeightRecord(
       date: DateTime.parse(json['date']),
@@ -24,24 +22,48 @@ class WeightRecord {
 
 class WeightRepository {
   static const String _key = 'weight_history';
+  static const String _currentWeightKey = 'user_current_weight';
 
-  // Сохранить новый вес
+  // Сохранить новый вес (простой метод, добавляет всегда новую запись)
   Future<void> addWeight(double weight) async {
+    await addWeightOrUpdateToday(weight);
+  }
+
+  // ИСПРАВЛЕНО: Умное добавление - обновляет запись, если она уже есть за сегодня
+  Future<void> addWeightOrUpdateToday(double weight) async {
     final prefs = await SharedPreferences.getInstance();
-    final history = await getWeightHistory();
+    List<WeightRecord> history = await getWeightHistory();
 
-    // Добавляем новую запись
-    history.add(WeightRecord(date: DateTime.now(), weight: weight));
+    final now = DateTime.now();
+    final todayString = now.toIso8601String().substring(0, 10); // "2023-10-25"
 
-    // Сортируем по дате (на всякий случай)
+    // Ищем, есть ли запись за сегодня
+    int todayIndex = -1;
+    for (int i = 0; i < history.length; i++) {
+      final recordDateString = history[i].date.toIso8601String().substring(0, 10);
+      if (recordDateString == todayString) {
+        todayIndex = i;
+        break;
+      }
+    }
+
+    if (todayIndex != -1) {
+      // Обновляем существующую
+      history[todayIndex] = WeightRecord(date: now, weight: weight);
+    } else {
+      // Добавляем новую
+      history.add(WeightRecord(date: now, weight: weight));
+    }
+
+    // Сортируем
     history.sort((a, b) => a.date.compareTo(b.date));
 
-    // Сохраняем список обратно
+    // Сохраняем
     final String jsonString = jsonEncode(history.map((e) => e.toJson()).toList());
     await prefs.setString(_key, jsonString);
 
-    // Также обновляем "текущий вес" для быстрого доступа
-    await prefs.setDouble('user_current_weight', weight);
+    // Обновляем текущий вес
+    await prefs.setDouble(_currentWeightKey, weight);
   }
 
   // Получить всю историю
@@ -51,13 +73,17 @@ class WeightRepository {
 
     if (jsonString == null) return [];
 
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList.map((e) => WeightRecord.fromJson(e)).toList();
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList.map((e) => WeightRecord.fromJson(e)).toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   // Получить последний вес
   Future<double?> getCurrentWeight() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble('user_current_weight');
+    return prefs.getDouble(_currentWeightKey);
   }
 }

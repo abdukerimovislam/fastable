@@ -203,11 +203,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get historyEmpty => 'Пока нет завершенных голоданий. Они появятся здесь!';
 
   @override
-  String get fastComplete => 'Голодание завершено!';
+  String get fastComplete => 'Пост завершён! 🎉';
 
   @override
-  String fastCompleteDesc(String duration) {
-    return 'Вы успешно голодали $duration. Сохранить эту запись?';
+  String fastCompleteDesc(String time) {
+    return 'Вы соблюдали пост в течение $time. Сохранить запись?';
   }
 
   @override
@@ -220,7 +220,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get endCyclePrompt => 'Завершить окно питания?';
 
   @override
-  String get endCyclePromptDesc => 'Это завершит текущий цикл и сбросит таймер.';
+  String get endCyclePromptDesc => 'Это остановит таймер питания и сбросит цикл.';
 
   @override
   String get endFastPrompt => 'Завершите текущий цикл, чтобы изменить план.';
@@ -598,4 +598,151 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get shareProgress => 'Поделиться';
+
+  @override
+  String get metricPhase => 'Фаза';
+
+  @override
+  String get metricStreak => 'Серия';
+
+  @override
+  String get metricStatus => 'Статус';
+
+  @override
+  String get statusDigesting => 'Пищеварение';
+
+  @override
+  String get statusStable => 'Стабильно';
+
+  @override
+  String get statusFatBurn => 'Сжигание жира';
+
+  @override
+  String get statusKetosis => 'Кетоз';
+
+  @override
+  String get statusNormal => 'Норма';
+
+  @override
+  String get titleCurrentPhase => 'Текущая фаза';
+
+  @override
+  String get valFastingZone => 'Зона поста';
+
+  @override
+  String get valEatingWindow => 'Окно питания';
+
+  @override
+  String get descFastingZone => 'Сейчас вы находитесь в периоде поста. Калории потреблять не рекомендуется.';
+
+  @override
+  String get descEatingWindow => 'Сейчас ваше окно питания. Сосредоточьтесь на питательных продуктах.';
+
+  @override
+  String get titleConsistencyStreak => 'Серия регулярности';
+
+  @override
+  String valStreakDays(int days) {
+    return '$days дней 🔥';
+  }
+
+  @override
+  String descStreak(int days) {
+    return 'Вы достигали цели поста $days дней подряд. Продолжайте, чтобы закрепить привычку!';
+  }
+
+  @override
+  String get titleBodyStatus => 'Состояние организма';
+
+  @override
+  String get descDigesting => 'Ваш организм переваривает пищу и восполняет запасы гликогена. Уровень инсулина повышается.';
+
+  @override
+  String get descStable => 'Уровень сахара в крови нормализуется. Организм готовится перейти от глюкозы к жиру как источнику энергии.';
+
+  @override
+  String get descFatBurn => 'Отличная работа! Организм начинает использовать жировые запасы для энергии. Уровень гормона роста может повышаться.';
+
+  @override
+  String get descKetosis => 'Глубокий кетоз! Организм эффективно сжигает жир. Процессы аутофагии могут скоро начаться.';
+
+  @override
+  String get btnGotIt => 'Понятно!';
+
+  @override
+  String get stage0_4 => 'Рост сахара';
+
+  @override
+  String get stage0_4_desc => 'Тело переваривает еду. Уровень сахара и инсулина растет.';
+
+  @override
+  String get stage4_8 => 'Падение сахара';
+
+  @override
+  String get stage4_8_desc => 'Инсулин падает. Организм начинает использовать запасы глюкозы.';
+
+  @override
+  String get stage8_12 => 'Нормализация';
+
+  @override
+  String get stage8_12_desc => 'Пищеварение отдыхает. Тело начинает процессы очищения.';
+
+  @override
+  String get stage12_16 => 'Сжигание жира';
+
+  @override
+  String get stage12_16_desc => 'Инсулин низкий. Организм переключается на сжигание жира.';
+
+  @override
+  String get stage16_18 => 'Кетоз';
+
+  @override
+  String get stage16_18_desc => 'Сжигание жира ускоряется. Вы в режиме активного похудения.';
+
+  @override
+  String get stage18_24 => 'Аутофагия';
+
+  @override
+  String get stage18_24_desc => 'Клеточное очищение. Организм перерабатывает старые клетки.';
+
+  @override
+  String get stage24_plus => 'Глубокое восстановление';
+
+  @override
+  String get stage24_plus_desc => 'Растет гормон роста. Идет мощная регенерация клеток.';
+
+  @override
+  String get viewTimeline => 'График тела';
+
+  @override
+  String get navFood => 'Еда';
+
+  @override
+  String get circadianEnabled => 'Circadian mode enabled';
+
+  @override
+  String get circadianDisabled => 'Circadian mode disabled';
+
+  @override
+  String get tabRecipes => 'Рецепты';
+
+  @override
+  String get tabKnowledge => 'Знания';
+
+  @override
+  String get categoryAll => 'Все';
+
+  @override
+  String get categoryKeto => 'Кето';
+
+  @override
+  String get categoryFitness => 'Фитнес';
+
+  @override
+  String get categoryVegan => 'Веган';
+
+  @override
+  String recipeTime(int minutes) {
+    return '$minutes мин';
+  }
 }

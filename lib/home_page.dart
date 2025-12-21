@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 import 'package:fastable/widgets/gradient_timer_blob.dart';
+import 'package:fastable/widgets/body_visualizer.dart'; // Визуализатор тела
 // ---------------------
 
 import 'package:fastable/l10n/app_localizations.dart';
@@ -18,17 +19,20 @@ import 'package:fastable/models/fasting_record.dart';
 // --- РЕПОЗИТОРИИ ---
 import 'package:fastable/repositories/history_repository.dart';
 import 'package:fastable/repositories/water_repository.dart';
-import 'package:fastable/repositories/weight_repository.dart'; // Убедитесь, что создали этот файл
+import 'package:fastable/repositories/weight_repository.dart';
 // -------------------
 
 import 'package:fastable/services/notification_service.dart';
 import 'package:fastable/services/sound_service.dart';
 
+// --- ЭКРАНЫ ---
 import 'package:fastable/screens/history_screen.dart';
 import 'package:fastable/screens/stats_screen.dart';
-import 'package:fastable/screens/learn_screen.dart';
+import 'package:fastable/screens/learn_screen.dart'; // Теперь это экран "Еда и Знания"
 import 'package:fastable/screens/profile_screen.dart';
 import 'package:fastable/screens/pro_screen.dart';
+import 'package:fastable/screens/plan_selection_screen.dart';
+import 'package:fastable/widgets/circadian_card.dart';
 
 const String kWaterGoalKey = 'water_goal';
 const String kGoalWeightKey = 'user_goal_weight';
@@ -43,7 +47,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   // --- ТАЙМЕР ---
   Timer? _timer;
   AppState _appState = AppState.stopped;
@@ -57,14 +61,18 @@ class _HomePageState extends State<HomePage> {
   int _waterCount = 0;
   int _waterGoal = 8;
   double _currentWeight = 70.0;
+  double _userHeight = 175.0; // Рост для визуализации
   int _streakDays = 1;
 
-  int _selectedIndex = 1; // По умолчанию Таймер
+  // --- НАСТРОЙКИ UI ---
+  int _selectedIndex = 1; // 0=History, 1=Timer, 2=Stats, 3=Food, 4=Profile
+  bool _isCircadianMode = false;
+  bool _isBodyView = false; // Переключатель вида на карточке таймера
 
   // --- СЕРВИСЫ И РЕПОЗИТОРИИ ---
   final HistoryRepository _historyRepository = HistoryRepository();
   final WaterRepository _waterRepository = WaterRepository();
-  final WeightRepository _weightRepository = WeightRepository(); // НОВОЕ
+  final WeightRepository _weightRepository = WeightRepository();
   final NotificationService _notificationService = NotificationService();
   final SoundService _soundService = SoundService();
 
@@ -84,6 +92,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _notificationService.requestPermissions();
     _loadStateData();
     _loadInterstitialAd();
@@ -91,10 +100,18 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _soundService.dispose();
     _interstitialAd?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadStateData();
+    }
   }
 
   // --- REKLAMA ---
@@ -103,7 +120,19 @@ class _HomePageState extends State<HomePage> {
       adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) => _interstitialAd = ad,
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              _loadInterstitialAd();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              _loadInterstitialAd();
+            },
+          );
+        },
         onAdFailedToLoad: (LoadAdError error) => _interstitialAd = null,
       ),
     );
@@ -127,38 +156,47 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- ЗАГРУЗКА ДАННЫХ (LOGIC) ---
+  // --- ЗАГРУЗКА ДАННЫХ ---
   Future<void> _loadStateData() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // 1. Состояние таймера
     String stateString = prefs.getString(kStateKey) ?? AppState.stopped.name;
-    _appState = AppState.values.firstWhere((e) => e.name == stateString);
+    try {
+      _appState = AppState.values.firstWhere((e) => e.name == stateString);
+    } catch(e) {
+      _appState = AppState.stopped;
+    }
 
     _currentPlanIndex = prefs.getInt(kPlanIndexKey) ?? 0;
     if (_currentPlanIndex < 0 || _currentPlanIndex >= _plans.length) _currentPlanIndex = 0;
     _updatePlanDurations();
 
+    _isCircadianMode = prefs.getBool('circadian_mode') ?? false;
+    _userHeight = (prefs.getInt('user_height') ?? 175).toDouble();
+
     if (_appState != AppState.stopped) {
       String? startTimeString = prefs.getString(kStartTimeKey);
       if (startTimeString != null) {
         _startTime = DateTime.parse(startTimeString);
-        _elapsedTime = DateTime.now().difference(_startTime!);
+
+        final now = DateTime.now();
+        _elapsedTime = now.difference(_startTime!);
+
         Duration totalDuration = (_appState == AppState.fasting) ? _currentPlanFastDuration : _currentPlanEatDuration;
+
         if (_elapsedTime >= totalDuration) {
           _elapsedTime = totalDuration;
-        } else {
-          _runTimerTick();
         }
+
+        _runTimerTick();
       }
     }
 
-    // 2. Вода (Сброс каждый день)
     String? lastWaterDate = prefs.getString('last_water_date');
     String todayStr = DateTime.now().toIso8601String().substring(0, 10);
 
     if (lastWaterDate != todayStr) {
-      _waterCount = 0; // Новый день
+      _waterCount = 0;
       prefs.setString('last_water_date', todayStr);
       _waterRepository.addOrUpdateWaterForDay(DateTime.now(), 0);
     } else {
@@ -166,14 +204,11 @@ class _HomePageState extends State<HomePage> {
     }
     _waterGoal = prefs.getInt(kWaterGoalKey) ?? 8;
 
-    // 3. Вес (Реальные данные)
     _currentWeight = await _weightRepository.getCurrentWeight() ?? 70.0;
-
-    // 4. Серия (Упрощенная логика)
     int savedStreak = prefs.getInt('user_streak') ?? 1;
     _streakDays = savedStreak;
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> _saveStateData() async {
@@ -206,28 +241,55 @@ class _HomePageState extends State<HomePage> {
         timer.cancel();
         return;
       }
-      final Duration nextTick = _elapsedTime + const Duration(seconds: 1);
-      Duration totalDuration = (_appState == AppState.fasting) ? _currentPlanFastDuration : _currentPlanEatDuration;
 
-      if (nextTick >= totalDuration) {
-        _timer?.cancel();
-        setState(() => _elapsedTime = totalDuration);
-        if (_appState == AppState.eating) _performReset();
-      } else {
-        setState(() => _elapsedTime = nextTick);
+      if (_startTime != null) {
+        final now = DateTime.now();
+        final diff = now.difference(_startTime!);
+        Duration totalDuration = (_appState == AppState.fasting) ? _currentPlanFastDuration : _currentPlanEatDuration;
+
+        if (diff >= totalDuration) {
+          _timer?.cancel();
+          setState(() => _elapsedTime = totalDuration);
+          if (_appState == AppState.eating) _performReset();
+        } else {
+          setState(() => _elapsedTime = diff);
+        }
       }
     });
+  }
+
+  void _toggleCircadianMode() async {
+    HapticFeedback.mediumImpact();
+    setState(() => _isCircadianMode = !_isCircadianMode);
+
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('circadian_mode', _isCircadianMode);
+
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isCircadianMode ? l10n.circadianEnabled : l10n.circadianDisabled),
+          backgroundColor: _isCircadianMode ? Colors.orangeAccent : Colors.grey,
+          duration: const Duration(seconds: 1),
+        )
+    );
   }
 
   // --- ACTIONS ---
   void _startFasting() {
     HapticFeedback.mediumImpact();
+
     if (_interstitialAd != null) {
-      _interstitialAd!.show().then((_) {
+      try {
+        _interstitialAd!.show();
         _interstitialAd = null;
-        _loadInterstitialAd();
-      });
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      _loadInterstitialAd();
     }
+
     _startTime = DateTime.now();
     _elapsedTime = Duration.zero;
     setState(() => _appState = AppState.fasting);
@@ -236,6 +298,7 @@ class _HomePageState extends State<HomePage> {
 
     final DateTime completionTime = _startTime!.add(_currentPlanFastDuration);
     _notificationService.scheduleFastCompletion(completionTime, "Goal Reached!");
+    _notificationService.scheduleWaterReminder();
   }
 
   void _startEating() async {
@@ -244,6 +307,10 @@ class _HomePageState extends State<HomePage> {
     setState(() => _appState = AppState.eating);
     _runTimerTick();
     _saveStateData();
+
+    final DateTime endTime = _startTime!.add(_currentPlanEatDuration);
+    _notificationService.scheduleEatingCompletion(endTime);
+    _notificationService.scheduleFastingStartReminder(endTime);
   }
 
   void _performReset() {
@@ -265,7 +332,6 @@ class _HomePageState extends State<HomePage> {
     HapticFeedback.lightImpact();
     setState(() => _waterCount = (_waterCount + 1).clamp(0, 99));
 
-    // Сохраняем в репозиторий и обновляем дату
     await _waterRepository.addOrUpdateWaterForDay(DateTime.now(), _waterCount);
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('last_water_date', DateTime.now().toIso8601String().substring(0, 10));
@@ -282,19 +348,21 @@ class _HomePageState extends State<HomePage> {
       duration: finalDuration,
     );
 
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: Text(AppLocalizations.of(context)!.fastComplete, style: const TextStyle(color: Colors.white)),
-        content: Text(AppLocalizations.of(context)!.fastCompleteDesc(_formatDuration(finalDuration)), style: const TextStyle(color: Colors.white70)),
+        title: Text(l10n.fastComplete, style: const TextStyle(color: Colors.white)),
+        content: Text(l10n.fastCompleteDesc(_formatDuration(finalDuration)), style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
-            child: Text(AppLocalizations.of(context)!.discard, style: const TextStyle(color: Colors.grey)),
+            child: Text(l10n.discard, style: const TextStyle(color: Colors.grey)),
             onPressed: () => Navigator.pop(ctx),
           ),
           TextButton(
-            child: Text(AppLocalizations.of(context)!.save, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+            child: Text(l10n.save, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
             onPressed: () async {
               await _historyRepository.addRecord(record);
               if (mounted) Navigator.pop(ctx);
@@ -307,19 +375,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _promptToStopEating() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: Text(AppLocalizations.of(context)!.endCyclePrompt, style: const TextStyle(color: Colors.white)),
-        content: Text(AppLocalizations.of(context)!.endCyclePromptDesc, style: const TextStyle(color: Colors.white70)),
+        title: Text(l10n.endCyclePrompt, style: const TextStyle(color: Colors.white)),
+        content: Text(l10n.endCyclePromptDesc, style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
-            child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.grey)),
+            child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey)),
             onPressed: () => Navigator.pop(ctx),
           ),
           TextButton(
-            child: Text(AppLocalizations.of(context)!.endCycle, style: const TextStyle(color: Colors.redAccent)),
+            child: Text(l10n.endCycle, style: const TextStyle(color: Colors.redAccent)),
             onPressed: () {
               Navigator.pop(ctx);
               _performReset();
@@ -330,18 +399,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- СТЕКЛЯННАЯ ЛИНЕЙКА (Ввод веса) ---
   void _showWeightPicker() {
+    final l10n = AppLocalizations.of(context)!;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
-        // Начинаем с текущего веса (если 0, то 70)
         double tempWeight = _currentWeight > 0 ? _currentWeight : 70.0;
 
         return Container(
-          height: 400,
+          height: 650,
           decoration: BoxDecoration(
             color: const Color(0xFF1E1E1E).withOpacity(0.98),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
@@ -351,9 +420,9 @@ class _HomePageState extends State<HomePage> {
             children: [
               const SizedBox(height: 16),
               Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 30),
-              Text(AppLocalizations.of(context)!.logWeight, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              Text(l10n.logWeight, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
 
               const Spacer(),
 
@@ -361,17 +430,28 @@ class _HomePageState extends State<HomePage> {
                   builder: (context, setModalState) {
                     return Column(
                       children: [
+                        // --- ВИЗУАЛИЗАЦИЯ ТЕЛА ---
+                        SizedBox(
+                          height: 280,
+                          child: BodyVisualizer(
+                            weight: tempWeight,
+                            height: _userHeight,
+                            phaseColor: Colors.blueAccent,
+                            isFasting: false,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
                         Text(
-                          "${tempWeight.toStringAsFixed(1)} ${AppLocalizations.of(context)!.unitKg}",
+                          "${tempWeight.toStringAsFixed(1)} ${l10n.unitKg}",
                           style: const TextStyle(color: Colors.blueAccent, fontSize: 48, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 30),
 
-                        // ЛИНЕЙКА
+                        const SizedBox(height: 20),
+
                         SizedBox(
-                          height: 100,
+                          height: 80,
                           child: PageView.builder(
-                            // Центрируем на значении
                             controller: PageController(
                                 viewportFraction: 0.2,
                                 initialPage: (tempWeight * 10).toInt() - 300
@@ -405,9 +485,7 @@ class _HomePageState extends State<HomePage> {
                 child: GestureDetector(
                   onTap: () async {
                     setState(() => _currentWeight = tempWeight);
-
-                    // Сохраняем в историю и обновляем текущий
-                    await _weightRepository.addWeight(tempWeight);
+                    await _weightRepository.addWeightOrUpdateToday(tempWeight);
 
                     if (mounted) {
                       Navigator.pop(context);
@@ -420,7 +498,7 @@ class _HomePageState extends State<HomePage> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)),
-                    child: Center(child: Text(AppLocalizations.of(context)!.saveWeight, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
+                    child: Center(child: Text(l10n.saveWeight, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
                   ),
                 ),
               ),
@@ -436,15 +514,247 @@ class _HomePageState extends State<HomePage> {
     return "${twoDigits(d.inHours)}:${twoDigits(d.inMinutes.remainder(60))}:${twoDigits(d.inSeconds.remainder(60))}";
   }
 
-  // --- UI WIDGETS ---
+  // --- HEALTH STATUS & COLORS ---
+  Color _getPhaseColor() {
+    if (_appState == AppState.eating) return const Color(0xFF84FAB0);
+    if (_appState == AppState.stopped) return Colors.blueAccent;
+
+    final hours = _elapsedTime.inHours;
+    if (hours < 12) return Colors.blueAccent;
+    if (hours < 16) return Colors.orangeAccent;
+    if (hours < 18) return Colors.purpleAccent;
+    return const Color(0xFFFFD700);
+  }
+
+  IconData _getPhaseIcon() {
+    if (_appState == AppState.eating) return Icons.restaurant;
+    final hours = _elapsedTime.inHours;
+    if (hours < 12) return Icons.bloodtype;
+    if (hours < 16) return Icons.local_fire_department;
+    if (hours < 18) return Icons.bolt;
+    return Icons.auto_awesome;
+  }
+
+  String _getHealthStatus(AppLocalizations l10n) {
+    if (_appState == AppState.eating) return l10n.statusDigesting;
+    if (_elapsedTime.inHours < 12) return l10n.statusStable;
+    if (_elapsedTime.inHours >= 12 && _elapsedTime.inHours < 16) return l10n.statusFatBurn;
+    if (_elapsedTime.inHours >= 16) return l10n.statusKetosis;
+    return l10n.statusNormal;
+  }
+
+  String _getHealthDescription(AppLocalizations l10n) {
+    if (_appState == AppState.eating) return l10n.descDigesting;
+    if (_elapsedTime.inHours < 12) return l10n.descStable;
+    if (_elapsedTime.inHours >= 12 && _elapsedTime.inHours < 16) return l10n.descFatBurn;
+    return l10n.descKetosis;
+  }
+
+  Map<String, String> _getCurrentStageDetail(AppLocalizations l10n, int hours) {
+    if (_appState == AppState.eating) {
+      return {"title": l10n.eatingWindow, "desc": l10n.descEatingWindow};
+    }
+    if (hours < 4) return {"title": l10n.stage0_4, "desc": l10n.stage0_4_desc};
+    if (hours < 8) return {"title": l10n.stage4_8, "desc": l10n.stage4_8_desc};
+    if (hours < 12) return {"title": l10n.stage8_12, "desc": l10n.stage8_12_desc};
+    if (hours < 16) return {"title": l10n.stage12_16, "desc": l10n.stage12_16_desc};
+    if (hours < 18) return {"title": l10n.stage16_18, "desc": l10n.stage16_18_desc};
+    if (hours < 24) return {"title": l10n.stage18_24, "desc": l10n.stage18_24_desc};
+    return {"title": l10n.stage24_plus, "desc": l10n.stage24_plus_desc};
+  }
+
+  // --- SHOW BODY TIMELINE ---
+  void _showBodyTimeline() {
+    final l10n = AppLocalizations.of(context)!;
+    final currentHours = _elapsedTime.inHours;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E).withOpacity(0.98),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 24),
+              Text(l10n.viewTimeline, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  children: [
+                    _buildTimelineItem(l10n, 0, 4, l10n.stage0_4, l10n.stage0_4_desc, currentHours),
+                    _buildTimelineItem(l10n, 4, 8, l10n.stage4_8, l10n.stage4_8_desc, currentHours),
+                    _buildTimelineItem(l10n, 8, 12, l10n.stage8_12, l10n.stage8_12_desc, currentHours),
+                    _buildTimelineItem(l10n, 12, 16, l10n.stage12_16, l10n.stage12_16_desc, currentHours),
+                    _buildTimelineItem(l10n, 16, 18, l10n.stage16_18, l10n.stage16_18_desc, currentHours),
+                    _buildTimelineItem(l10n, 18, 24, l10n.stage18_24, l10n.stage18_24_desc, currentHours),
+                    _buildTimelineItem(l10n, 24, 100, l10n.stage24_plus, l10n.stage24_plus_desc, currentHours),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(l10n.btnGotIt, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTimelineItem(AppLocalizations l10n, int start, int end, String title, String desc, int currentHours) {
+    bool isActive = currentHours >= start && (end == 100 ? true : currentHours < end);
+    bool isPassed = currentHours >= end;
+
+    if (_appState == AppState.eating) {
+      isActive = false; isPassed = false;
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 24, height: 24,
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.blueAccent : (isPassed ? Colors.green : Colors.grey.withOpacity(0.3)),
+                  shape: BoxShape.circle,
+                  border: isActive ? Border.all(color: Colors.white, width: 2) : null,
+                ),
+                child: isPassed ? const Icon(Icons.check, size: 14, color: Colors.black) : null,
+              ),
+              Expanded(
+                child: Container(
+                  width: 2,
+                  color: isPassed ? Colors.green.withOpacity(0.5) : Colors.grey.withOpacity(0.2),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    end == 100 ? "$start+ h" : "$start - $end h",
+                    style: TextStyle(color: isActive ? Colors.blueAccent : Colors.white54, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(desc, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                ],
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showMetricInfo({
+    required String title,
+    required String value,
+    required String description,
+    required IconData icon,
+    required Color color,
+  }) {
+    HapticFeedback.selectionClick();
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E).withOpacity(0.98),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
+                  child: Icon(icon, color: color, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14)),
+                    Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(description, style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: color, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.btnGotIt, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem({required IconData icon, required Color color, required String label, required String value, required VoidCallback onTap}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(value, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+            Text(label, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildTimerGlassCard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isFasting = _appState == AppState.fasting;
-
-    final Color stateColor = isFasting
-        ? const Color(0xFFFF9A9E)
-        : (_appState == AppState.eating ? const Color(0xFF84FAB0) : Colors.blueAccent);
+    final Color stateColor = _getPhaseColor();
 
     String stateText;
     if (isFasting) stateText = l10n.fastingPhase;
@@ -461,6 +771,10 @@ class _HomePageState extends State<HomePage> {
     final timeLeft = (_appState == AppState.stopped) ? Duration.zero : totalDuration - _elapsedTime;
     final timeString = (_appState == AppState.stopped) ? "16:00:00" : _formatDuration(timeLeft);
 
+    final stageInfo = _getCurrentStageDetail(l10n, _elapsedTime.inHours);
+    final String detailText = isFasting ? stageInfo['title']! : "";
+    final IconData stageIcon = _getPhaseIcon();
+
     VoidCallback onAction;
     String btnLabel;
     if (_appState == AppState.stopped) {
@@ -474,78 +788,112 @@ class _HomePageState extends State<HomePage> {
       btnLabel = l10n.endCycle;
     }
 
+    final currentPlan = _plans[_currentPlanIndex];
+    final planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
+
     return GlassCard(
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
-                  if (isFasting)
-                    Text(l10n.autophagyZone, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
+                    if (isFasting && !_isBodyView)
+                      GestureDetector(
+                        onTap: _showBodyTimeline,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(detailText, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                              const SizedBox(width: 4),
+                              Icon(Icons.info_outline, color: Colors.white.withOpacity(0.4), size: 14)
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: stateColor.withOpacity(0.2), shape: BoxShape.circle),
-                child: Icon(isFasting ? Icons.local_fire_department : Icons.restaurant, color: stateColor, size: 20),
-              )
-            ],
-          ),
-
-          const SizedBox(height: 30),
-
-          SizedBox(
-            height: 240,
-            width: 240,
-            child: GradientTimerBlob(
-              percent: percent,
-              isFasting: isFasting,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              Row(
                 children: [
-                  Text(
-                    timeString,
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _isBodyView = !_isBodyView);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _isBodyView ? stateColor : Colors.white.withOpacity(0.2)),
+                      ),
+                      child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white, size: 18),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isFasting ? l10n.remaining : l10n.targetGoal,
-                    style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () async {
+                      HapticFeedback.lightImpact();
+                      final bool? result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanSelectionScreen()));
+                      if (result == true) {
+                        _loadStateData();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.2))),
+                      child: Row(children: [Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)), const SizedBox(width: 4), const Icon(Icons.edit, color: Colors.white70, size: 12)]),
+                    ),
                   ),
                 ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            height: 300,
+            width: double.infinity,
+            child: _isBodyView
+                ? Center(child: BodyVisualizer(weight: _currentWeight, height: _userHeight, phaseColor: stateColor, isFasting: isFasting))
+                : SizedBox(
+              width: 240, height: 240,
+              child: GradientTimerBlob(
+                percent: percent, isFasting: isFasting,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(timeString, style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white, fontFeatures: [FontFeature.tabularFigures()])),
+                    const SizedBox(height: 8),
+                    if (isFasting)
+                      GestureDetector(
+                        onTap: _showBodyTimeline,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: stateColor.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: stateColor.withOpacity(0.5))),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(stageIcon, color: stateColor, size: 14), const SizedBox(width: 6), Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))]),
+                        ),
+                      )
+                    else
+                      Text(l10n.targetGoal, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                  ],
+                ),
               ),
             ),
           ),
-
-          const SizedBox(height: 30),
-
+          const SizedBox(height: 20),
           GestureDetector(
             onTap: onAction,
             child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              decoration: BoxDecoration(
-                color: stateColor.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  btnLabel,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
+              width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(color: stateColor.withOpacity(0.8), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))]),
+              child: Center(child: Text(btnLabel, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
             ),
           ),
         ],
@@ -553,20 +901,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildInfoColumn({required IconData icon, required Color color, required String label, required String value}) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
-      ],
-    );
-  }
-
   Widget _buildDashboard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
@@ -574,7 +910,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HEADER
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -586,170 +921,51 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
+                  onTap: _toggleCircadianMode,
                   child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
-                    ),
-                    child: const CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Colors.white12,
-                      child: Icon(Icons.person, color: Colors.white),
-                    ),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: _isCircadianMode ? Colors.orange.withOpacity(0.2) : Colors.white.withOpacity(0.05), shape: BoxShape.circle, border: Border.all(color: _isCircadianMode ? Colors.orange : Colors.transparent, width: 1)),
+                    child: Icon(_isCircadianMode ? Icons.wb_sunny : Icons.wb_sunny_outlined, color: _isCircadianMode ? Colors.orange : Colors.white54, size: 22),
                   ),
-                )
+                ),
               ],
             ),
-
+            if (_isCircadianMode)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: CircadianCard(
+                  onClose: _toggleCircadianMode, // Кнопка "Х" выключит режим
+                ),
+              ),
             const SizedBox(height: 24),
-
-            // TIMER
             _buildTimerGlassCard(context),
-
             const SizedBox(height: 16),
-
-            // ИНФО-СТРОКА (Фаза, Серия, Статус)
             GlassCard(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildInfoColumn(
-                    icon: Icons.local_fire_department_rounded,
-                    color: Colors.orangeAccent,
-                    label: "Phase",
-                    value: _appState == AppState.fasting ? "Fat Burn" : "Fed",
-                  ),
+                  _buildInfoItem(icon: Icons.local_fire_department_rounded, color: Colors.orangeAccent, label: l10n.metricPhase, value: _appState == AppState.fasting ? l10n.fastingPhase : l10n.eatingWindow, onTap: () => _showMetricInfo(title: l10n.titleCurrentPhase, value: _appState == AppState.fasting ? l10n.valFastingZone : l10n.valEatingWindow, description: _appState == AppState.fasting ? l10n.descFastingZone : l10n.descEatingWindow, icon: Icons.local_fire_department_rounded, color: Colors.orangeAccent)),
                   Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
-                  _buildInfoColumn(
-                    icon: Icons.bolt_rounded,
-                    color: const Color(0xFFF9D423),
-                    label: "Streak",
-                    value: "$_streakDays Days",
-                  ),
+                  _buildInfoItem(icon: Icons.bolt_rounded, color: const Color(0xFFF9D423), label: l10n.metricStreak, value: l10n.valStreakDays(_streakDays), onTap: () => _showMetricInfo(title: l10n.titleConsistencyStreak, value: l10n.valStreakDays(_streakDays), description: l10n.descStreak(_streakDays), icon: Icons.bolt_rounded, color: const Color(0xFFF9D423))),
                   Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
-                  _buildInfoColumn(
-                    icon: Icons.favorite_rounded,
-                    color: Colors.redAccent,
-                    label: "Health",
-                    value: "Good",
-                  ),
+                  _buildInfoItem(icon: Icons.monitor_heart_outlined, color: Colors.redAccent, label: l10n.metricStatus, value: _getHealthStatus(l10n), onTap: () => _showMetricInfo(title: l10n.titleBodyStatus, value: _getHealthStatus(l10n), description: _getHealthDescription(l10n), icon: Icons.monitor_heart_outlined, color: Colors.redAccent)),
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // АСИММЕТРИЧНЫЙ БЕНТО (Вода и Вес)
             Row(
               children: [
-                // ВОДА (Шире)
-                Expanded(
-                  flex: 5,
-                  child: GlassCard(
-                    onTap: _addWater,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle),
-                              child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20),
-                            ),
-                            Text(
-                                "${(_waterCount / (_waterGoal == 0 ? 1 : _waterGoal) * 100).toInt()}%",
-                                style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold)
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text("$_waterCount", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4, left: 4),
-                              child: Text("/ $_waterGoal", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
+                Expanded(flex: 5, child: GlassCard(onTap: _addWater, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20)), Text("${(_waterCount / (_waterGoal == 0 ? 1 : _waterGoal) * 100).toInt()}%", style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold))]), const SizedBox(height: 12), Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("$_waterCount", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 4), child: Text("/ $_waterGoal", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])]))),
                 const SizedBox(width: 12),
-
-                // ВЕС (Уже)
-                Expanded(
-                  flex: 4,
-                  child: GlassCard(
-                    onTap: _showWeightPicker, // Вызов линейки
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: const Color(0xFF00FA9A).withOpacity(0.2), shape: BoxShape.circle),
-                              child: const Icon(Icons.show_chart_rounded, color: Color(0xFF00FA9A), size: 20),
-                            ),
-                            Icon(Icons.arrow_right_alt_rounded, color: const Color(0xFF00FA9A).withOpacity(0.8), size: 16),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(l10n.currentWeight, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(_currentWeight.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4, left: 2),
-                              child: Text(l10n.unitKg, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                Expanded(flex: 4, child: GlassCard(onTap: _showWeightPicker, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFF00FA9A).withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.show_chart_rounded, color: Color(0xFF00FA9A), size: 20)), Icon(Icons.arrow_right_alt_rounded, color: const Color(0xFF00FA9A).withOpacity(0.8), size: 16)]), const SizedBox(height: 12), Text(l10n.currentWeight, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_currentWeight.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 2), child: Text(l10n.unitKg, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])]))),
               ],
             ),
-
             const SizedBox(height: 16),
-
-            // PRO BANNER
             GlassCard(
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle),
-                    child: const Icon(Icons.star, color: Colors.amber),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13)),
-                    ],
-                  ),
-                  const Spacer(),
-                  Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3)),
-                ],
-              ),
+              child: Row(children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.star, color: Colors.amber)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)), Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))]), const Spacer(), Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))]),
             ),
-
             const SizedBox(height: 20),
             _buildBannerAd(),
           ],
@@ -761,7 +977,11 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDockItem(IconData icon, int index, String label) {
     final bool isSelected = _selectedIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
+      onTap: () {
+        setState(() => _selectedIndex = index);
+        // Если вернулись на Главную, можно обновить данные (например, если в профиле сменили рост)
+        if (index == 1) _loadStateData();
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -771,22 +991,10 @@ class _HomePageState extends State<HomePage> {
             decoration: BoxDecoration(
               color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
               shape: BoxShape.circle,
-              boxShadow: isSelected
-                  ? [BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 10, spreadRadius: 2)]
-                  : [],
+              boxShadow: isSelected ? [BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 10, spreadRadius: 2)] : [],
             ),
-            child: Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
-              size: 26,
-            ),
+            child: Icon(icon, color: isSelected ? Colors.white : Colors.white.withOpacity(0.4), size: 26),
           ),
-          if (isSelected)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              width: 4, height: 4,
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            )
         ],
       ),
     );
@@ -796,38 +1004,36 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    // ВАЖНО: Прозрачный Scaffold
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBody: true,
-
       body: MeshBackground(
         isFasting: _appState == AppState.fasting,
         child: IndexedStack(
           index: _selectedIndex,
           children: [
-            HistoryScreen(historyRepository: _historyRepository, waterRepository: _waterRepository),
-            _buildDashboard(context),
-            StatsScreen(repository: _historyRepository),
-            const LearnScreen(),
+            HistoryScreen(historyRepository: _historyRepository, waterRepository: _waterRepository), // 0
+            _buildDashboard(context), // 1
+            StatsScreen(repository: _historyRepository), // 2
+            const LearnScreen(), // 3 (Еда и Рецепты из Firebase)
+            const ProfileScreen(), // 4
           ],
         ),
       ),
-
-      // FLOATING GLASS DOCK
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 30),
         color: Colors.transparent,
         child: GlassCard(
-          height: 80,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          height: 75,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildDockItem(Icons.calendar_month_rounded, 0, l10n.navHistory),
               _buildDockItem(Icons.timer_rounded, 1, l10n.navTimer),
               _buildDockItem(Icons.bar_chart_rounded, 2, l10n.navStats),
-              _buildDockItem(Icons.school_rounded, 3, l10n.navLearn),
+              _buildDockItem(Icons.restaurant_menu_rounded, 3, l10n.navFood),
+              _buildDockItem(Icons.person_rounded, 4, l10n.navProfile),
             ],
           ),
         ),

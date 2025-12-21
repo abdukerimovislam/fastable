@@ -1,11 +1,14 @@
 class FastingPlan {
-  final Duration fastingDuration; // Renamed from 'duration'
-  final Duration eatingDuration;  // NEW: How long the eating window is
-  final String translationKey; // The key for its name
+  final Duration fastingDuration;
+  final Duration eatingDuration;
+  final String translationKey;
 
   FastingPlan({
     required this.fastingDuration,
     required this.eatingDuration,
     required this.translationKey,
   });
+
+  // Хелпер для получения общего названия, если перевод не найден
+  String get defaultName => "${fastingDuration.inHours}:${eatingDuration.inHours}";
 }

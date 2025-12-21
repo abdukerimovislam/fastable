@@ -224,5 +224,121 @@
   "noteSaved": "Nota guardada",
   "syncHealthTitle": "Sincronizar salud",
   "syncHealthDesc": "Registrar ayunos y leer peso automáticamente.",
-  "shareProgress": "Compartir progreso"
+  "shareProgress": "Compartir progreso",
+    "fastComplete": "¡Ayuno completado! 🎉",
+    "fastCompleteDesc": "Has ayunado durante {time}. ¿Guardar este registro?",
+    "@fastCompleteDesc": {
+      "placeholders": {
+        "time": { "type": "String" }
+      }
+    },
+    "discard": "Descartar",
+    "save": "Guardar",
+    "endCyclePrompt": "¿Finalizar la ventana de alimentación?",
+    "endCyclePromptDesc": "Esto detendrá el temporizador de comida y reiniciará el ciclo.",
+    "cancel": "Cancelar",
+    "logWeight": "Registrar peso",
+    "saveWeight": "Guardar peso",
+
+    "metricPhase": "Fase",
+    "metricStreak": "Racha",
+    "metricStatus": "Estado",
+
+    "statusDigesting": "Digestión",
+    "statusStable": "Estable",
+    "statusFatBurn": "Quema de grasa",
+    "statusKetosis": "Cetosis",
+    "statusNormal": "Normal",
+
+    "titleCurrentPhase": "Fase actual",
+    "valFastingZone": "Zona de ayuno",
+    "valEatingWindow": "Ventana de alimentación",
+    "descFastingZone": "Actualmente estás en la ventana de ayuno. No se deben consumir calorías.",
+    "descEatingWindow": "Estás en tu ventana de alimentación. Prioriza alimentos nutritivos.",
+
+    "titleConsistencyStreak": "Racha de constancia",
+    "valStreakDays": "{days} días 🔥",
+    "@valStreakDays": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    },
+    "descStreak": "Has cumplido tu objetivo de ayuno durante {days} días consecutivos. ¡Sigue así para crear el hábito!",
+    "@descStreak": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    },
+
+    "titleBodyStatus": "Estado del cuerpo",
+    "descDigesting": "Tu cuerpo está digiriendo alimentos y reponiendo las reservas de glucógeno. Los niveles de insulina están aumentando.",
+    "descStable": "Los niveles de azúcar en sangre se están normalizando. El cuerpo se prepara para cambiar de glucosa a grasa como fuente de energía.",
+    "descFatBurn": "¡Buen trabajo! Tu cuerpo comienza a quemar grasa almacenada para obtener energía. Los niveles de la hormona del crecimiento pueden aumentar.",
+    "descKetosis": "¡Cetosis profunda! Tu cuerpo quema grasa de forma eficiente. La autofagia puede comenzar pronto.",
+
+    "btnGotIt": "¡Entendido!",
+    "stage0_4": "Aumento del azúcar en sangre",
+      "stage0_4_desc": "Tu cuerpo está digiriendo la última comida. Los niveles de glucosa e insulina aumentan.",
+
+      "stage4_8": "Descenso del azúcar en sangre",
+      "stage4_8_desc": "Los niveles de insulina comienzan a bajar. El cuerpo empieza a usar la glucosa almacenada.",
+
+      "stage8_12": "Normalización",
+      "stage8_12_desc": "El sistema digestivo descansa. El cuerpo comienza procesos de reparación y limpieza.",
+
+      "stage12_16": "Quema de grasa",
+      "stage12_16_desc": "La insulina está baja. El cuerpo empieza a usar la grasa almacenada como energía.",
+
+      "stage16_18": "Cetosis",
+      "stage16_18_desc": "La quema de grasa se acelera. Estás en modo de quema máxima de grasa.",
+
+      "stage18_24": "Autofagia",
+      "stage18_24_desc": "Comienza la limpieza celular. El cuerpo recicla células viejas y dañadas.",
+
+      "stage24_plus": "Reparación profunda",
+      "stage24_plus_desc": "Aumentan los niveles de la hormona del crecimiento. Ocurre una regeneración celular significativa.",
+
+      "viewTimeline": "Ver línea de tiempo del cuerpo",
+      "stage0_4": "Aumento do açúcar no sangue",
+        "stage0_4_desc": "Seu corpo está digerindo a última refeição. Os níveis de glicose e insulina aumentam.",
+
+        "stage4_8": "Queda do açúcar no sangue",
+        "stage4_8_desc": "Os níveis de insulina começam a cair. O corpo passa a usar a glicose armazenada.",
+
+        "stage8_12": "Normalização",
+        "stage8_12_desc": "O sistema digestivo descansa. O corpo inicia processos de reparação e limpeza.",
+
+        "stage12_16": "Queima de gordura",
+        "stage12_16_desc": "A insulina está baixa. O corpo começa a usar a gordura armazenada como energia.",
+
+        "stage16_18": "Cetose",
+        "stage16_18_desc": "A queima de gordura se intensifica. Você entra em modo total de queima de gordura.",
+
+        "stage18_24": "Autofagia",
+        "stage18_24_desc": "A limpeza celular começa. O corpo recicla células antigas e danificadas.",
+
+        "stage24_plus": "Reparação profunda",
+        "stage24_plus_desc": "Os níveis do hormônio do crescimento aumentam. Ocorre uma regeneração celular significativa.",
+
+        "viewTimeline": "Ver linha do tempo do corpo",
+        "navFood": "Comida",
+          "navProfile": "Perfil",
+          "tabRecipes": "Recetas",
+            "tabKnowledge": "Conocimiento",
+
+            "categoryAll": "Todo",
+            "categoryKeto": "Keto",
+            "categoryFitness": "Fitness",
+            "categoryVegan": "Vegano",
+
+            "recipeTime": "{minutes} min",
+            "@recipeTime": {
+              "placeholders": {
+                "minutes": {
+                  "type": "int"
+                }
+              }
+            }
+
+
 }

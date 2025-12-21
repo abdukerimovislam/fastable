@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/home_page.dart';
-import 'package:fastable/repositories/weight_repository.dart'; // Подключаем репозиторий
+import 'package:fastable/repositories/weight_repository.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 
-// Константы, которые нужны Home Page
 const String kHeightKey = 'user_height';
 const String kGoalWeightKey = 'user_goal_weight';
 const String kCurrentWeightKey = 'user_current_weight';
@@ -22,7 +21,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // Данные пользователя
   int _height = 170;
   double _currentWeight = 70.0;
   double _goalWeight = 65.0;
@@ -32,7 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return MeshBackground(
-      isFasting: false, // Нейтральный фон
+      isFasting: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
@@ -43,17 +41,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   controller: _pageController,
                   onPageChanged: (idx) => setState(() => _currentPage = idx),
                   children: [
-                    // СТРАНИЦА 1: Приветствие
+                    // СТРАНИЦА 1
                     _buildPage(
                       title: l10n.onboardingWelcomeTitle,
                       desc: l10n.onboardingWelcomeDesc,
                       child: const Icon(Icons.favorite, size: 100, color: Colors.redAccent),
                     ),
 
-                    // СТРАНИЦА 2: Ввод данных (Стеклянные слайдеры)
+                    // СТРАНИЦА 2
                     _buildDataPage(l10n),
 
-                    // СТРАНИЦА 3: Финал
+                    // СТРАНИЦА 3
                     _buildPage(
                       title: "You are ready!",
                       desc: "Let's start your journey to a better version of yourself.",
@@ -63,7 +61,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
 
-              // Индикатор страниц
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (index) {
@@ -82,7 +79,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
               const SizedBox(height: 20),
 
-              // Кнопка Далее
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: GestureDetector(
@@ -97,9 +93,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       await prefs.setDouble(kCurrentWeightKey, _currentWeight);
                       await prefs.setBool('onboarding_complete', true);
 
-                      // Сохраняем начальный вес в историю
+                      // ИСПРАВЛЕНО: Используем безопасный метод сохранения веса
                       final weightRepo = WeightRepository();
-                      await weightRepo.addWeight(_currentWeight); // <--- ИСПРАВЛЕННЫЙ МЕТОД
+                      await weightRepo.addWeightOrUpdateToday(_currentWeight);
 
                       if (mounted) {
                         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
@@ -155,7 +151,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text(l10n.onboardingGoalTitle, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 30),
 
-          // Ввод Роста
           GlassCard(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Column(
@@ -172,7 +167,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Ввод Текущего Веса
           GlassCard(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Column(

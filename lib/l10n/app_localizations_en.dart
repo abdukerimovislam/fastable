@@ -203,11 +203,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyEmpty => 'No completed fasts yet. Your history will show up here!';
 
   @override
-  String get fastComplete => 'Fasting Complete!';
+  String get fastComplete => 'Fast Complete! 🎉';
 
   @override
-  String fastCompleteDesc(String duration) {
-    return 'You have successfully fasted for $duration. Save this record?';
+  String fastCompleteDesc(String time) {
+    return 'You have fasted for $time. Save this record?';
   }
 
   @override
@@ -220,7 +220,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endCyclePrompt => 'End Eating Window?';
 
   @override
-  String get endCyclePromptDesc => 'This will finish your current cycle and reset the timer.';
+  String get endCyclePromptDesc => 'This will stop the eating timer and reset the cycle.';
 
   @override
   String get endFastPrompt => 'End your current cycle to change the plan.';
@@ -598,4 +598,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareProgress => 'Share Progress';
+
+  @override
+  String get metricPhase => 'Phase';
+
+  @override
+  String get metricStreak => 'Streak';
+
+  @override
+  String get metricStatus => 'Status';
+
+  @override
+  String get statusDigesting => 'Digesting';
+
+  @override
+  String get statusStable => 'Stable';
+
+  @override
+  String get statusFatBurn => 'Fat Burn';
+
+  @override
+  String get statusKetosis => 'Ketosis';
+
+  @override
+  String get statusNormal => 'Normal';
+
+  @override
+  String get titleCurrentPhase => 'Current Phase';
+
+  @override
+  String get valFastingZone => 'Fasting Zone';
+
+  @override
+  String get valEatingWindow => 'Eating Window';
+
+  @override
+  String get descFastingZone => 'You are currently in the fasting window. No calories should be consumed.';
+
+  @override
+  String get descEatingWindow => 'You are in your eating window. Focus on nutrient-dense foods.';
+
+  @override
+  String get titleConsistencyStreak => 'Consistency Streak';
+
+  @override
+  String valStreakDays(int days) {
+    return '$days Days 🔥';
+  }
+
+  @override
+  String descStreak(int days) {
+    return 'You\'ve hit your fasting goal for $days consecutive days. Keep it up to build a habit!';
+  }
+
+  @override
+  String get titleBodyStatus => 'Body Status';
+
+  @override
+  String get descDigesting => 'Your body is currently digesting food and replenishing glycogen stores. Insulin levels are rising.';
+
+  @override
+  String get descStable => 'Your blood sugar levels are normalizing. The body is preparing to switch from glucose to fat for fuel.';
+
+  @override
+  String get descFatBurn => 'Great job! Your body is starting to burn stored fat for energy. Growth hormone levels may start to increase.';
+
+  @override
+  String get descKetosis => 'Deep Ketosis! Your body is efficiently burning fat. Autophagy (cell cleaning) may be starting soon.';
+
+  @override
+  String get btnGotIt => 'Got it!';
+
+  @override
+  String get stage0_4 => 'Blood Sugar Rise';
+
+  @override
+  String get stage0_4_desc => 'Your body is digesting your last meal. Blood sugar and insulin levels go up.';
+
+  @override
+  String get stage4_8 => 'Blood Sugar Drop';
+
+  @override
+  String get stage4_8_desc => 'Insulin levels start to drop. Your body begins to use up stored glucose.';
+
+  @override
+  String get stage8_12 => 'Normalization';
+
+  @override
+  String get stage8_12_desc => 'Digestive system rests. Your body starts healing and cleaning itself.';
+
+  @override
+  String get stage12_16 => 'Fat Burning';
+
+  @override
+  String get stage12_16_desc => 'Insulin is low. Your body starts burning stored fat for energy.';
+
+  @override
+  String get stage16_18 => 'Ketosis';
+
+  @override
+  String get stage16_18_desc => 'Fat burning accelerates. You are in full fat-burning mode.';
+
+  @override
+  String get stage18_24 => 'Autophagy';
+
+  @override
+  String get stage18_24_desc => 'Cellular cleanup begins. Your body recycles old and damaged cells.';
+
+  @override
+  String get stage24_plus => 'Deep Repair';
+
+  @override
+  String get stage24_plus_desc => 'Growth hormone levels increase. Significant cellular regeneration occurs.';
+
+  @override
+  String get viewTimeline => 'View Body Timeline';
+
+  @override
+  String get navFood => 'Food';
+
+  @override
+  String get circadianEnabled => 'Circadian mode enabled';
+
+  @override
+  String get circadianDisabled => 'Circadian mode disabled';
+
+  @override
+  String get tabRecipes => 'Recipes';
+
+  @override
+  String get tabKnowledge => 'Knowledge';
+
+  @override
+  String get categoryAll => 'All';
+
+  @override
+  String get categoryKeto => 'Keto';
+
+  @override
+  String get categoryFitness => 'Fitness';
+
+  @override
+  String get categoryVegan => 'Vegan';
+
+  @override
+  String recipeTime(int minutes) {
+    return '$minutes min';
+  }
 }

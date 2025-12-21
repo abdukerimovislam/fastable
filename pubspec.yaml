@@ -50,6 +50,8 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.0
   google_mobile_ads: ^6.0.0
+  geolocator: ^10.1.0 # Для координат
+  sunrise_sunset_calc: ^3.0.0 # Для расчета солнца
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -486,14 +486,14 @@ abstract class AppLocalizations {
   /// No description provided for @fastComplete.
   ///
   /// In en, this message translates to:
-  /// **'Fasting Complete!'**
+  /// **'Fast Complete! 🎉'**
   String get fastComplete;
 
   /// No description provided for @fastCompleteDesc.
   ///
   /// In en, this message translates to:
-  /// **'You have successfully fasted for {duration}. Save this record?'**
-  String fastCompleteDesc(String duration);
+  /// **'You have fasted for {time}. Save this record?'**
+  String fastCompleteDesc(String time);
 
   /// No description provided for @noFastsOnDay.
   ///
@@ -516,7 +516,7 @@ abstract class AppLocalizations {
   /// No description provided for @endCyclePromptDesc.
   ///
   /// In en, this message translates to:
-  /// **'This will finish your current cycle and reset the timer.'**
+  /// **'This will stop the eating timer and reset the cycle.'**
   String get endCyclePromptDesc;
 
   /// No description provided for @endFastPrompt.
@@ -1268,6 +1268,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share Progress'**
   String get shareProgress;
+
+  /// No description provided for @metricPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase'**
+  String get metricPhase;
+
+  /// No description provided for @metricStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get metricStreak;
+
+  /// No description provided for @metricStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get metricStatus;
+
+  /// No description provided for @statusDigesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Digesting'**
+  String get statusDigesting;
+
+  /// No description provided for @statusStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get statusStable;
+
+  /// No description provided for @statusFatBurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Burn'**
+  String get statusFatBurn;
+
+  /// No description provided for @statusKetosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Ketosis'**
+  String get statusKetosis;
+
+  /// No description provided for @statusNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get statusNormal;
+
+  /// No description provided for @titleCurrentPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Phase'**
+  String get titleCurrentPhase;
+
+  /// No description provided for @valFastingZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Zone'**
+  String get valFastingZone;
+
+  /// No description provided for @valEatingWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating Window'**
+  String get valEatingWindow;
+
+  /// No description provided for @descFastingZone.
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently in the fasting window. No calories should be consumed.'**
+  String get descFastingZone;
+
+  /// No description provided for @descEatingWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in your eating window. Focus on nutrient-dense foods.'**
+  String get descEatingWindow;
+
+  /// No description provided for @titleConsistencyStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency Streak'**
+  String get titleConsistencyStreak;
+
+  /// No description provided for @valStreakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} Days 🔥'**
+  String valStreakDays(int days);
+
+  /// No description provided for @descStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve hit your fasting goal for {days} consecutive days. Keep it up to build a habit!'**
+  String descStreak(int days);
+
+  /// No description provided for @titleBodyStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Status'**
+  String get titleBodyStatus;
+
+  /// No description provided for @descDigesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body is currently digesting food and replenishing glycogen stores. Insulin levels are rising.'**
+  String get descDigesting;
+
+  /// No description provided for @descStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your blood sugar levels are normalizing. The body is preparing to switch from glucose to fat for fuel.'**
+  String get descStable;
+
+  /// No description provided for @descFatBurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Great job! Your body is starting to burn stored fat for energy. Growth hormone levels may start to increase.'**
+  String get descFatBurn;
+
+  /// No description provided for @descKetosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Ketosis! Your body is efficiently burning fat. Autophagy (cell cleaning) may be starting soon.'**
+  String get descKetosis;
+
+  /// No description provided for @btnGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it!'**
+  String get btnGotIt;
+
+  /// No description provided for @stage0_4.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Sugar Rise'**
+  String get stage0_4;
+
+  /// No description provided for @stage0_4_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body is digesting your last meal. Blood sugar and insulin levels go up.'**
+  String get stage0_4_desc;
+
+  /// No description provided for @stage4_8.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Sugar Drop'**
+  String get stage4_8;
+
+  /// No description provided for @stage4_8_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Insulin levels start to drop. Your body begins to use up stored glucose.'**
+  String get stage4_8_desc;
+
+  /// No description provided for @stage8_12.
+  ///
+  /// In en, this message translates to:
+  /// **'Normalization'**
+  String get stage8_12;
+
+  /// No description provided for @stage8_12_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Digestive system rests. Your body starts healing and cleaning itself.'**
+  String get stage8_12_desc;
+
+  /// No description provided for @stage12_16.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Burning'**
+  String get stage12_16;
+
+  /// No description provided for @stage12_16_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Insulin is low. Your body starts burning stored fat for energy.'**
+  String get stage12_16_desc;
+
+  /// No description provided for @stage16_18.
+  ///
+  /// In en, this message translates to:
+  /// **'Ketosis'**
+  String get stage16_18;
+
+  /// No description provided for @stage16_18_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat burning accelerates. You are in full fat-burning mode.'**
+  String get stage16_18_desc;
+
+  /// No description provided for @stage18_24.
+  ///
+  /// In en, this message translates to:
+  /// **'Autophagy'**
+  String get stage18_24;
+
+  /// No description provided for @stage18_24_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cellular cleanup begins. Your body recycles old and damaged cells.'**
+  String get stage18_24_desc;
+
+  /// No description provided for @stage24_plus.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Repair'**
+  String get stage24_plus;
+
+  /// No description provided for @stage24_plus_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth hormone levels increase. Significant cellular regeneration occurs.'**
+  String get stage24_plus_desc;
+
+  /// No description provided for @viewTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'View Body Timeline'**
+  String get viewTimeline;
+
+  /// No description provided for @navFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get navFood;
+
+  /// No description provided for @circadianEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian mode enabled'**
+  String get circadianEnabled;
+
+  /// No description provided for @circadianDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian mode disabled'**
+  String get circadianDisabled;
+
+  /// No description provided for @tabRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes'**
+  String get tabRecipes;
+
+  /// No description provided for @tabKnowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge'**
+  String get tabKnowledge;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get categoryAll;
+
+  /// No description provided for @categoryKeto.
+  ///
+  /// In en, this message translates to:
+  /// **'Keto'**
+  String get categoryKeto;
+
+  /// No description provided for @categoryFitness.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness'**
+  String get categoryFitness;
+
+  /// No description provided for @categoryVegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan'**
+  String get categoryVegan;
+
+  /// No description provided for @recipeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String recipeTime(int minutes);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

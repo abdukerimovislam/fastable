@@ -8,6 +8,8 @@ class GlassCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
   final double opacity;
+  final Color? color;        // <--- ДОБАВЛЕНО
+  final BoxBorder? border;   // <--- ДОБАВЛЕНО
 
   const GlassCard({
     super.key,
@@ -16,7 +18,9 @@ class GlassCard extends StatelessWidget {
     this.height,
     this.padding,
     this.onTap,
-    this.opacity = 0.08, // Насколько "мутное" стекло
+    this.opacity = 0.08, // Дефолтная мутность
+    this.color,          // <--- ДОБАВЛЕНО
+    this.border,         // <--- ДОБАВЛЕНО
   });
 
   @override
@@ -35,14 +39,18 @@ class GlassCard extends StatelessWidget {
             height: height,
             padding: padding ?? const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              // Полупрозрачная заливка
-              color: Colors.white.withOpacity(opacity),
+              // Если цвет передан (например, amber при выборе), используем его.
+              // Иначе используем дефолтный белый с заданной прозрачностью.
+              color: color ?? Colors.white.withOpacity(opacity),
+
               borderRadius: borderRadius,
-              // Тонкая белая рамка (блик на грани стекла)
-              border: Border.all(
+
+              // Если граница передана, берем её. Иначе рисуем тонкую белую.
+              border: border ?? Border.all(
                 color: Colors.white.withOpacity(0.1),
                 width: 1.0,
               ),
+
               // Едва заметная тень для объема
               boxShadow: [
                 BoxShadow(

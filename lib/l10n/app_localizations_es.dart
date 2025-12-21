@@ -203,11 +203,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get historyEmpty => 'Aún no hay ayunos completados. ¡Aparecerán aquí!';
 
   @override
-  String get fastComplete => '¡Ayuno completado!';
+  String get fastComplete => '¡Ayuno completado! 🎉';
 
   @override
-  String fastCompleteDesc(String duration) {
-    return 'Has ayunado durante $duration. ¿Guardar este registro?';
+  String fastCompleteDesc(String time) {
+    return 'Has ayunado durante $time. ¿Guardar este registro?';
   }
 
   @override
@@ -217,10 +217,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get detailsFor => 'Detalles para';
 
   @override
-  String get endCyclePrompt => '¿Finalizar ventana de comida?';
+  String get endCyclePrompt => '¿Finalizar la ventana de alimentación?';
 
   @override
-  String get endCyclePromptDesc => 'Esto finalizará tu ciclo actual y reiniciará el temporizador.';
+  String get endCyclePromptDesc => 'Esto detendrá el temporizador de comida y reiniciará el ciclo.';
 
   @override
   String get endFastPrompt => 'Finaliza el ciclo actual para cambiar el plan.';
@@ -598,4 +598,151 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shareProgress => 'Compartir progreso';
+
+  @override
+  String get metricPhase => 'Fase';
+
+  @override
+  String get metricStreak => 'Racha';
+
+  @override
+  String get metricStatus => 'Estado';
+
+  @override
+  String get statusDigesting => 'Digestión';
+
+  @override
+  String get statusStable => 'Estable';
+
+  @override
+  String get statusFatBurn => 'Quema de grasa';
+
+  @override
+  String get statusKetosis => 'Cetosis';
+
+  @override
+  String get statusNormal => 'Normal';
+
+  @override
+  String get titleCurrentPhase => 'Fase actual';
+
+  @override
+  String get valFastingZone => 'Zona de ayuno';
+
+  @override
+  String get valEatingWindow => 'Ventana de alimentación';
+
+  @override
+  String get descFastingZone => 'Actualmente estás en la ventana de ayuno. No se deben consumir calorías.';
+
+  @override
+  String get descEatingWindow => 'Estás en tu ventana de alimentación. Prioriza alimentos nutritivos.';
+
+  @override
+  String get titleConsistencyStreak => 'Racha de constancia';
+
+  @override
+  String valStreakDays(int days) {
+    return '$days días 🔥';
+  }
+
+  @override
+  String descStreak(int days) {
+    return 'Has cumplido tu objetivo de ayuno durante $days días consecutivos. ¡Sigue así para crear el hábito!';
+  }
+
+  @override
+  String get titleBodyStatus => 'Estado del cuerpo';
+
+  @override
+  String get descDigesting => 'Tu cuerpo está digiriendo alimentos y reponiendo las reservas de glucógeno. Los niveles de insulina están aumentando.';
+
+  @override
+  String get descStable => 'Los niveles de azúcar en sangre se están normalizando. El cuerpo se prepara para cambiar de glucosa a grasa como fuente de energía.';
+
+  @override
+  String get descFatBurn => '¡Buen trabajo! Tu cuerpo comienza a quemar grasa almacenada para obtener energía. Los niveles de la hormona del crecimiento pueden aumentar.';
+
+  @override
+  String get descKetosis => '¡Cetosis profunda! Tu cuerpo quema grasa de forma eficiente. La autofagia puede comenzar pronto.';
+
+  @override
+  String get btnGotIt => '¡Entendido!';
+
+  @override
+  String get stage0_4 => 'Aumento do açúcar no sangue';
+
+  @override
+  String get stage0_4_desc => 'Seu corpo está digerindo a última refeição. Os níveis de glicose e insulina aumentam.';
+
+  @override
+  String get stage4_8 => 'Queda do açúcar no sangue';
+
+  @override
+  String get stage4_8_desc => 'Os níveis de insulina começam a cair. O corpo passa a usar a glicose armazenada.';
+
+  @override
+  String get stage8_12 => 'Normalização';
+
+  @override
+  String get stage8_12_desc => 'O sistema digestivo descansa. O corpo inicia processos de reparação e limpeza.';
+
+  @override
+  String get stage12_16 => 'Queima de gordura';
+
+  @override
+  String get stage12_16_desc => 'A insulina está baixa. O corpo começa a usar a gordura armazenada como energia.';
+
+  @override
+  String get stage16_18 => 'Cetose';
+
+  @override
+  String get stage16_18_desc => 'A queima de gordura se intensifica. Você entra em modo total de queima de gordura.';
+
+  @override
+  String get stage18_24 => 'Autofagia';
+
+  @override
+  String get stage18_24_desc => 'A limpeza celular começa. O corpo recicla células antigas e danificadas.';
+
+  @override
+  String get stage24_plus => 'Reparação profunda';
+
+  @override
+  String get stage24_plus_desc => 'Os níveis do hormônio do crescimento aumentam. Ocorre uma regeneração celular significativa.';
+
+  @override
+  String get viewTimeline => 'Ver linha do tempo do corpo';
+
+  @override
+  String get navFood => 'Comida';
+
+  @override
+  String get circadianEnabled => 'Circadian mode enabled';
+
+  @override
+  String get circadianDisabled => 'Circadian mode disabled';
+
+  @override
+  String get tabRecipes => 'Recetas';
+
+  @override
+  String get tabKnowledge => 'Conocimiento';
+
+  @override
+  String get categoryAll => 'Todo';
+
+  @override
+  String get categoryKeto => 'Keto';
+
+  @override
+  String get categoryFitness => 'Fitness';
+
+  @override
+  String get categoryVegan => 'Vegano';
+
+  @override
+  String recipeTime(int minutes) {
+    return '$minutes min';
+  }
 }
