@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Вспомогательная функция для получения перевода
-String _getTranslated(Map<String, dynamic> data, String field, String locale) {
-  final map = data[field] as Map<String, dynamic>?;
-  if (map == null) return "";
+// Вспомогательная функция для безопасного получения перевода
+String _getTranslated(Map<String, dynamic>? data, String field, String locale) {
+  if (data == null) return "";
+  final map = data[field];
+  if (map is! Map) return ""; // Защита если поле не Map
+
   // Пытаемся взять нужный язык, если нет - берем английский, если нет - пустую строку
-  return map[locale] ?? map['en'] ?? "";
+  return map[locale]?.toString() ?? map['en']?.toString() ?? "";
 }
 
 class RecipeModel {
@@ -36,11 +38,9 @@ class RecipeModel {
     required this.color,
   });
 
-  // Фабрика для создания из Firebase документа
   factory RecipeModel.fromSnapshot(DocumentSnapshot doc, String locale) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>?;
 
-    // Парсинг цвета из строки (простой вариант)
     Color parseColor(String? colorName) {
       switch (colorName) {
         case 'green': return Colors.greenAccent;
@@ -51,18 +51,27 @@ class RecipeModel {
       }
     }
 
+    if (data == null) {
+      // Возвращаем пустую модель-заглушку, чтобы список не падал
+      return RecipeModel(
+          id: doc.id, title: "Error", description: "", imageUrl: "",
+          calories: 0, protein: 0, fat: 0, carbs: 0, timeMinutes: 0,
+          tags: [], color: Colors.grey);
+    }
+
     return RecipeModel(
       id: doc.id,
       title: _getTranslated(data, 'title', locale),
       description: _getTranslated(data, 'description', locale),
-      imageUrl: data['imageUrl'] ?? '',
-      calories: data['calories'] ?? 0,
-      protein: data['protein'] ?? 0,
-      fat: data['fat'] ?? 0,
-      carbs: data['carbs'] ?? 0,
-      timeMinutes: data['timeMinutes'] ?? 0,
+      imageUrl: data['imageUrl']?.toString() ?? '',
+      // Безопасное приведение типов (Firestore может вернуть double или int)
+      calories: (data['calories'] as num?)?.toInt() ?? 0,
+      protein: (data['protein'] as num?)?.toInt() ?? 0,
+      fat: (data['fat'] as num?)?.toInt() ?? 0,
+      carbs: (data['carbs'] as num?)?.toInt() ?? 0,
+      timeMinutes: (data['timeMinutes'] as num?)?.toInt() ?? 0,
       tags: List<String>.from(data['tags'] ?? []),
-      color: parseColor(data['color']),
+      color: parseColor(data['color']?.toString()),
     );
   }
 }
@@ -71,7 +80,7 @@ class ArticleModel {
   final String id;
   final String title;
   final String subtitle;
-  final String contentUrl; // Ссылка на полный текст или Markdown (на будущее)
+  final String contentUrl;
 
   ArticleModel({
     required this.id,
@@ -81,12 +90,16 @@ class ArticleModel {
   });
 
   factory ArticleModel.fromSnapshot(DocumentSnapshot doc, String locale) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>?;
+    if (data == null) {
+      return ArticleModel(id: doc.id, title: "Error", subtitle: "", contentUrl: "");
+    }
+
     return ArticleModel(
       id: doc.id,
       title: _getTranslated(data, 'title', locale),
       subtitle: _getTranslated(data, 'subtitle', locale),
-      contentUrl: data['contentUrl'] ?? '',
+      contentUrl: data['contentUrl']?.toString() ?? '',
     );
   }
 }
