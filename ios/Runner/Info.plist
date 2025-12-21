@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+<key>PermissionGroupNotification</key>
+<string>We need to send you fasting notifications.</string>
+
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Fastable uses your location to calculate accurate sunset and sunrise times for the Circadian Fasting mode.</string>
+
+<key>NSUserTrackingUsageDescription</key>
+<string>This identifier will be used to deliver personalized ads to you.</string>
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>We need your location to calculate accurate sunset times for Circadian Fasting.</string>
 <key>GADApplicationIdentifier</key>
