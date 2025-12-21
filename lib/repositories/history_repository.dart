@@ -1,48 +1,68 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fastable/models/fasting_record.dart';
 
 class HistoryRepository {
-  static const String _key = 'fasting_history_records';
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Получить все записи
-  Future<List<FastingRecord>> loadRecords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? jsonString = prefs.getString(_key);
+  // Получаем ссылку на коллекцию истории конкретного пользователя
+  CollectionReference? _getCollection() {
+    final user = _auth.currentUser;
+    // Если пользователь не авторизован (даже анонимно), возвращаем null
+    if (user == null) return null;
+    return _db.collection('users').doc(user.uid).collection('fasting_history');
+  }
 
-    if (jsonString == null) return [];
+  // --- ГЛАВНЫЙ МЕТОД ДЛЯ СТАТИСТИКИ (STREAM) ---
+  // Слушает изменения в базе данных в реальном времени
+  Stream<List<FastingRecord>> getRecordsStream() {
+    final col = _getCollection();
 
-    try {
-      final List<dynamic> jsonList = jsonDecode(jsonString);
-      return jsonList.map((e) => FastingRecord.fromJson(e)).toList();
-    } catch (e) {
-      return [];
+    if (col == null) {
+      // Если нет доступа к базе, возвращаем пустой список
+      return Stream.value([]);
     }
+
+    return col
+        .orderBy('endTime', descending: true) // Сортируем: новые сверху
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return FastingRecord(
+          startTime: (data['startTime'] as Timestamp).toDate(),
+          endTime: (data['endTime'] as Timestamp).toDate(),
+          duration: Duration(minutes: (data['durationMinutes'] as num).toInt()),
+        );
+      }).toList();
+    });
   }
 
   // Добавить запись
   Future<void> addRecord(FastingRecord record) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<FastingRecord> currentRecords = await loadRecords();
+    final col = _getCollection();
+    if (col == null) return;
 
-    currentRecords.add(record);
-
-    // Сортируем: новые сверху
-    currentRecords.sort((a, b) => b.startTime.compareTo(a.startTime));
-
-    final String jsonString = jsonEncode(currentRecords.map((e) => e.toJson()).toList());
-    await prefs.setString(_key, jsonString);
+    await col.add({
+      'startTime': Timestamp.fromDate(record.startTime),
+      'endTime': Timestamp.fromDate(record.endTime),
+      'durationMinutes': record.duration.inMinutes,
+    });
   }
 
-  // Удалить запись (на будущее)
+  // Удалить запись
   Future<void> deleteRecord(FastingRecord record) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<FastingRecord> currentRecords = await loadRecords();
+    final col = _getCollection();
+    if (col == null) return;
 
-    // Удаляем по совпадению времени начала
-    currentRecords.removeWhere((e) => e.startTime == record.startTime);
+    // Ищем запись по времени начала, чтобы удалить
+    final snapshot = await col
+        .where('startTime', isEqualTo: Timestamp.fromDate(record.startTime))
+        .get();
 
-    final String jsonString = jsonEncode(currentRecords.map((e) => e.toJson()).toList());
-    await prefs.setString(_key, jsonString);
+    for (var doc in snapshot.docs) {
+      await doc.reference.delete();
+    }
   }
 }

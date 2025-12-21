@@ -433,13 +433,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bmiUnderweight => 'Underweight';
 
   @override
-  String get bmiNormal => 'Normal';
+  String get bmiNormal => 'Normal Weight';
 
   @override
   String get bmiOverweight => 'Overweight';
 
   @override
-  String get bmiObese => 'Obese';
+  String get bmiObese => 'Obesity';
 
   @override
   String get enterHeightCm => 'Enter height (cm)';
@@ -745,4 +745,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String recipeTime(int minutes) {
     return '$minutes min';
   }
+
+  @override
+  String get waterSettings => 'Water Settings';
+
+  @override
+  String get removeCup => 'Remove Cup (-1)';
+
+  @override
+  String get dailyGoal => 'Daily Goal';
+
+  @override
+  String get bmiScore => 'BMI Score';
+
+  @override
+  String bmiDescription(int height, String weight) {
+    return 'Based on your height ($height cm) and weight ($weight kg).';
+  }
+
+  @override
+  String get onboardingTitle => 'Let\'s personalize\nyour journey';
+
+  @override
+  String get onboardingHeightTitle => 'What is your height?';
+
+  @override
+  String get onboardingHeightDesc => 'We need this to calibrate the Body Visualizer and calculate your health metrics accurately.';
+
+  @override
+  String get onboardingWeightTitle => 'What is your weight?';
+
+  @override
+  String get onboardingWeightDesc => 'This helps us track your progress and adjust your fasting plan dynamically.';
+
+  @override
+  String get btnNext => 'Next';
+
+  @override
+  String get btnFinish => 'Start Journey';
+
+  @override
+  String get cm => 'cm';
+
+  @override
+  String get kg => 'kg';
+
+  @override
+  String get statsSuccessRate => 'Success Rate';
+
+  @override
+  String statsSuccessDesc(int success, int total) {
+    return '$success of $total fasts were 16h+';
+  }
+
+  @override
+  String get statsTotalFasts => 'Total Fasts';
+
+  @override
+  String get statsTotalHours => 'Total Hours';
+
+  @override
+  String get statsAverage => 'Average';
+
+  @override
+  String get statsLongest => 'Longest';
 }

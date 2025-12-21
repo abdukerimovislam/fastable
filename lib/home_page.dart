@@ -9,7 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 import 'package:fastable/widgets/gradient_timer_blob.dart';
-import 'package:fastable/widgets/body_visualizer.dart'; // Визуализатор тела
+import 'package:fastable/widgets/body_visualizer.dart';
+import 'package:fastable/widgets/circadian_card.dart';
 // ---------------------
 
 import 'package:fastable/l10n/app_localizations.dart';
@@ -28,11 +29,10 @@ import 'package:fastable/services/sound_service.dart';
 // --- ЭКРАНЫ ---
 import 'package:fastable/screens/history_screen.dart';
 import 'package:fastable/screens/stats_screen.dart';
-import 'package:fastable/screens/learn_screen.dart'; // Теперь это экран "Еда и Знания"
+import 'package:fastable/screens/learn_screen.dart';
 import 'package:fastable/screens/profile_screen.dart';
 import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/screens/plan_selection_screen.dart';
-import 'package:fastable/widgets/circadian_card.dart';
 
 const String kWaterGoalKey = 'water_goal';
 const String kGoalWeightKey = 'user_goal_weight';
@@ -61,13 +61,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _waterCount = 0;
   int _waterGoal = 8;
   double _currentWeight = 70.0;
-  double _userHeight = 175.0; // Рост для визуализации
+  double _userHeight = 175.0;
   int _streakDays = 1;
 
   // --- НАСТРОЙКИ UI ---
-  int _selectedIndex = 1; // 0=History, 1=Timer, 2=Stats, 3=Food, 4=Profile
+  // Начинаем с Таймера (Центральная иконка, индекс 2)
+  int _selectedIndex = 2;
   bool _isCircadianMode = false;
-  bool _isBodyView = false; // Переключатель вида на карточке таймера
+  bool _isBodyView = false;
 
   // --- СЕРВИСЫ И РЕПОЗИТОРИИ ---
   final HistoryRepository _historyRepository = HistoryRepository();
@@ -75,6 +76,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final WeightRepository _weightRepository = WeightRepository();
   final NotificationService _notificationService = NotificationService();
   final SoundService _soundService = SoundService();
+
+  // Кэшированные страницы для предотвращения мигания
+  late final List<Widget> _pages;
 
   InterstitialAd? _interstitialAd;
 
@@ -93,6 +97,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Инициализируем страницы один раз.
+    // Dashboard (Таймер) не добавляем сюда, он строится динамически.
+    _pages = [
+      HistoryScreen(historyRepository: _historyRepository, waterRepository: _waterRepository), // 0
+      StatsScreen(repository: _historyRepository), // 1
+      const SizedBox(), // 2 (Placeholder для Таймера)
+      const LearnScreen(), // 3
+      const ProfileScreen(), // 4
+    ];
+
     _notificationService.requestPermissions();
     _loadStateData();
     _loadInterstitialAd();
@@ -114,7 +129,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  // --- REKLAMA ---
   void _loadInterstitialAd() {
     InterstitialAd.load(
       adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
@@ -156,7 +170,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  // --- ЗАГРУЗКА ДАННЫХ ---
   Future<void> _loadStateData() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -264,18 +277,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     final prefs = await SharedPreferences.getInstance();
     prefs.setBool('circadian_mode', _isCircadianMode);
-
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isCircadianMode ? l10n.circadianEnabled : l10n.circadianDisabled),
-          backgroundColor: _isCircadianMode ? Colors.orangeAccent : Colors.grey,
-          duration: const Duration(seconds: 1),
-        )
-    );
   }
 
-  // --- ACTIONS ---
   void _startFasting() {
     HapticFeedback.mediumImpact();
 
@@ -327,6 +330,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _notificationService.cancelAllNotifications();
   }
 
+  // --- ВОДА (Добавление, Удаление, Настройка) ---
+
   void _addWater() async {
     _soundService.playWaterSound();
     HapticFeedback.lightImpact();
@@ -335,6 +340,88 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     await _waterRepository.addOrUpdateWaterForDay(DateTime.now(), _waterCount);
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('last_water_date', DateTime.now().toIso8601String().substring(0, 10));
+  }
+
+  void _removeWater() async {
+    if (_waterCount > 0) {
+      HapticFeedback.mediumImpact();
+      setState(() => _waterCount = _waterCount - 1);
+      await _waterRepository.addOrUpdateWaterForDay(DateTime.now(), _waterCount);
+    }
+  }
+
+  void _setWaterGoal(int newGoal) async {
+    setState(() => _waterGoal = newGoal);
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt(kWaterGoalKey, newGoal);
+  }
+
+  // Меню воды (вызывается долгим нажатием)
+  void _showWaterMenu() {
+    HapticFeedback.mediumImpact();
+    final l10n = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.98),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.waterSettings, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+
+              // Кнопка: Убрать стакан
+              ListTile(
+                leading: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                title: Text(l10n.removeCup, style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _removeWater();
+                },
+              ),
+              const Divider(color: Colors.white12),
+
+              const SizedBox(height: 10),
+              // Скролл: Выбор цели
+              Text(l10n.dailyGoal, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+              SizedBox(
+                height: 120,
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 40,
+                  perspective: 0.005,
+                  physics: const FixedExtentScrollPhysics(),
+                  controller: FixedExtentScrollController(initialItem: (_waterGoal - 1).clamp(0, 19)),
+                  onSelectedItemChanged: (index) {
+                    HapticFeedback.selectionClick();
+                    _setWaterGoal(index + 1);
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    childCount: 20,
+                    builder: (context, index) {
+                      final val = index + 1;
+                      return Center(
+                        child: Text(
+                          "$val ${l10n.cups}",
+                          style: TextStyle(
+                              color: val == _waterGoal ? Colors.blueAccent : Colors.white38,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _promptToManuallyEndFast() {
@@ -430,7 +517,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   builder: (context, setModalState) {
                     return Column(
                       children: [
-                        // --- ВИЗУАЛИЗАЦИЯ ТЕЛА ---
                         SizedBox(
                           height: 280,
                           child: BodyVisualizer(
@@ -514,7 +600,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return "${twoDigits(d.inHours)}:${twoDigits(d.inMinutes.remainder(60))}:${twoDigits(d.inSeconds.remainder(60))}";
   }
 
-  // --- HEALTH STATUS & COLORS ---
   Color _getPhaseColor() {
     if (_appState == AppState.eating) return const Color(0xFF84FAB0);
     if (_appState == AppState.stopped) return Colors.blueAccent;
@@ -563,7 +648,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return {"title": l10n.stage24_plus, "desc": l10n.stage24_plus_desc};
   }
 
-  // --- SHOW BODY TIMELINE ---
+  // --- BMI CALCULATOR ---
+  double _calculateBMI() {
+    if (_userHeight <= 0) return 0;
+    double heightM = _userHeight / 100.0;
+    return _currentWeight / (heightM * heightM);
+  }
+
+  String _getBMICategory(double bmi, AppLocalizations l10n) {
+    if (bmi < 18.5) return l10n.bmiUnderweight;
+    if (bmi < 25) return l10n.bmiNormal;
+    if (bmi < 30) return l10n.bmiOverweight;
+    return l10n.bmiObese;
+  }
+
+  Color _getBMIColor(double bmi) {
+    if (bmi < 18.5) return Colors.blueAccent;
+    if (bmi < 25) return Colors.greenAccent;
+    if (bmi < 30) return Colors.orangeAccent;
+    return Colors.redAccent;
+  }
+
   void _showBodyTimeline() {
     final l10n = AppLocalizations.of(context)!;
     final currentHours = _elapsedTime.inHours;
@@ -903,6 +1008,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Widget _buildDashboard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    // РАСЧЕТ BMI
+    final double bmi = _calculateBMI();
+    final String bmiStr = bmi.toStringAsFixed(1);
+    final String bmiCat = _getBMICategory(bmi, l10n);
+    final Color bmiColor = _getBMIColor(bmi);
+
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
@@ -910,6 +1022,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ВЕРХНЯЯ ПАНЕЛЬ
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -920,6 +1033,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     Text(l10n.dashboardOverview, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
                   ],
                 ),
+                // КНОПКА ЦИРКАДНОГО РИТМА
                 GestureDetector(
                   onTap: _toggleCircadianMode,
                   child: Container(
@@ -930,16 +1044,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ),
               ],
             ),
+
+            // КАРТОЧКА ЦИРКАДНОГО РИТМА
             if (_isCircadianMode)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: CircadianCard(
-                  onClose: _toggleCircadianMode, // Кнопка "Х" выключит режим
+                  onClose: _toggleCircadianMode,
                 ),
               ),
+
             const SizedBox(height: 24),
+
+            // ТАЙМЕР
             _buildTimerGlassCard(context),
+
             const SizedBox(height: 16),
+
+            // ИНФО-ПАНЕЛЬ (Phase, Streak, BMI)
             GlassCard(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
               child: Row(
@@ -949,24 +1071,58 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
                   _buildInfoItem(icon: Icons.bolt_rounded, color: const Color(0xFFF9D423), label: l10n.metricStreak, value: l10n.valStreakDays(_streakDays), onTap: () => _showMetricInfo(title: l10n.titleConsistencyStreak, value: l10n.valStreakDays(_streakDays), description: l10n.descStreak(_streakDays), icon: Icons.bolt_rounded, color: const Color(0xFFF9D423))),
                   Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
-                  _buildInfoItem(icon: Icons.monitor_heart_outlined, color: Colors.redAccent, label: l10n.metricStatus, value: _getHealthStatus(l10n), onTap: () => _showMetricInfo(title: l10n.titleBodyStatus, value: _getHealthStatus(l10n), description: _getHealthDescription(l10n), icon: Icons.monitor_heart_outlined, color: Colors.redAccent)),
+
+                  // BMI ВМЕСТО STATUS
+                  _buildInfoItem(
+                      icon: Icons.health_and_safety_rounded,
+                      color: bmiColor,
+                      label: l10n.bmiScore,
+                      value: bmiStr,
+                      onTap: () => _showMetricInfo(
+                          title: l10n.bmiScore,
+                          value: "$bmiStr ($bmiCat)",
+                          description: l10n.bmiDescription(_userHeight.toInt(), _currentWeight.toStringAsFixed(1)),
+                          icon: Icons.health_and_safety_rounded,
+                          color: bmiColor
+                      )
+                  ),
                 ],
               ),
             ),
+
             const SizedBox(height: 16),
+
+            // ВОДА И ВЕС
             Row(
               children: [
-                Expanded(flex: 5, child: GlassCard(onTap: _addWater, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20)), Text("${(_waterCount / (_waterGoal == 0 ? 1 : _waterGoal) * 100).toInt()}%", style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold))]), const SizedBox(height: 12), Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("$_waterCount", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 4), child: Text("/ $_waterGoal", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])]))),
+                // ВОДА С ДОЛГИМ НАЖАТИЕМ
+                Expanded(
+                    flex: 5,
+                    child: GestureDetector(
+                      onTap: _addWater,
+                      onLongPress: _showWaterMenu,
+                      child: GlassCard(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20)), Text("${(_waterCount / (_waterGoal == 0 ? 1 : _waterGoal) * 100).toInt()}%", style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold))]), const SizedBox(height: 12), Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("$_waterCount", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 4), child: Text("/ $_waterGoal", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])])
+                      ),
+                    )
+                ),
                 const SizedBox(width: 12),
+                // ВЕС
                 Expanded(flex: 4, child: GlassCard(onTap: _showWeightPicker, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFF00FA9A).withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.show_chart_rounded, color: Color(0xFF00FA9A), size: 20)), Icon(Icons.arrow_right_alt_rounded, color: const Color(0xFF00FA9A).withOpacity(0.8), size: 16)]), const SizedBox(height: 12), Text(l10n.currentWeight, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_currentWeight.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 2), child: Text(l10n.unitKg, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])]))),
               ],
             ),
+
             const SizedBox(height: 16),
+
+            // PRO БАННЕР
             GlassCard(
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
               child: Row(children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.star, color: Colors.amber)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)), Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))]), const Spacer(), Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))]),
             ),
+
             const SizedBox(height: 20),
+
+            // РЕКЛАМА
             _buildBannerAd(),
           ],
         ),
@@ -974,26 +1130,38 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildDockItem(IconData icon, int index, String label) {
+  Widget _buildDockItem(IconData icon, int index, String label, {bool isCenter = false}) {
     final bool isSelected = _selectedIndex == index;
+    final double iconSize = isCenter ? 32 : 26;
+    final Color activeColor = isCenter ? Colors.blueAccent : Colors.white;
+
     return GestureDetector(
       onTap: () {
+        HapticFeedback.selectionClick();
         setState(() => _selectedIndex = index);
-        // Если вернулись на Главную, можно обновить данные (например, если в профиле сменили рост)
-        if (index == 1) _loadStateData();
+        // Если перешли на таймер (индекс 2), обновляем данные
+        if (index == 2) _loadStateData();
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(isCenter ? 14 : 12),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+              color: isSelected
+                  ? (isCenter ? Colors.blueAccent.withOpacity(0.2) : Colors.white.withOpacity(0.2))
+                  : Colors.transparent,
               shape: BoxShape.circle,
-              boxShadow: isSelected ? [BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 10, spreadRadius: 2)] : [],
+              boxShadow: isSelected && isCenter
+                  ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.3), blurRadius: 15)]
+                  : [],
             ),
-            child: Icon(icon, color: isSelected ? Colors.white : Colors.white.withOpacity(0.4), size: 26),
+            child: Icon(
+                icon,
+                color: isSelected ? activeColor : Colors.white.withOpacity(0.4),
+                size: iconSize
+            ),
           ),
         ],
       ),
@@ -1012,11 +1180,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         child: IndexedStack(
           index: _selectedIndex,
           children: [
-            HistoryScreen(historyRepository: _historyRepository, waterRepository: _waterRepository), // 0
-            _buildDashboard(context), // 1
-            StatsScreen(repository: _historyRepository), // 2
-            const LearnScreen(), // 3 (Еда и Рецепты из Firebase)
-            const ProfileScreen(), // 4
+            _pages[0], // History (0)
+            _pages[1], // Stats (1)
+            _buildDashboard(context), // Timer (2 - Центр)
+            _pages[3], // Food (3)
+            _pages[4], // Profile (4)
           ],
         ),
       ),
@@ -1030,8 +1198,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildDockItem(Icons.calendar_month_rounded, 0, l10n.navHistory),
-              _buildDockItem(Icons.timer_rounded, 1, l10n.navTimer),
-              _buildDockItem(Icons.bar_chart_rounded, 2, l10n.navStats),
+              _buildDockItem(Icons.bar_chart_rounded, 1, l10n.navStats),
+              _buildDockItem(Icons.timer_rounded, 2, l10n.navTimer, isCenter: true),
               _buildDockItem(Icons.restaurant_menu_rounded, 3, l10n.navFood),
               _buildDockItem(Icons.person_rounded, 4, l10n.navProfile),
             ],

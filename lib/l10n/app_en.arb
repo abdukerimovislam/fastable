@@ -311,5 +311,43 @@
                 "type": "int"
               }
             }
-          }
+          },
+          "waterSettings": "Water Settings",
+            "removeCup": "Remove Cup (-1)",
+            "dailyGoal": "Daily Goal",
+            "cups": "cups",
+            "bmiScore": "BMI Score",
+            "bmiUnderweight": "Underweight",
+            "bmiNormal": "Normal Weight",
+            "bmiOverweight": "Overweight",
+            "bmiObese": "Obesity",
+            "bmiDescription": "Based on your height ({height} cm) and weight ({weight} kg).",
+            "@bmiDescription": {
+              "placeholders": {
+                "height": { "type": "int" },
+                "weight": { "type": "String" }
+              }
+            },
+
+            "onboardingTitle": "Let's personalize\nyour journey",
+            "onboardingHeightTitle": "What is your height?",
+            "onboardingHeightDesc": "We need this to calibrate the Body Visualizer and calculate your health metrics accurately.",
+            "onboardingWeightTitle": "What is your weight?",
+            "onboardingWeightDesc": "This helps us track your progress and adjust your fasting plan dynamically.",
+            "btnNext": "Next",
+            "btnFinish": "Start Journey",
+            "cm": "cm",
+            "kg": "kg",
+            "statsSuccessRate": "Success Rate",
+              "statsSuccessDesc": "{success} of {total} fasts were 16h+",
+              "@statsSuccessDesc": {
+                "placeholders": {
+                  "success": { "type": "int" },
+                  "total": { "type": "int" }
+                }
+              },
+              "statsTotalFasts": "Total Fasts",
+              "statsTotalHours": "Total Hours",
+              "statsAverage": "Average",
+              "statsLongest": "Longest"
 }

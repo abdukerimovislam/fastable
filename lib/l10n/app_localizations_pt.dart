@@ -433,7 +433,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bmiUnderweight => 'Abaixo do peso';
 
   @override
-  String get bmiNormal => 'Normal';
+  String get bmiNormal => 'Peso normal';
 
   @override
   String get bmiOverweight => 'Sobrepeso';
@@ -745,4 +745,68 @@ class AppLocalizationsPt extends AppLocalizations {
   String recipeTime(int minutes) {
     return '$minutes min';
   }
+
+  @override
+  String get waterSettings => 'Configurações de água';
+
+  @override
+  String get removeCup => 'Remover copo (-1)';
+
+  @override
+  String get dailyGoal => 'Meta diária';
+
+  @override
+  String get bmiScore => 'IMC';
+
+  @override
+  String bmiDescription(int height, String weight) {
+    return 'Com base na sua altura ($height cm) e peso ($weight kg).';
+  }
+
+  @override
+  String get onboardingTitle => 'Vamos personalizar\nsua jornada';
+
+  @override
+  String get onboardingHeightTitle => 'Qual é a sua altura?';
+
+  @override
+  String get onboardingHeightDesc => 'Precisamos disso para calibrar o visualizador corporal e calcular suas métricas de saúde com precisão.';
+
+  @override
+  String get onboardingWeightTitle => 'Qual é o seu peso?';
+
+  @override
+  String get onboardingWeightDesc => 'Isso nos ajuda a acompanhar seu progresso e ajustar seu plano de jejum dinamicamente.';
+
+  @override
+  String get btnNext => 'Próximo';
+
+  @override
+  String get btnFinish => 'Iniciar jornada';
+
+  @override
+  String get cm => 'cm';
+
+  @override
+  String get kg => 'kg';
+
+  @override
+  String get statsSuccessRate => 'Taxa de sucesso';
+
+  @override
+  String statsSuccessDesc(int success, int total) {
+    return '$success de $total jejuns foram de 16 h ou mais';
+  }
+
+  @override
+  String get statsTotalFasts => 'Total de jejuns';
+
+  @override
+  String get statsTotalHours => 'Total de horas';
+
+  @override
+  String get statsAverage => 'Média';
+
+  @override
+  String get statsLongest => 'Mais longo';
 }

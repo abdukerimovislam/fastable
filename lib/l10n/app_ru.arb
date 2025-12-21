@@ -308,6 +308,39 @@
                 "type": "int"
               }
             }
-          }
+          },
+          "waterSettings": "Настройки воды",
+            "removeCup": "Убрать стакан (-1)",
+            "dailyGoal": "Дневная цель",
+            "cups": "стак.",
+            "bmiScore": "ИМТ",
+            "bmiUnderweight": "Дефицит веса",
+            "bmiNormal": "Норма",
+            "bmiOverweight": "Лишний вес",
+            "bmiObese": "Ожирение",
+            "bmiDescription": "На основе роста ({height} см) и веса ({weight} кг).",
+
+            "onboardingTitle": "Настроим ваш\nпрофиль",
+            "onboardingHeightTitle": "Ваш рост",
+            "onboardingHeightDesc": "Это нужно для работы Визуализатора Тела и точного расчета индексов здоровья.",
+            "onboardingWeightTitle": "Ваш вес",
+            "onboardingWeightDesc": "Поможет отслеживать прогресс и адаптировать план голодания под вас.",
+            "btnNext": "Далее",
+            "btnFinish": "Начать путь",
+            "cm": "см",
+            "kg": "кг",
+            "statsSuccessRate": "Успешность",
+              "statsSuccessDesc": "{success} из {total} голоданий длились 16 ч и более",
+              "@statsSuccessDesc": {
+                "placeholders": {
+                  "success": { "type": "int" },
+                  "total": { "type": "int" }
+                }
+              },
+
+              "statsTotalFasts": "Всего голоданий",
+              "statsTotalHours": "Всего часов",
+              "statsAverage": "Среднее",
+              "statsLongest": "Максимум"
 
 }

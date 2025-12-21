@@ -338,7 +338,48 @@
                   "type": "int"
                 }
               }
-            }
+            },
+            "waterSettings": "Configuración de agua",
+              "removeCup": "Quitar vaso (-1)",
+              "dailyGoal": "Objetivo diario",
+              "cups": "vasos",
+
+              "bmiScore": "IMC",
+              "bmiUnderweight": "Bajo peso",
+              "bmiNormal": "Peso normal",
+              "bmiOverweight": "Sobrepeso",
+              "bmiObese": "Obesidad",
+              "bmiDescription": "Basado en tu altura ({height} cm) y peso ({weight} kg).",
+              "@bmiDescription": {
+                "placeholders": {
+                  "height": { "type": "int" },
+                  "weight": { "type": "String" }
+                }
+              },
+
+              "onboardingTitle": "Personalicemos\n tu recorrido",
+              "onboardingHeightTitle": "¿Cuál es tu altura?",
+              "onboardingHeightDesc": "La necesitamos para calibrar el visualizador corporal y calcular tus métricas de salud con precisión.",
+              "onboardingWeightTitle": "¿Cuál es tu peso?",
+              "onboardingWeightDesc": "Esto nos ayuda a seguir tu progreso y ajustar tu plan de ayuno dinámicamente.",
+              "btnNext": "Siguiente",
+              "btnFinish": "Comenzar",
+              "cm": "cm",
+              "kg": "kg",
+              "statsSuccessRate": "Tasa de éxito",
+                "statsSuccessDesc": "{success} de {total} ayunos fueron de 16 h o más",
+                "@statsSuccessDesc": {
+                  "placeholders": {
+                    "success": { "type": "int" },
+                    "total": { "type": "int" }
+                  }
+                },
+
+                "statsTotalFasts": "Ayunos totales",
+                "statsTotalHours": "Horas totales",
+                "statsAverage": "Promedio",
+                "statsLongest": "Más largo"
+
 
 
 }

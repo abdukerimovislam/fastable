@@ -942,7 +942,7 @@ abstract class AppLocalizations {
   /// No description provided for @bmiNormal.
   ///
   /// In en, this message translates to:
-  /// **'Normal'**
+  /// **'Normal Weight'**
   String get bmiNormal;
 
   /// No description provided for @bmiOverweight.
@@ -954,7 +954,7 @@ abstract class AppLocalizations {
   /// No description provided for @bmiObese.
   ///
   /// In en, this message translates to:
-  /// **'Obese'**
+  /// **'Obesity'**
   String get bmiObese;
 
   /// No description provided for @enterHeightCm.
@@ -1550,6 +1550,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} min'**
   String recipeTime(int minutes);
+
+  /// No description provided for @waterSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Settings'**
+  String get waterSettings;
+
+  /// No description provided for @removeCup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Cup (-1)'**
+  String get removeCup;
+
+  /// No description provided for @dailyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Goal'**
+  String get dailyGoal;
+
+  /// No description provided for @bmiScore.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI Score'**
+  String get bmiScore;
+
+  /// No description provided for @bmiDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your height ({height} cm) and weight ({weight} kg).'**
+  String bmiDescription(int height, String weight);
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s personalize\nyour journey'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingHeightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is your height?'**
+  String get onboardingHeightTitle;
+
+  /// No description provided for @onboardingHeightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We need this to calibrate the Body Visualizer and calculate your health metrics accurately.'**
+  String get onboardingHeightDesc;
+
+  /// No description provided for @onboardingWeightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is your weight?'**
+  String get onboardingWeightTitle;
+
+  /// No description provided for @onboardingWeightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This helps us track your progress and adjust your fasting plan dynamically.'**
+  String get onboardingWeightDesc;
+
+  /// No description provided for @btnNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get btnNext;
+
+  /// No description provided for @btnFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Journey'**
+  String get btnFinish;
+
+  /// No description provided for @cm.
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get cm;
+
+  /// No description provided for @kg.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get kg;
+
+  /// No description provided for @statsSuccessRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Success Rate'**
+  String get statsSuccessRate;
+
+  /// No description provided for @statsSuccessDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'{success} of {total} fasts were 16h+'**
+  String statsSuccessDesc(int success, int total);
+
+  /// No description provided for @statsTotalFasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Fasts'**
+  String get statsTotalFasts;
+
+  /// No description provided for @statsTotalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Hours'**
+  String get statsTotalHours;
+
+  /// No description provided for @statsAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get statsAverage;
+
+  /// No description provided for @statsLongest.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest'**
+  String get statsLongest;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -433,7 +433,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bmiUnderweight => 'Bajo peso';
 
   @override
-  String get bmiNormal => 'Normal';
+  String get bmiNormal => 'Peso normal';
 
   @override
   String get bmiOverweight => 'Sobrepeso';
@@ -745,4 +745,68 @@ class AppLocalizationsEs extends AppLocalizations {
   String recipeTime(int minutes) {
     return '$minutes min';
   }
+
+  @override
+  String get waterSettings => 'Configuración de agua';
+
+  @override
+  String get removeCup => 'Quitar vaso (-1)';
+
+  @override
+  String get dailyGoal => 'Objetivo diario';
+
+  @override
+  String get bmiScore => 'IMC';
+
+  @override
+  String bmiDescription(int height, String weight) {
+    return 'Basado en tu altura ($height cm) y peso ($weight kg).';
+  }
+
+  @override
+  String get onboardingTitle => 'Personalicemos\n tu recorrido';
+
+  @override
+  String get onboardingHeightTitle => '¿Cuál es tu altura?';
+
+  @override
+  String get onboardingHeightDesc => 'La necesitamos para calibrar el visualizador corporal y calcular tus métricas de salud con precisión.';
+
+  @override
+  String get onboardingWeightTitle => '¿Cuál es tu peso?';
+
+  @override
+  String get onboardingWeightDesc => 'Esto nos ayuda a seguir tu progreso y ajustar tu plan de ayuno dinámicamente.';
+
+  @override
+  String get btnNext => 'Siguiente';
+
+  @override
+  String get btnFinish => 'Comenzar';
+
+  @override
+  String get cm => 'cm';
+
+  @override
+  String get kg => 'kg';
+
+  @override
+  String get statsSuccessRate => 'Tasa de éxito';
+
+  @override
+  String statsSuccessDesc(int success, int total) {
+    return '$success de $total ayunos fueron de 16 h o más';
+  }
+
+  @override
+  String get statsTotalFasts => 'Ayunos totales';
+
+  @override
+  String get statsTotalHours => 'Horas totales';
+
+  @override
+  String get statsAverage => 'Promedio';
+
+  @override
+  String get statsLongest => 'Más largo';
 }

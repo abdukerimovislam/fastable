@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/widgets/glass_card.dart'; // Ваш виджет
 import 'package:fastable/widgets/mesh_background.dart'; // Ваш фон
 import 'package:fastable/home_page.dart';
+import 'package:fastable/screens/onboarding_screen.dart';
 
 class PermissionsScreen extends StatefulWidget {
   const PermissionsScreen({super.key});
@@ -48,14 +49,12 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
   }
 
   Future<void> _finishOnboarding() async {
-    // Запоминаем, что пользователь прошел этот экран
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_first_run', false);
-
+    // Не сохраняем is_first_run здесь!
+    // Переходим к вводу данных
     if (mounted) {
       Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomePage())
+          MaterialPageRoute(builder: (_) => const OnboardingScreen())
       );
     }
   }

@@ -84,7 +84,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get waterIntake => 'Потребление воды';
 
   @override
-  String get cups => 'стаканов';
+  String get cups => 'стак.';
 
   @override
   String get cupsUnit => 'ст.';
@@ -430,13 +430,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bmiCategory => 'Категория';
 
   @override
-  String get bmiUnderweight => 'Недостаток веса';
+  String get bmiUnderweight => 'Дефицит веса';
 
   @override
   String get bmiNormal => 'Норма';
 
   @override
-  String get bmiOverweight => 'Избыточный вес';
+  String get bmiOverweight => 'Лишний вес';
 
   @override
   String get bmiObese => 'Ожирение';
@@ -745,4 +745,68 @@ class AppLocalizationsRu extends AppLocalizations {
   String recipeTime(int minutes) {
     return '$minutes мин';
   }
+
+  @override
+  String get waterSettings => 'Настройки воды';
+
+  @override
+  String get removeCup => 'Убрать стакан (-1)';
+
+  @override
+  String get dailyGoal => 'Дневная цель';
+
+  @override
+  String get bmiScore => 'ИМТ';
+
+  @override
+  String bmiDescription(int height, String weight) {
+    return 'На основе роста ($height см) и веса ($weight кг).';
+  }
+
+  @override
+  String get onboardingTitle => 'Настроим ваш\nпрофиль';
+
+  @override
+  String get onboardingHeightTitle => 'Ваш рост';
+
+  @override
+  String get onboardingHeightDesc => 'Это нужно для работы Визуализатора Тела и точного расчета индексов здоровья.';
+
+  @override
+  String get onboardingWeightTitle => 'Ваш вес';
+
+  @override
+  String get onboardingWeightDesc => 'Поможет отслеживать прогресс и адаптировать план голодания под вас.';
+
+  @override
+  String get btnNext => 'Далее';
+
+  @override
+  String get btnFinish => 'Начать путь';
+
+  @override
+  String get cm => 'см';
+
+  @override
+  String get kg => 'кг';
+
+  @override
+  String get statsSuccessRate => 'Успешность';
+
+  @override
+  String statsSuccessDesc(int success, int total) {
+    return '$success из $total голоданий длились 16 ч и более';
+  }
+
+  @override
+  String get statsTotalFasts => 'Всего голоданий';
+
+  @override
+  String get statsTotalHours => 'Всего часов';
+
+  @override
+  String get statsAverage => 'Среднее';
+
+  @override
+  String get statsLongest => 'Максимум';
 }

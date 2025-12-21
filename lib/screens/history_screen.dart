@@ -23,56 +23,23 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  // Календарь
-  CalendarFormat _calendarFormat = CalendarFormat.week; // По умолчанию - неделя
+  CalendarFormat _calendarFormat = CalendarFormat.week;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  List<FastingRecord> _allRecords = [];
-  List<FastingRecord> _selectedDayRecords = [];
-  bool _isLoading = true;
+  // Храним поток в переменной, чтобы не пересоздавать его при каждом build
+  late Stream<List<FastingRecord>> _recordsStream;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _loadHistory();
-  }
-
-  Future<void> _loadHistory() async {
-    final records = await widget.historyRepository.loadRecords();
-    if (mounted) {
-      setState(() {
-        _allRecords = records;
-        _isLoading = false;
-        _updateSelectedDayRecords(_selectedDay!);
-      });
-    }
-  }
-
-  // Фильтруем записи для выбранного дня
-  void _updateSelectedDayRecords(DateTime date) {
-    setState(() {
-      _selectedDayRecords = _allRecords.where((record) {
-        return isSameDay(record.endTime, date) || isSameDay(record.startTime, date);
-      }).toList();
-
-      // Сортируем: сначала новые
-      _selectedDayRecords.sort((a, b) => b.endTime.compareTo(a.endTime));
-    });
-  }
-
-  // Какие события (голодания) были в этот день? (для точек на календаре)
-  List<FastingRecord> _getEventsForDay(DateTime day) {
-    return _allRecords.where((record) {
-      return isSameDay(record.endTime, day);
-    }).toList();
+    // Инициализация потока один раз
+    _recordsStream = widget.historyRepository.getRecordsStream();
   }
 
   Future<void> _deleteRecord(FastingRecord record) async {
     await widget.historyRepository.deleteRecord(record);
-    await _loadHistory(); // Перезагружаем все, чтобы обновить точки на календаре
-
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -83,7 +50,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
             textColor: Colors.white,
             onPressed: () async {
               await widget.historyRepository.addRecord(record);
-              _loadHistory();
             },
           ),
         ),
@@ -95,149 +61,131 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: MeshBackground(
-        isFasting: false,
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ЗАГОЛОВОК
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: Text(
-                  l10n?.navHistory ?? "History",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
+    return StreamBuilder<List<FastingRecord>>(
+      stream: _recordsStream, // Используем сохраненный поток
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Colors.transparent, // Transparent для MeshBackground
+            body: Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
+          );
+        }
+
+        final allRecords = snapshot.data ?? [];
+
+        final selectedDayRecords = allRecords.where((record) {
+          if (_selectedDay == null) return true;
+          return isSameDay(record.endTime, _selectedDay) || isSameDay(record.startTime, _selectedDay);
+        }).toList();
+
+        selectedDayRecords.sort((a, b) => b.endTime.compareTo(a.endTime));
+
+        List<FastingRecord> getEventsForDay(DateTime day) {
+          return allRecords.where((record) {
+            return isSameDay(record.endTime, day);
+          }).toList();
+        }
+
+        return Scaffold(
+          backgroundColor: Colors.transparent, // Важно для MeshBackground
+          body: SafeArea( // MeshBackground уже есть в HomePage, тут нужен только контент?
+            // Если HistoryScreen используется внутри MeshBackground в HomePage,
+            // то тут MeshBackground не нужен.
+            // В HomePage у нас: body: MeshBackground( child: IndexedStack(...) )
+            // Значит здесь фон должен быть прозрачным.
+            bottom: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                  child: Text(
+                    l10n?.navHistory ?? "History",
+                    style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ),
-
-              // 1. КАЛЕНДАРЬ (GLASS CARD)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GlassCard(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: TableCalendar<FastingRecord>(
-                    firstDay: DateTime.utc(2023, 1, 1),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    focusedDay: _focusedDay,
-                    calendarFormat: _calendarFormat,
-
-                    // Стиль заголовка (Месяц Год)
-                    headerStyle: const HeaderStyle(
-                      formatButtonVisible: false, // Убираем кнопку "2 weeks"
-                      titleCentered: true,
-                      titleTextStyle: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white70),
-                      rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white70),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GlassCard(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: TableCalendar<FastingRecord>(
+                      firstDay: DateTime.utc(2023, 1, 1),
+                      lastDay: DateTime.utc(2030, 12, 31),
+                      focusedDay: _focusedDay,
+                      calendarFormat: _calendarFormat,
+                      headerStyle: const HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                        titleTextStyle: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white70),
+                        rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white70),
+                      ),
+                      calendarStyle: CalendarStyle(
+                        defaultTextStyle: const TextStyle(color: Colors.white),
+                        weekendTextStyle: const TextStyle(color: Colors.white70),
+                        outsideTextStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+                        selectedDecoration: const BoxDecoration(color: Colors.blueAccent, shape: BoxShape.circle),
+                        todayDecoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.3), shape: BoxShape.circle),
+                        markerDecoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
+                      ),
+                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      onDaySelected: (selectedDay, focusedDay) {
+                        if (!isSameDay(_selectedDay, selectedDay)) {
+                          setState(() {
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                          });
+                        }
+                      },
+                      onFormatChanged: (format) {
+                        if (_calendarFormat != format) {
+                          setState(() => _calendarFormat = format);
+                        }
+                      },
+                      onPageChanged: (focusedDay) => _focusedDay = focusedDay,
+                      eventLoader: getEventsForDay,
                     ),
-
-                    // Цвета и шрифты календаря
-                    calendarStyle: CalendarStyle(
-                      defaultTextStyle: const TextStyle(color: Colors.white),
-                      weekendTextStyle: const TextStyle(color: Colors.white70),
-                      outsideTextStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
-
-                      // Выбранный день
-                      selectedDecoration: const BoxDecoration(
-                        color: Colors.blueAccent,
-                        shape: BoxShape.circle,
-                      ),
-
-                      // Сегодняшний день
-                      todayDecoration: BoxDecoration(
-                        color: Colors.blueAccent.withOpacity(0.3),
-                        shape: BoxShape.circle,
-                      ),
-
-                      // Точки событий (маркеры)
-                      markerDecoration: const BoxDecoration(
-                        color: Colors.greenAccent, // Цвет точки, если есть запись
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-
-                    // ОБРАБОТЧИК НАЖАТИЯ
-                    onDaySelected: (selectedDay, focusedDay) {
-                      if (!isSameDay(_selectedDay, selectedDay)) {
-                        setState(() {
-                          _selectedDay = selectedDay;
-                          _focusedDay = focusedDay;
-                        });
-                        _updateSelectedDayRecords(selectedDay);
-                      }
-                    },
-
-                    // СМЕНА ФОРМАТА (Неделя <-> Месяц)
-                    onFormatChanged: (format) {
-                      if (_calendarFormat != format) {
-                        setState(() => _calendarFormat = format);
-                      }
-                    },
-                    onPageChanged: (focusedDay) {
-                      _focusedDay = focusedDay;
-                    },
-
-                    // ЗАГРУЗКА ТОЧЕК
-                    eventLoader: _getEventsForDay,
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ЗАГОЛОВОК СПИСКА
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _selectedDay != null
-                          ? DateFormat('EEEE, d MMM').format(_selectedDay!)
-                          : "All Records",
-                      style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    if (_selectedDayRecords.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
-                        child: Text(
-                          "${_selectedDayRecords.length} records",
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
-                        ),
-                      )
-                  ],
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedDay != null ? DateFormat('EEEE, d MMM').format(_selectedDay!) : "All Records",
+                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      if (selectedDayRecords.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
+                          child: Text(
+                            "${selectedDayRecords.length} records",
+                            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
+                          ),
+                        )
+                    ],
+                  ),
                 ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // 2. СПИСОК ЗАПИСЕЙ (LIST)
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                    : _selectedDayRecords.isEmpty
-                    ? _buildEmptyDayState()
-                    : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                  itemCount: _selectedDayRecords.length,
-                  itemBuilder: (context, index) {
-                    return _buildRecordItem(_selectedDayRecords[index]);
-                  },
+                const SizedBox(height: 10),
+                Expanded(
+                  child: selectedDayRecords.isEmpty
+                      ? _buildEmptyDayState()
+                      : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    itemCount: selectedDayRecords.length,
+                    itemBuilder: (context, index) {
+                      return _buildRecordItem(selectedDayRecords[index]);
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -266,7 +214,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final durationMinutes = record.duration.inMinutes.remainder(60);
     final startTimeStr = DateFormat('HH:mm').format(record.startTime);
     final endTimeStr = DateFormat('HH:mm').format(record.endTime);
-
     final isLongFast = durationHours >= 16;
 
     return Padding(
@@ -286,18 +233,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
         onDismissed: (_) => _deleteRecord(record),
         child: GlassCard(
           padding: const EdgeInsets.all(16),
-          // Легкая подсветка для "Героических" голоданий
           color: isLongFast ? Colors.amber.withOpacity(0.08) : null,
           child: Row(
             children: [
-              // ИКОНКА
               Container(
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isLongFast
-                      ? Colors.amber.withOpacity(0.2)
-                      : Colors.blueAccent.withOpacity(0.2),
+                  color: isLongFast ? Colors.amber.withOpacity(0.2) : Colors.blueAccent.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -307,8 +250,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-
-              // ДЕТАЛИ
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,11 +258,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       children: [
                         Text(
                           "${durationHours}h ${durationMinutes > 0 ? '${durationMinutes}m' : ''}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         if (isLongFast) ...[
                           const SizedBox(width: 6),
@@ -332,16 +269,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const SizedBox(height: 4),
                     Text(
                       "$startTimeStr - $endTimeStr",
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
                     ),
                   ],
                 ),
               ),
-
-              // КНОПКА УДАЛЕНИЯ (Опционально, т.к. есть свайп)
               Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.2)),
             ],
           ),

@@ -294,7 +294,48 @@
               "type": "int"
             }
           }
-        }
+        },
+        "waterSettings": "Configurações de água",
+          "removeCup": "Remover copo (-1)",
+          "dailyGoal": "Meta diária",
+          "cups": "copos",
+
+          "bmiScore": "IMC",
+          "bmiUnderweight": "Abaixo do peso",
+          "bmiNormal": "Peso normal",
+          "bmiOverweight": "Sobrepeso",
+          "bmiObese": "Obesidade",
+          "bmiDescription": "Com base na sua altura ({height} cm) e peso ({weight} kg).",
+          "@bmiDescription": {
+            "placeholders": {
+              "height": { "type": "int" },
+              "weight": { "type": "String" }
+            }
+          },
+
+          "onboardingTitle": "Vamos personalizar\nsua jornada",
+          "onboardingHeightTitle": "Qual é a sua altura?",
+          "onboardingHeightDesc": "Precisamos disso para calibrar o visualizador corporal e calcular suas métricas de saúde com precisão.",
+          "onboardingWeightTitle": "Qual é o seu peso?",
+          "onboardingWeightDesc": "Isso nos ajuda a acompanhar seu progresso e ajustar seu plano de jejum dinamicamente.",
+          "btnNext": "Próximo",
+          "btnFinish": "Iniciar jornada",
+          "cm": "cm",
+          "kg": "kg",
+          "statsSuccessRate": "Taxa de sucesso",
+            "statsSuccessDesc": "{success} de {total} jejuns foram de 16 h ou mais",
+            "@statsSuccessDesc": {
+              "placeholders": {
+                "success": { "type": "int" },
+                "total": { "type": "int" }
+              }
+            },
+
+            "statsTotalFasts": "Total de jejuns",
+            "statsTotalHours": "Total de horas",
+            "statsAverage": "Média",
+            "statsLongest": "Mais longo"
+
 
 
 
