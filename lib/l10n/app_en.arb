@@ -349,5 +349,22 @@
               "statsTotalFasts": "Total Fasts",
               "statsTotalHours": "Total Hours",
               "statsAverage": "Average",
-              "statsLongest": "Longest"
+              "statsLongest": "Longest",
+              "circadianTitle": "Circadian Rhythm",
+                "circadianIntroTitle": "Eat with the Sun ☀️",
+                "circadianIntroDesc": "Your metabolism is linked to the sun.\n\n• Sunrise: Best time to wake up and hydrate.\n• Daytime: High metabolism. Ideal for eating.\n• Sunset: Metabolism slows down. Stop eating.\n• Night: Deep repair mode. Fasting is effortless.\n\nThis mode automatically adjusts your fasting goals to sunrise and sunset times in your location.",
+                "circadianBtnEnable": "Enable Circadian Mode",
+                "circadianBtnDisable": "Disable",
+                "circadianTargetSunrise": "Until Sunrise",
+                "circadianTargetSunset": "Until Sunset",
+                "circadianPhaseDay": "Daytime (Eat)",
+                "circadianPhaseNight": "Nighttime (Fast)",
+                "circadianWarnDayTitle": "It's Daytime ☀️",
+                "circadianWarnDayDesc": "The sun is up! Your body is ready for food. Ideally, wait until sunset to start fasting.",
+                "circadianWarnBtnStart": "Start Anyway",
+                "circadianWarnBtnWait": "Wait for Sunset",
+                "circadianBonusTime": "Bonus Time 🔥",
+                "circadianSyncing": "Syncing with the Sun...",
+                "circadianError": "Could not get location. Using standard timer.",
+                "circadianManaged": "Solar Controlled"
 }

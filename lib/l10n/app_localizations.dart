@@ -1670,6 +1670,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Longest'**
   String get statsLongest;
+
+  /// No description provided for @circadianTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian Rhythm'**
+  String get circadianTitle;
+
+  /// No description provided for @circadianIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Eat with the Sun ☀️'**
+  String get circadianIntroTitle;
+
+  /// No description provided for @circadianIntroDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your metabolism is linked to the sun.\n\n• Sunrise: Best time to wake up and hydrate.\n• Daytime: High metabolism. Ideal for eating.\n• Sunset: Metabolism slows down. Stop eating.\n• Night: Deep repair mode. Fasting is effortless.\n\nThis mode automatically adjusts your fasting goals to sunrise and sunset times in your location.'**
+  String get circadianIntroDesc;
+
+  /// No description provided for @circadianBtnEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Circadian Mode'**
+  String get circadianBtnEnable;
+
+  /// No description provided for @circadianBtnDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get circadianBtnDisable;
+
+  /// No description provided for @circadianTargetSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Until Sunrise'**
+  String get circadianTargetSunrise;
+
+  /// No description provided for @circadianTargetSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Until Sunset'**
+  String get circadianTargetSunset;
+
+  /// No description provided for @circadianPhaseDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Daytime (Eat)'**
+  String get circadianPhaseDay;
+
+  /// No description provided for @circadianPhaseNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Nighttime (Fast)'**
+  String get circadianPhaseNight;
+
+  /// No description provided for @circadianWarnDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s Daytime ☀️'**
+  String get circadianWarnDayTitle;
+
+  /// No description provided for @circadianWarnDayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The sun is up! Your body is ready for food. Ideally, wait until sunset to start fasting.'**
+  String get circadianWarnDayDesc;
+
+  /// No description provided for @circadianWarnBtnStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Anyway'**
+  String get circadianWarnBtnStart;
+
+  /// No description provided for @circadianWarnBtnWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for Sunset'**
+  String get circadianWarnBtnWait;
+
+  /// No description provided for @circadianBonusTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus Time 🔥'**
+  String get circadianBonusTime;
+
+  /// No description provided for @circadianSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing with the Sun...'**
+  String get circadianSyncing;
+
+  /// No description provided for @circadianError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get location. Using standard timer.'**
+  String get circadianError;
+
+  /// No description provided for @circadianManaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Solar Controlled'**
+  String get circadianManaged;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

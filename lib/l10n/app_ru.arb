@@ -341,6 +341,23 @@
               "statsTotalFasts": "Всего голоданий",
               "statsTotalHours": "Всего часов",
               "statsAverage": "Среднее",
-              "statsLongest": "Максимум"
+              "statsLongest": "Максимум",
+              "circadianTitle": "Циркадный ритм",
+                "circadianIntroTitle": "Питание по Солнцу ☀️",
+                "circadianIntroDesc": "Ваш метаболизм зависит от солнца.\n\n• Восход: Пробуждение. Лучше время для воды.\n• День: Пик метаболизма. Идеально для еды.\n• Закат: Организм готовится ко сну. Стоп еда.\n• Ночь: Время восстановления. Естественный голод.\n\nЭтот режим автоматически подстраивает цели голодания под восход и закат в вашей локации.",
+                "circadianBtnEnable": "Включить режим",
+                "circadianBtnDisable": "Отключить",
+                "circadianTargetSunrise": "До восхода",
+                "circadianTargetSunset": "До заката",
+                "circadianPhaseDay": "День (Можно есть)",
+                "circadianPhaseNight": "Ночь (Голодание)",
+                "circadianWarnDayTitle": "Сейчас день ☀️",
+                "circadianWarnDayDesc": "Солнце высоко! Организм ждет пищу. Лучше всего начать голодание после заката.",
+                "circadianWarnBtnStart": "Всё равно начать",
+                "circadianWarnBtnWait": "Ждать заката",
+                "circadianBonusTime": "Сверх нормы 🔥",
+                "circadianSyncing": "Синхронизация с солнцем...",
+                "circadianError": "Нет геопозиции. Включен обычный таймер.",
+                "circadianManaged": "По Солнцу"
 
 }

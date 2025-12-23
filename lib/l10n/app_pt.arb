@@ -334,7 +334,24 @@
             "statsTotalFasts": "Total de jejuns",
             "statsTotalHours": "Total de horas",
             "statsAverage": "Média",
-            "statsLongest": "Mais longo"
+            "statsLongest": "Mais longo",
+            "circadianTitle": "Ritmo circadiano",
+              "circadianIntroTitle": "Coma com o sol ☀️",
+              "circadianIntroDesc": "O seu metabolismo está ligado ao sol.\n\n• Nascer do sol: melhor momento para acordar e se hidratar.\n• Dia: metabolismo elevado. Ideal para se alimentar.\n• Pôr do sol: o metabolismo desacelera. É melhor parar de comer.\n• Noite: modo de recuperação profunda. O jejum acontece com mais facilidade.\n\nEste modo ajusta automaticamente suas metas de jejum de acordo com os horários de nascer e pôr do sol da sua localização.",
+              "circadianBtnEnable": "Ativar modo circadiano",
+              "circadianBtnDisable": "Desativar",
+              "circadianTargetSunrise": "Até o nascer do sol",
+              "circadianTargetSunset": "Até o pôr do sol",
+              "circadianPhaseDay": "Dia (Comer)",
+              "circadianPhaseNight": "Noite (Jejum)",
+              "circadianWarnDayTitle": "É dia ☀️",
+              "circadianWarnDayDesc": "O sol já nasceu! Seu corpo está pronto para se alimentar. Idealmente, espere até o pôr do sol para iniciar o jejum.",
+              "circadianWarnBtnStart": "Começar mesmo assim",
+              "circadianWarnBtnWait": "Esperar o pôr do sol",
+              "circadianBonusTime": "Tempo bônus 🔥",
+              "circadianSyncing": "Sincronizando com o sol...",
+              "circadianError": "Não foi possível obter a localização. Usando temporizador padrão.",
+              "circadianManaged": "Controlado pelo sol"
 
 
 

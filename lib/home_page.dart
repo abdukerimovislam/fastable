@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui'; // Для FontFeature
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,7 +11,6 @@ import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 import 'package:fastable/widgets/gradient_timer_blob.dart';
 import 'package:fastable/widgets/body_visualizer.dart';
-import 'package:fastable/widgets/circadian_card.dart';
 // ---------------------
 
 import 'package:fastable/l10n/app_localizations.dart';
@@ -53,6 +53,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   AppState _appState = AppState.stopped;
   Duration _currentPlanFastDuration = const Duration(hours: 16);
   Duration _currentPlanEatDuration = const Duration(hours: 8);
+
   Duration _elapsedTime = Duration.zero;
   DateTime? _startTime;
   int _currentPlanIndex = 0;
@@ -65,21 +66,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _streakDays = 1;
 
   // --- НАСТРОЙКИ UI ---
-  // Начинаем с Таймера (Центральная иконка, индекс 2)
-  int _selectedIndex = 2;
-  bool _isCircadianMode = false;
+  int _selectedIndex = 2; // Центр (Таймер)
   bool _isBodyView = false;
 
-  // --- СЕРВИСЫ И РЕПОЗИТОРИИ ---
+  // --- СЕРВИСЫ ---
   final HistoryRepository _historyRepository = HistoryRepository();
   final WaterRepository _waterRepository = WaterRepository();
   final WeightRepository _weightRepository = WeightRepository();
   final NotificationService _notificationService = NotificationService();
   final SoundService _soundService = SoundService();
 
-  // Кэшированные страницы для предотвращения мигания
   late final List<Widget> _pages;
-
   InterstitialAd? _interstitialAd;
 
   final List<FastingPlan> _plans = [
@@ -98,12 +95,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Инициализируем страницы один раз.
-    // Dashboard (Таймер) не добавляем сюда, он строится динамически.
+    // Инициализация страниц
     _pages = [
       HistoryScreen(historyRepository: _historyRepository, waterRepository: _waterRepository), // 0
       StatsScreen(repository: _historyRepository), // 1
-      const SizedBox(), // 2 (Placeholder для Таймера)
+      const SizedBox(), // 2 (Заглушка)
       const LearnScreen(), // 3
       const ProfileScreen(), // 4
     ];
@@ -131,35 +127,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void _loadInterstitialAd() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
+      adUnitId: 'ca-app-pub-3940256099942544/1033173712',
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _interstitialAd = ad;
-          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-              _loadInterstitialAd();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              ad.dispose();
-              _loadInterstitialAd();
-            },
-          );
-        },
-        onAdFailedToLoad: (LoadAdError error) => _interstitialAd = null,
+        onAdLoaded: (ad) => _interstitialAd = ad,
+        onAdFailedToLoad: (error) => _interstitialAd = null,
       ),
     );
   }
 
   Widget _buildBannerAd() {
     final BannerAd bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test ID
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
       size: AdSize.banner,
       request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdFailedToLoad: (ad, err) => ad.dispose(),
-      ),
+      listener: BannerAdListener(onAdFailedToLoad: (ad, err) => ad.dispose()),
     )..load();
 
     return Container(
@@ -184,23 +166,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (_currentPlanIndex < 0 || _currentPlanIndex >= _plans.length) _currentPlanIndex = 0;
     _updatePlanDurations();
 
-    _isCircadianMode = prefs.getBool('circadian_mode') ?? false;
     _userHeight = (prefs.getInt('user_height') ?? 175).toDouble();
 
     if (_appState != AppState.stopped) {
       String? startTimeString = prefs.getString(kStartTimeKey);
       if (startTimeString != null) {
         _startTime = DateTime.parse(startTimeString);
-
         final now = DateTime.now();
         _elapsedTime = now.difference(_startTime!);
-
-        Duration totalDuration = (_appState == AppState.fasting) ? _currentPlanFastDuration : _currentPlanEatDuration;
-
-        if (_elapsedTime >= totalDuration) {
-          _elapsedTime = totalDuration;
-        }
-
         _runTimerTick();
       }
     }
@@ -215,8 +188,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     } else {
       _waterCount = await _waterRepository.getWaterForDay(DateTime.now());
     }
-    _waterGoal = prefs.getInt(kWaterGoalKey) ?? 8;
 
+    _waterGoal = prefs.getInt(kWaterGoalKey) ?? 8;
     _currentWeight = await _weightRepository.getCurrentWeight() ?? 70.0;
     int savedStreak = prefs.getInt('user_streak') ?? 1;
     _streakDays = savedStreak;
@@ -228,6 +201,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString(kStateKey, _appState.name);
     prefs.setInt(kPlanIndexKey, _currentPlanIndex);
+
     if (_appState != AppState.stopped && _startTime != null) {
       prefs.setString(kStartTimeKey, _startTime!.toIso8601String());
     } else {
@@ -258,37 +232,26 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       if (_startTime != null) {
         final now = DateTime.now();
         final diff = now.difference(_startTime!);
-        Duration totalDuration = (_appState == AppState.fasting) ? _currentPlanFastDuration : _currentPlanEatDuration;
 
-        if (diff >= totalDuration) {
-          _timer?.cancel();
-          setState(() => _elapsedTime = totalDuration);
-          if (_appState == AppState.eating) _performReset();
-        } else {
-          setState(() => _elapsedTime = diff);
+        setState(() => _elapsedTime = diff);
+
+        // Авто-сброс только для окна еды
+        if (_appState == AppState.eating && diff >= _currentPlanEatDuration) {
+          _performReset();
         }
       }
     });
   }
 
-  void _toggleCircadianMode() async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isCircadianMode = !_isCircadianMode);
-
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setBool('circadian_mode', _isCircadianMode);
-  }
-
-  void _startFasting() {
+  // --- ЛОГИКА СТАРТА/СТОПА ---
+  void _startFasting() async {
     HapticFeedback.mediumImpact();
 
     if (_interstitialAd != null) {
       try {
         _interstitialAd!.show();
         _interstitialAd = null;
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     } else {
       _loadInterstitialAd();
     }
@@ -307,6 +270,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void _startEating() async {
     _startTime = DateTime.now();
     _elapsedTime = Duration.zero;
+
     setState(() => _appState = AppState.eating);
     _runTimerTick();
     _saveStateData();
@@ -330,13 +294,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _notificationService.cancelAllNotifications();
   }
 
-  // --- ВОДА (Добавление, Удаление, Настройка) ---
-
+  // --- ВОДА ---
   void _addWater() async {
     _soundService.playWaterSound();
     HapticFeedback.lightImpact();
     setState(() => _waterCount = (_waterCount + 1).clamp(0, 99));
-
     await _waterRepository.addOrUpdateWaterForDay(DateTime.now(), _waterCount);
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('last_water_date', DateTime.now().toIso8601String().substring(0, 10));
@@ -356,7 +318,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     prefs.setInt(kWaterGoalKey, newGoal);
   }
 
-  // Меню воды (вызывается долгим нажатием)
   void _showWaterMenu() {
     HapticFeedback.mediumImpact();
     final l10n = AppLocalizations.of(context)!;
@@ -373,20 +334,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             children: [
               Text(l10n.waterSettings, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
-
-              // Кнопка: Убрать стакан
               ListTile(
                 leading: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
                 title: Text(l10n.removeCup, style: const TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _removeWater();
-                },
+                onTap: () { Navigator.pop(ctx); _removeWater(); },
               ),
               const Divider(color: Colors.white12),
-
               const SizedBox(height: 10),
-              // Скролл: Выбор цели
               Text(l10n.dailyGoal, style: const TextStyle(color: Colors.white70, fontSize: 14)),
               SizedBox(
                 height: 120,
@@ -403,16 +357,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     childCount: 20,
                     builder: (context, index) {
                       final val = index + 1;
-                      return Center(
-                        child: Text(
-                          "$val ${l10n.cups}",
-                          style: TextStyle(
-                              color: val == _waterGoal ? Colors.blueAccent : Colors.white38,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold
-                          ),
-                        ),
-                      );
+                      return Center(child: Text("$val ${l10n.cups}", style: TextStyle(color: val == _waterGoal ? Colors.blueAccent : Colors.white38, fontSize: 20, fontWeight: FontWeight.bold)));
                     },
                   ),
                 ),
@@ -426,63 +371,288 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void _promptToManuallyEndFast() {
     HapticFeedback.mediumImpact();
+
+    // Фиксируем финальное время
     Duration finalDuration = _elapsedTime;
-    if (finalDuration >= _currentPlanFastDuration) finalDuration = _currentPlanFastDuration;
 
-    final FastingRecord record = FastingRecord(
-      startTime: _startTime!,
-      endTime: _startTime!.add(finalDuration),
-      duration: finalDuration,
-    );
+    // Вызываем красивую шторку вместо скучного диалога
+    _showEndFastModal(finalDuration);
+  }
 
+  void _showEndFastModal(Duration duration) {
     final l10n = AppLocalizations.of(context)!;
+    final String timeString = _formatDuration(duration);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey.shade900,
-        title: Text(l10n.fastComplete, style: const TextStyle(color: Colors.white)),
-        content: Text(l10n.fastCompleteDesc(_formatDuration(finalDuration)), style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            child: Text(l10n.discard, style: const TextStyle(color: Colors.grey)),
-            onPressed: () => Navigator.pop(ctx),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E).withOpacity(0.9),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20, spreadRadius: 5)
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle Bar
+                Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2)),
+                ),
+                const SizedBox(height: 30),
+
+                // Иконка
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.15), shape: BoxShape.circle),
+                  child: const Icon(Icons.emoji_events_rounded, color: Colors.greenAccent, size: 40),
+                ),
+                const SizedBox(height: 20),
+
+                // Заголовок
+                Text(
+                  l10n.fastComplete,
+                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "You successfully completed a fast cycle!", // Можно вынести в l10n
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+                ),
+                const SizedBox(height: 30),
+
+                // ВРЕМЯ
+                Text(
+                  timeString,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+                Text(
+                  "Total Duration".toUpperCase(), // Делаем заглавными тут
+                  style: TextStyle(
+                    color: Colors.greenAccent.withOpacity(0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                    // uppercase: true удалено
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Кнопка Сохранить
+                GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.heavyImpact();
+                    Navigator.pop(ctx);
+
+                    final FastingRecord record = FastingRecord(
+                      startTime: _startTime!,
+                      endTime: DateTime.now(),
+                      duration: duration,
+                    );
+
+                    try {
+                      await _historyRepository.addRecord(record);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Fasting saved successfully! 🏆"), backgroundColor: Colors.green)
+                        );
+                      }
+                    } catch (e) {
+                      print("Save Error: $e");
+                    }
+
+                    _startEating();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF43C6AC), Color(0xFF191654)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: const Color(0xFF43C6AC).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 5))],
+                    ),
+                    child: Center(
+                      child: Text(
+                        l10n.save,
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Кнопка Отмена
+                TextButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    Navigator.pop(ctx);
+                  },
+                  style: TextButton.styleFrom(foregroundColor: Colors.white.withOpacity(0.5)),
+                  child: Text(l10n.discard, style: const TextStyle(fontSize: 16)),
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            child: Text(l10n.save, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
-            onPressed: () async {
-              await _historyRepository.addRecord(record);
-              if (mounted) Navigator.pop(ctx);
-              _startEating();
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   void _promptToStopEating() {
+    // Вызываем красивую шторку
+    _showStopEatingModal();
+  }
+
+
+  void _showStopEatingModal() {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    // Показываем время, сколько длилось окно еды
+    final String timeString = _formatDuration(_elapsedTime);
+
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey.shade900,
-        title: Text(l10n.endCyclePrompt, style: const TextStyle(color: Colors.white)),
-        content: Text(l10n.endCyclePromptDesc, style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey)),
-            onPressed: () => Navigator.pop(ctx),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E).withOpacity(0.9),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20, spreadRadius: 5)
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle Bar
+                Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2)),
+                ),
+                const SizedBox(height: 30),
+
+                // Иконка (Оранжевая - цвет еды/энергии)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                      color: Colors.orangeAccent.withOpacity(0.15),
+                      shape: BoxShape.circle
+                  ),
+                  child: const Icon(Icons.flag_rounded, color: Colors.orangeAccent, size: 40),
+                ),
+                const SizedBox(height: 20),
+
+                // Заголовок
+                Text(
+                  l10n.endCyclePrompt, // "End Cycle?"
+                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.endCyclePromptDesc, // "This will reset your current progress."
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+                ),
+                const SizedBox(height: 30),
+
+                // ВРЕМЯ (Сколько длилось окно еды)
+                Text(
+                  timeString,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Eating Duration".toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.orangeAccent.withOpacity(0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Кнопка "Завершить" (Красный градиент - внимание)
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    Navigator.pop(ctx); // Закрываем окно
+                    _performReset(); // Сбрасываем цикл
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF512F), Color(0xFFDD2476)], // Красивый красно-розовый градиент
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: const Color(0xFFFF512F).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 5))],
+                    ),
+                    child: Center(
+                      child: Text(
+                        l10n.endCycle, // "End Cycle"
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Кнопка Отмена
+                TextButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    Navigator.pop(ctx);
+                  },
+                  style: TextButton.styleFrom(foregroundColor: Colors.white.withOpacity(0.5)),
+                  child: Text(l10n.cancel, style: const TextStyle(fontSize: 16)),
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            child: Text(l10n.endCycle, style: const TextStyle(color: Colors.redAccent)),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _performReset();
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -495,97 +665,46 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       isScrollControlled: true,
       builder: (context) {
         double tempWeight = _currentWeight > 0 ? _currentWeight : 70.0;
-
         return Container(
           height: 650,
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E).withOpacity(0.98),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
-          ),
+          decoration: BoxDecoration(color: const Color(0xFF1E1E1E).withOpacity(0.98), borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1)))),
           child: Column(
             children: [
               const SizedBox(height: 16),
               Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 20),
-
               Text(l10n.logWeight, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-
               const Spacer(),
-
               StatefulBuilder(
                   builder: (context, setModalState) {
                     return Column(
                       children: [
-                        SizedBox(
-                          height: 280,
-                          child: BodyVisualizer(
-                            weight: tempWeight,
-                            height: _userHeight,
-                            phaseColor: Colors.blueAccent,
-                            isFasting: false,
-                          ),
-                        ),
-
+                        SizedBox(height: 280, child: BodyVisualizer(weight: tempWeight, height: _userHeight, phaseColor: Colors.blueAccent, isFasting: false)),
                         const SizedBox(height: 20),
-                        Text(
-                          "${tempWeight.toStringAsFixed(1)} ${l10n.unitKg}",
-                          style: const TextStyle(color: Colors.blueAccent, fontSize: 48, fontWeight: FontWeight.bold),
-                        ),
-
+                        Text("${tempWeight.toStringAsFixed(1)} ${l10n.unitKg}", style: const TextStyle(color: Colors.blueAccent, fontSize: 48, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 20),
-
                         SizedBox(
                           height: 80,
                           child: PageView.builder(
-                            controller: PageController(
-                                viewportFraction: 0.2,
-                                initialPage: (tempWeight * 10).toInt() - 300
-                            ),
-                            onPageChanged: (index) {
-                              HapticFeedback.selectionClick();
-                              setModalState(() {
-                                tempWeight = (index + 300) / 10.0;
-                              });
-                            },
-                            itemBuilder: (context, index) {
-                              return Center(
-                                child: Container(
-                                  width: 2,
-                                  height: index % 10 == 0 ? 40 : 20,
-                                  color: Colors.white.withOpacity(index % 10 == 0 ? 0.8 : 0.3),
-                                ),
-                              );
-                            },
+                            controller: PageController(viewportFraction: 0.2, initialPage: (tempWeight * 10).toInt() - 300),
+                            onPageChanged: (index) { HapticFeedback.selectionClick(); setModalState(() { tempWeight = (index + 300) / 10.0; }); },
+                            itemBuilder: (context, index) { return Center(child: Container(width: 2, height: index % 10 == 0 ? 40 : 20, color: Colors.white.withOpacity(index % 10 == 0 ? 0.8 : 0.3))); },
                           ),
                         ),
                       ],
                     );
                   }
               ),
-
               const Spacer(),
-
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: GestureDetector(
                   onTap: () async {
                     setState(() => _currentWeight = tempWeight);
                     await _weightRepository.addWeightOrUpdateToday(tempWeight);
-
-                    if (mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Weight saved"), backgroundColor: Colors.green, duration: Duration(milliseconds: 800)),
-                      );
-                    }
+                    if (mounted) { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Weight saved"), backgroundColor: Colors.green, duration: Duration(milliseconds: 800))); }
                   },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)),
-                    child: Center(child: Text(l10n.saveWeight, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
-                  ),
+                  child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 16), decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)), child: Center(child: Text(l10n.saveWeight, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)))),
                 ),
               ),
             ],
@@ -603,7 +722,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Color _getPhaseColor() {
     if (_appState == AppState.eating) return const Color(0xFF84FAB0);
     if (_appState == AppState.stopped) return Colors.blueAccent;
-
     final hours = _elapsedTime.inHours;
     if (hours < 12) return Colors.blueAccent;
     if (hours < 16) return Colors.orangeAccent;
@@ -620,25 +738,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return Icons.auto_awesome;
   }
 
-  String _getHealthStatus(AppLocalizations l10n) {
-    if (_appState == AppState.eating) return l10n.statusDigesting;
-    if (_elapsedTime.inHours < 12) return l10n.statusStable;
-    if (_elapsedTime.inHours >= 12 && _elapsedTime.inHours < 16) return l10n.statusFatBurn;
-    if (_elapsedTime.inHours >= 16) return l10n.statusKetosis;
-    return l10n.statusNormal;
-  }
-
-  String _getHealthDescription(AppLocalizations l10n) {
-    if (_appState == AppState.eating) return l10n.descDigesting;
-    if (_elapsedTime.inHours < 12) return l10n.descStable;
-    if (_elapsedTime.inHours >= 12 && _elapsedTime.inHours < 16) return l10n.descFatBurn;
-    return l10n.descKetosis;
-  }
-
   Map<String, String> _getCurrentStageDetail(AppLocalizations l10n, int hours) {
-    if (_appState == AppState.eating) {
-      return {"title": l10n.eatingWindow, "desc": l10n.descEatingWindow};
-    }
+    if (_appState == AppState.eating) return {"title": l10n.eatingWindow, "desc": l10n.descEatingWindow};
     if (hours < 4) return {"title": l10n.stage0_4, "desc": l10n.stage0_4_desc};
     if (hours < 8) return {"title": l10n.stage4_8, "desc": l10n.stage4_8_desc};
     if (hours < 12) return {"title": l10n.stage8_12, "desc": l10n.stage8_12_desc};
@@ -648,7 +749,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return {"title": l10n.stage24_plus, "desc": l10n.stage24_plus_desc};
   }
 
-  // --- BMI CALCULATOR ---
   double _calculateBMI() {
     if (_userHeight <= 0) return 0;
     double heightM = _userHeight / 100.0;
@@ -730,10 +830,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Widget _buildTimelineItem(AppLocalizations l10n, int start, int end, String title, String desc, int currentHours) {
     bool isActive = currentHours >= start && (end == 100 ? true : currentHours < end);
     bool isPassed = currentHours >= end;
-
-    if (_appState == AppState.eating) {
-      isActive = false; isPassed = false;
-    }
+    if (_appState == AppState.eating) { isActive = false; isPassed = false; }
 
     return IntrinsicHeight(
       child: Row(
@@ -741,40 +838,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         children: [
           Column(
             children: [
-              Container(
-                width: 24, height: 24,
-                decoration: BoxDecoration(
-                  color: isActive ? Colors.blueAccent : (isPassed ? Colors.green : Colors.grey.withOpacity(0.3)),
-                  shape: BoxShape.circle,
-                  border: isActive ? Border.all(color: Colors.white, width: 2) : null,
-                ),
-                child: isPassed ? const Icon(Icons.check, size: 14, color: Colors.black) : null,
-              ),
-              Expanded(
-                child: Container(
-                  width: 2,
-                  color: isPassed ? Colors.green.withOpacity(0.5) : Colors.grey.withOpacity(0.2),
-                ),
-              ),
+              Container(width: 24, height: 24, decoration: BoxDecoration(color: isActive ? Colors.blueAccent : (isPassed ? Colors.green : Colors.grey.withOpacity(0.3)), shape: BoxShape.circle, border: isActive ? Border.all(color: Colors.white, width: 2) : null), child: isPassed ? const Icon(Icons.check, size: 14, color: Colors.black) : null),
+              Expanded(child: Container(width: 2, color: isPassed ? Colors.green.withOpacity(0.5) : Colors.grey.withOpacity(0.2))),
             ],
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    end == 100 ? "$start+ h" : "$start - $end h",
-                    style: TextStyle(color: isActive ? Colors.blueAccent : Colors.white54, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(desc, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
-                ],
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(end == 100 ? "$start+ h" : "$start - $end h", style: TextStyle(color: isActive ? Colors.blueAccent : Colors.white54, fontWeight: FontWeight.bold)), const SizedBox(height: 4), Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)), const SizedBox(height: 4), Text(desc, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13))]),
             ),
           )
         ],
@@ -782,59 +854,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  void _showMetricInfo({
-    required String title,
-    required String value,
-    required String description,
-    required IconData icon,
-    required Color color,
-  }) {
+  void _showMetricInfo({required String title, required String value, required String description, required IconData icon, required Color color}) {
     HapticFeedback.selectionClick();
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E).withOpacity(0.98),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        ),
+        decoration: BoxDecoration(color: const Color(0xFF1E1E1E).withOpacity(0.98), borderRadius: const BorderRadius.vertical(top: Radius.circular(30))),
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
-                  child: Icon(icon, color: color, size: 28),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14)),
-                    Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Text(description, style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: color, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.btnGotIt, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(2))), const SizedBox(height: 24), Row(children: [Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: color, size: 28)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14)), Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold))])]), const SizedBox(height: 24), Text(description, style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5)), const SizedBox(height: 40), SizedBox(width: double.infinity, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: color, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), onPressed: () => Navigator.pop(context), child: Text(l10n.btnGotIt, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))))]),
       ),
     );
   }
@@ -844,172 +873,469 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(value, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            Text(label, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
-          ],
-        ),
+        child: Column(children: [Icon(icon, color: color, size: 24), const SizedBox(height: 4), Text(value, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)), Text(label, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10))]),
       ),
     );
   }
 
   Widget _buildTimerGlassCard(BuildContext context) {
+
     final l10n = AppLocalizations.of(context)!;
+
     final isFasting = _appState == AppState.fasting;
+
     final Color stateColor = _getPhaseColor();
 
+
+
     String stateText;
+
     if (isFasting) stateText = l10n.fastingPhase;
+
     else if (_appState == AppState.eating) stateText = l10n.eatingWindow;
+
     else stateText = l10n.readyToFast;
 
+
+
     Duration totalDuration = isFasting ? _currentPlanFastDuration : _currentPlanEatDuration;
+
     if (_appState == AppState.stopped) totalDuration = const Duration(hours: 16);
 
+
+
     final double percent = (_appState == AppState.stopped)
+
         ? 0.0
+
         : (_elapsedTime.inSeconds / totalDuration.inSeconds).clamp(0.0, 1.0);
 
+
+
     final timeLeft = (_appState == AppState.stopped) ? Duration.zero : totalDuration - _elapsedTime;
+
     final timeString = (_appState == AppState.stopped) ? "16:00:00" : _formatDuration(timeLeft);
 
+
+
+    // ДЕТАЛИ СТАДИИ
+
     final stageInfo = _getCurrentStageDetail(l10n, _elapsedTime.inHours);
+
     final String detailText = isFasting ? stageInfo['title']! : "";
+
     final IconData stageIcon = _getPhaseIcon();
 
+
+
     VoidCallback onAction;
+
     String btnLabel;
+
     if (_appState == AppState.stopped) {
+
       onAction = _startFasting;
+
       btnLabel = l10n.startFast;
+
     } else if (isFasting) {
+
       onAction = _promptToManuallyEndFast;
+
       btnLabel = l10n.endFast;
+
     } else {
+
       onAction = _promptToStopEating;
+
       btnLabel = l10n.endCycle;
+
     }
 
+
+
     final currentPlan = _plans[_currentPlanIndex];
+
     final planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
 
+
+
     return GlassCard(
+
       child: Column(
+
         children: [
+
+          // HEADER
+
           Row(
+
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
             children: [
+
+              // ЛЕВАЯ ЧАСТЬ: Текст
+
               Expanded(
+
                 child: Column(
+
                   crossAxisAlignment: CrossAxisAlignment.start,
+
                   children: [
-                    Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
-                    if (isFasting && !_isBodyView)
+
+                    Text(
+
+                      stateText,
+
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+
+                    ),
+
+                    if (isFasting && !_isBodyView) // Скрываем подпись в режиме тела, там и так понятно
+
                       GestureDetector(
+
                         onTap: _showBodyTimeline,
+
                         child: Padding(
+
                           padding: const EdgeInsets.only(top: 4),
+
                           child: Row(
+
                             mainAxisSize: MainAxisSize.min,
+
                             children: [
+
                               Text(detailText, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+
                               const SizedBox(width: 4),
+
                               Icon(Icons.info_outline, color: Colors.white.withOpacity(0.4), size: 14)
+
                             ],
+
                           ),
+
                         ),
+
                       ),
+
                   ],
+
                 ),
+
               ),
+
+
+
+              // ПРАВАЯ ЧАСТЬ: КНОПКИ УПРАВЛЕНИЯ
+
               Row(
+
                 children: [
+
+                  // Кнопка переключения вида (Тело/Таймер)
+
                   GestureDetector(
+
                     onTap: () {
+
                       HapticFeedback.selectionClick();
+
                       setState(() => _isBodyView = !_isBodyView);
+
                     },
+
                     child: Container(
+
                       padding: const EdgeInsets.all(8),
+
                       decoration: BoxDecoration(
+
                         color: Colors.white.withOpacity(0.1),
+
                         shape: BoxShape.circle,
+
                         border: Border.all(color: _isBodyView ? stateColor : Colors.white.withOpacity(0.2)),
+
                       ),
-                      child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white, size: 18),
+
+                      child: Icon(
+
+                          _isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded,
+
+                          color: Colors.white,
+
+                          size: 18
+
+                      ),
+
                     ),
+
                   ),
+
                   const SizedBox(width: 8),
+
+                  // Кнопка плана
+
                   GestureDetector(
+
                     onTap: () async {
+
                       HapticFeedback.lightImpact();
-                      final bool? result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanSelectionScreen()));
+
+                      final bool? result = await Navigator.push(
+
+                          context,
+
+                          MaterialPageRoute(builder: (_) => const PlanSelectionScreen())
+
+                      );
+
                       if (result == true) {
+
                         _loadStateData();
+
                       }
+
                     },
+
                     child: Container(
+
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.2))),
-                      child: Row(children: [Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)), const SizedBox(width: 4), const Icon(Icons.edit, color: Colors.white70, size: 12)]),
+
+                      decoration: BoxDecoration(
+
+                        color: Colors.white.withOpacity(0.1),
+
+                        borderRadius: BorderRadius.circular(20),
+
+                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+
+                      ),
+
+                      child: Row(
+
+                        children: [
+
+                          Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+
+                          const SizedBox(width: 4),
+
+                          const Icon(Icons.edit, color: Colors.white70, size: 12),
+
+                        ],
+
+                      ),
+
                     ),
+
                   ),
+
                 ],
+
               ),
+
             ],
+
           ),
+
+
+
           const SizedBox(height: 30),
+
+
+
+          // CENTRAL CONTENT (TIMER OR BODY)
+
           SizedBox(
-            height: 300,
+
+            height: 300, // Чуть больше места для тела
+
             width: double.infinity,
+
             child: _isBodyView
-                ? Center(child: BodyVisualizer(weight: _currentWeight, height: _userHeight, phaseColor: stateColor, isFasting: isFasting))
-                : SizedBox(
-              width: 240, height: 240,
-              child: GradientTimerBlob(
-                percent: percent, isFasting: isFasting,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(timeString, style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white, fontFeatures: [FontFeature.tabularFigures()])),
-                    const SizedBox(height: 8),
-                    if (isFasting)
-                      GestureDetector(
-                        onTap: _showBodyTimeline,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: stateColor.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: stateColor.withOpacity(0.5))),
-                          child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(stageIcon, color: stateColor, size: 14), const SizedBox(width: 6), Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))]),
-                        ),
-                      )
-                    else
-                      Text(l10n.targetGoal, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
-                  ],
-                ),
+
+                ? Center(
+
+              child: BodyVisualizer(
+
+                weight: _currentWeight,
+
+                height: _userHeight, // Нужно загрузить из Prefs (см. выше)
+
+                phaseColor: stateColor,
+
+                isFasting: isFasting,
+
               ),
+
+            )
+
+                : SizedBox(
+
+              width: 240,
+
+              height: 240,
+
+              child: GradientTimerBlob(
+
+                percent: percent,
+
+                isFasting: isFasting,
+
+                child: Column(
+
+                  mainAxisSize: MainAxisSize.min,
+
+                  children: [
+
+                    Text(
+
+                      timeString,
+
+                      style: const TextStyle(
+
+                        fontSize: 36,
+
+                        fontWeight: FontWeight.w700,
+
+                        color: Colors.white,
+
+                        fontFeatures: [FontFeature.tabularFigures()],
+
+                      ),
+
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    if (isFasting)
+
+                      GestureDetector(
+
+                        onTap: _showBodyTimeline,
+
+                        child: Container(
+
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+
+                          decoration: BoxDecoration(
+
+                            color: stateColor.withOpacity(0.2),
+
+                            borderRadius: BorderRadius.circular(20),
+
+                            border: Border.all(color: stateColor.withOpacity(0.5)),
+
+                          ),
+
+                          child: Row(
+
+                            mainAxisSize: MainAxisSize.min,
+
+                            children: [
+
+                              Icon(stageIcon, color: stateColor, size: 14),
+
+                              const SizedBox(width: 6),
+
+                              Text(
+
+                                detailText,
+
+                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+
+                              ),
+
+                            ],
+
+                          ),
+
+                        ),
+
+                      )
+
+                    else
+
+                      Text(
+
+                        l10n.targetGoal,
+
+                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13),
+
+                      ),
+
+                  ],
+
+                ),
+
+              ),
+
             ),
+
           ),
+
+
+
           const SizedBox(height: 20),
+
+
+
+          // ACTION BUTTON
+
           GestureDetector(
+
             onTap: onAction,
+
             child: Container(
-              width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18),
-              decoration: BoxDecoration(color: stateColor.withOpacity(0.8), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))]),
-              child: Center(child: Text(btnLabel, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
+
+              width: double.infinity,
+
+              padding: const EdgeInsets.symmetric(vertical: 18),
+
+              decoration: BoxDecoration(
+
+                color: stateColor.withOpacity(0.8),
+
+                borderRadius: BorderRadius.circular(20),
+
+                boxShadow: [
+
+                  BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))
+
+                ],
+
+              ),
+
+              child: Center(
+
+                child: Text(
+
+                  btnLabel,
+
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+
+                ),
+
+              ),
+
             ),
+
           ),
+
         ],
+
       ),
+
     );
+
   }
 
   Widget _buildDashboard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    // РАСЧЕТ BMI
     final double bmi = _calculateBMI();
     final String bmiStr = bmi.toStringAsFixed(1);
     final String bmiCat = _getBMICategory(bmi, l10n);
@@ -1022,7 +1348,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ВЕРХНЯЯ ПАНЕЛЬ
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1033,35 +1358,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     Text(l10n.dashboardOverview, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
                   ],
                 ),
-                // КНОПКА ЦИРКАДНОГО РИТМА
-                GestureDetector(
-                  onTap: _toggleCircadianMode,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: _isCircadianMode ? Colors.orange.withOpacity(0.2) : Colors.white.withOpacity(0.05), shape: BoxShape.circle, border: Border.all(color: _isCircadianMode ? Colors.orange : Colors.transparent, width: 1)),
-                    child: Icon(_isCircadianMode ? Icons.wb_sunny : Icons.wb_sunny_outlined, color: _isCircadianMode ? Colors.orange : Colors.white54, size: 22),
-                  ),
-                ),
               ],
             ),
 
-            // КАРТОЧКА ЦИРКАДНОГО РИТМА
-            if (_isCircadianMode)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: CircadianCard(
-                  onClose: _toggleCircadianMode,
-                ),
-              ),
-
             const SizedBox(height: 24),
-
-            // ТАЙМЕР
             _buildTimerGlassCard(context),
-
             const SizedBox(height: 16),
 
-            // ИНФО-ПАНЕЛЬ (Phase, Streak, BMI)
             GlassCard(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
               child: Row(
@@ -1071,50 +1374,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
                   _buildInfoItem(icon: Icons.bolt_rounded, color: const Color(0xFFF9D423), label: l10n.metricStreak, value: l10n.valStreakDays(_streakDays), onTap: () => _showMetricInfo(title: l10n.titleConsistencyStreak, value: l10n.valStreakDays(_streakDays), description: l10n.descStreak(_streakDays), icon: Icons.bolt_rounded, color: const Color(0xFFF9D423))),
                   Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
-
-                  // BMI ВМЕСТО STATUS
-                  _buildInfoItem(
-                      icon: Icons.health_and_safety_rounded,
-                      color: bmiColor,
-                      label: l10n.bmiScore,
-                      value: bmiStr,
-                      onTap: () => _showMetricInfo(
-                          title: l10n.bmiScore,
-                          value: "$bmiStr ($bmiCat)",
-                          description: l10n.bmiDescription(_userHeight.toInt(), _currentWeight.toStringAsFixed(1)),
-                          icon: Icons.health_and_safety_rounded,
-                          color: bmiColor
-                      )
-                  ),
+                  _buildInfoItem(icon: Icons.health_and_safety_rounded, color: bmiColor, label: l10n.bmiScore, value: bmiStr, onTap: () => _showMetricInfo(title: l10n.bmiScore, value: "$bmiStr ($bmiCat)", description: l10n.bmiDescription(_userHeight.toInt(), _currentWeight.toStringAsFixed(1)), icon: Icons.health_and_safety_rounded, color: bmiColor)),
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
 
-            // ВОДА И ВЕС
             Row(
               children: [
-                // ВОДА С ДОЛГИМ НАЖАТИЕМ
-                Expanded(
-                    flex: 5,
-                    child: GestureDetector(
-                      onTap: _addWater,
-                      onLongPress: _showWaterMenu,
-                      child: GlassCard(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20)), Text("${(_waterCount / (_waterGoal == 0 ? 1 : _waterGoal) * 100).toInt()}%", style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold))]), const SizedBox(height: 12), Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("$_waterCount", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 4), child: Text("/ $_waterGoal", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])])
-                      ),
-                    )
-                ),
+                Expanded(flex: 5, child: GestureDetector(onTap: _addWater, onLongPress: _showWaterMenu, child: GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20)), Text("${(_waterCount / (_waterGoal == 0 ? 1 : _waterGoal) * 100).toInt()}%", style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold))]), const SizedBox(height: 12), Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("$_waterCount", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 4), child: Text("/ $_waterGoal", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])])))),
                 const SizedBox(width: 12),
-                // ВЕС
                 Expanded(flex: 4, child: GlassCard(onTap: _showWeightPicker, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFF00FA9A).withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.show_chart_rounded, color: Color(0xFF00FA9A), size: 20)), Icon(Icons.arrow_right_alt_rounded, color: const Color(0xFF00FA9A).withOpacity(0.8), size: 16)]), const SizedBox(height: 12), Text(l10n.currentWeight, style: const TextStyle(color: Colors.white54, fontSize: 12)), Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_currentWeight.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 2), child: Text(l10n.unitKg, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])]))),
               ],
             ),
 
             const SizedBox(height: 16),
 
-            // PRO БАННЕР
             GlassCard(
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
               child: Row(children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.star, color: Colors.amber)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)), Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))]), const Spacer(), Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))]),
@@ -1122,7 +1397,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
             const SizedBox(height: 20),
 
-            // РЕКЛАМА
             _buildBannerAd(),
           ],
         ),
@@ -1139,7 +1413,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       onTap: () {
         HapticFeedback.selectionClick();
         setState(() => _selectedIndex = index);
-        // Если перешли на таймер (индекс 2), обновляем данные
         if (index == 2) _loadStateData();
       },
       child: Column(
@@ -1180,11 +1453,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         child: IndexedStack(
           index: _selectedIndex,
           children: [
-            _pages[0], // History (0)
-            _pages[1], // Stats (1)
-            _buildDashboard(context), // Timer (2 - Центр)
-            _pages[3], // Food (3)
-            _pages[4], // Profile (4)
+            _pages[0], // History
+            _pages[1], // Stats
+            _buildDashboard(context), // Timer
+            _pages[3], // Food
+            _pages[4], // Profile
           ],
         ),
       ),

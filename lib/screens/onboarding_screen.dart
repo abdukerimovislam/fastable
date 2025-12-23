@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Для HapticFeedback
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/home_page.dart';
@@ -19,7 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   int _currentPage = 0;
 
-  // Данные для ввода
+  // Начальные значения
   int _height = 175;
   double _weight = 70.0;
 
@@ -30,11 +31,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: MeshBackground(
-        isFasting: false, // Спокойный фон
+        isFasting: false,
         child: SafeArea(
           child: Column(
             children: [
-              // Прогресс бар
+              // Прогресс бар (точки сверху)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 child: Row(
@@ -62,27 +63,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(), // Блокируем свайп, только кнопки
+                  physics: const NeverScrollableScrollPhysics(), // Запрещаем свайп пальцем, только кнопка
                   onPageChanged: (idx) => setState(() => _currentPage = idx),
                   children: [
-                    // СТР. 1: РОСТ
+                    // СТР. 1: РОСТ (Рулетка)
                     _buildInputPage(
                       title: l10n.onboardingHeightTitle,
                       desc: l10n.onboardingHeightDesc,
-                      child: _buildHeightPicker(l10n),
+                      // Диапазон 100 - 250 см
+                      child: _buildRoulettePicker(
+                        minValue: 100,
+                        count: 151,
+                        initialValue: _height,
+                        suffix: l10n.cm,
+                        onChanged: (val) => setState(() => _height = val),
+                      ),
                     ),
 
-                    // СТР. 2: ВЕС
+                    // СТР. 2: ВЕС (Рулетка с дробными)
                     _buildInputPage(
                       title: l10n.onboardingWeightTitle,
                       desc: l10n.onboardingWeightDesc,
-                      child: _buildWeightPicker(l10n),
+                      // Диапазон 30.0 - 200.0 кг
+                      child: _buildDecimalRoulettePicker(
+                        initialValue: _weight,
+                        suffix: l10n.kg,
+                        onChanged: (val) => setState(() => _weight = val),
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              // Кнопка Далее/Финиш
+              // Кнопка Далее
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: GestureDetector(
@@ -114,7 +127,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildProgressDot(int index) {
     bool isActive = index <= _currentPage;
     return Expanded(
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         height: 4,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
@@ -131,7 +145,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           GlassCard(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -144,34 +158,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           const Spacer(),
-          child,
+          // Сама рулетка по центру
+          Center(child: child),
           const Spacer(),
         ],
       ),
     );
   }
 
-  Widget _buildHeightPicker(AppLocalizations l10n) {
+  // Рулетка для целых чисел (Рост)
+  Widget _buildRoulettePicker({
+    required int minValue,
+    required int count,
+    required int initialValue,
+    required String suffix,
+    required Function(int) onChanged,
+  }) {
     return SizedBox(
-      height: 200,
+      height: 250,
       child: ListWheelScrollView.useDelegate(
-        itemExtent: 50,
+        itemExtent: 60,
         perspective: 0.005,
         physics: const FixedExtentScrollPhysics(),
-        controller: FixedExtentScrollController(initialItem: _height - 100),
-        onSelectedItemChanged: (index) => setState(() => _height = 100 + index),
+        controller: FixedExtentScrollController(initialItem: initialValue - minValue),
+        onSelectedItemChanged: (index) {
+          HapticFeedback.selectionClick(); // Вибрация при прокрутке
+          onChanged(minValue + index);
+        },
         childDelegate: ListWheelChildBuilderDelegate(
-          childCount: 150,
+          childCount: count,
           builder: (context, index) {
-            final h = 100 + index;
-            final isSelected = h == _height;
+            final value = minValue + index;
+            final isSelected = value == _height; // Для подсветки (условно, т.к. перерисовка идет по setState)
+
             return Center(
               child: Text(
-                "$h ${l10n.cm}",
+                "$value $suffix",
                 style: TextStyle(
-                  color: isSelected ? Colors.blueAccent : Colors.white30,
-                  fontSize: isSelected ? 40 : 24,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: Colors.white, // Всегда белый, фокус по центру
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             );
@@ -181,29 +207,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildWeightPicker(AppLocalizations l10n) {
+  // Рулетка для дробных чисел (Вес)
+  Widget _buildDecimalRoulettePicker({
+    required double initialValue,
+    required String suffix,
+    required Function(double) onChanged,
+  }) {
+    // 30.0 кг ... 200.0 кг (шаг 0.1) -> (200-30)*10 = 1700 элементов
+    const int minWeightInt = 300; // 30.0 * 10
+
     return SizedBox(
-      height: 200,
+      height: 250,
       child: ListWheelScrollView.useDelegate(
-        itemExtent: 50,
+        itemExtent: 60,
         perspective: 0.005,
         physics: const FixedExtentScrollPhysics(),
-        controller: FixedExtentScrollController(initialItem: (_weight * 10).toInt() - 300),
+        controller: FixedExtentScrollController(initialItem: (initialValue * 10).toInt() - minWeightInt),
         onSelectedItemChanged: (index) {
-          setState(() => _weight = (index + 300) / 10.0);
+          HapticFeedback.selectionClick();
+          double val = (minWeightInt + index) / 10.0;
+          onChanged(val);
         },
         childDelegate: ListWheelChildBuilderDelegate(
-          childCount: 1700, // 30.0 - 200.0 kg
+          childCount: 1700,
           builder: (context, index) {
-            final w = (index + 300) / 10.0;
-            final isSelected = w == _weight;
+            final value = (minWeightInt + index) / 10.0;
             return Center(
               child: Text(
-                "${w.toStringAsFixed(1)} ${l10n.kg}",
-                style: TextStyle(
-                  color: isSelected ? Colors.blueAccent : Colors.white30,
-                  fontSize: isSelected ? 40 : 24,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                "${value.toStringAsFixed(1)} $suffix",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             );
@@ -222,9 +257,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     } else {
       // Финиш: Сохраняем вес и завершаем
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('is_first_run', false); // Флаг: Онбординг пройден
+      await prefs.setBool('is_first_run', false);
 
-      // Сохраняем вес через репозиторий (чтобы улетело и в Firebase, если юзер зашел)
       await _weightRepository.addWeightOrUpdateToday(_weight);
 
       if (mounted) {

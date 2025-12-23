@@ -809,4 +809,55 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get statsLongest => 'Mais longo';
+
+  @override
+  String get circadianTitle => 'Ritmo circadiano';
+
+  @override
+  String get circadianIntroTitle => 'Coma com o sol ☀️';
+
+  @override
+  String get circadianIntroDesc => 'O seu metabolismo está ligado ao sol.\n\n• Nascer do sol: melhor momento para acordar e se hidratar.\n• Dia: metabolismo elevado. Ideal para se alimentar.\n• Pôr do sol: o metabolismo desacelera. É melhor parar de comer.\n• Noite: modo de recuperação profunda. O jejum acontece com mais facilidade.\n\nEste modo ajusta automaticamente suas metas de jejum de acordo com os horários de nascer e pôr do sol da sua localização.';
+
+  @override
+  String get circadianBtnEnable => 'Ativar modo circadiano';
+
+  @override
+  String get circadianBtnDisable => 'Desativar';
+
+  @override
+  String get circadianTargetSunrise => 'Até o nascer do sol';
+
+  @override
+  String get circadianTargetSunset => 'Até o pôr do sol';
+
+  @override
+  String get circadianPhaseDay => 'Dia (Comer)';
+
+  @override
+  String get circadianPhaseNight => 'Noite (Jejum)';
+
+  @override
+  String get circadianWarnDayTitle => 'É dia ☀️';
+
+  @override
+  String get circadianWarnDayDesc => 'O sol já nasceu! Seu corpo está pronto para se alimentar. Idealmente, espere até o pôr do sol para iniciar o jejum.';
+
+  @override
+  String get circadianWarnBtnStart => 'Começar mesmo assim';
+
+  @override
+  String get circadianWarnBtnWait => 'Esperar o pôr do sol';
+
+  @override
+  String get circadianBonusTime => 'Tempo bônus 🔥';
+
+  @override
+  String get circadianSyncing => 'Sincronizando com o sol...';
+
+  @override
+  String get circadianError => 'Não foi possível obter a localização. Usando temporizador padrão.';
+
+  @override
+  String get circadianManaged => 'Controlado pelo sol';
 }

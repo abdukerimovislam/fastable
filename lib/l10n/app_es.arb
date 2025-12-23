@@ -378,7 +378,24 @@
                 "statsTotalFasts": "Ayunos totales",
                 "statsTotalHours": "Horas totales",
                 "statsAverage": "Promedio",
-                "statsLongest": "Más largo"
+                "statsLongest": "Más largo",
+                "circadianTitle": "Ritmo circadiano",
+                  "circadianIntroTitle": "Come con el sol ☀️",
+                  "circadianIntroDesc": "Tu metabolismo está conectado con el sol.\n\n• Amanecer: el mejor momento para despertar e hidratarte.\n• Día: metabolismo alto. Ideal para comer.\n• Atardecer: el metabolismo se ralentiza. Es mejor dejar de comer.\n• Noche: modo de reparación profunda. Ayunar se vuelve más fácil.\n\nEste modo ajusta automáticamente tus objetivos de ayuno según las horas de amanecer y atardecer de tu ubicación.",
+                  "circadianBtnEnable": "Activar modo circadiano",
+                  "circadianBtnDisable": "Desactivar",
+                  "circadianTargetSunrise": "Hasta el amanecer",
+                  "circadianTargetSunset": "Hasta el atardecer",
+                  "circadianPhaseDay": "Día (Comer)",
+                  "circadianPhaseNight": "Noche (Ayuno)",
+                  "circadianWarnDayTitle": "Es de día ☀️",
+                  "circadianWarnDayDesc": "¡El sol ya está arriba! Tu cuerpo está listo para comer. Idealmente, espera hasta el atardecer para comenzar el ayuno.",
+                  "circadianWarnBtnStart": "Empezar de todos modos",
+                  "circadianWarnBtnWait": "Esperar al atardecer",
+                  "circadianBonusTime": "Tiempo extra 🔥",
+                  "circadianSyncing": "Sincronizando con el sol...",
+                  "circadianError": "No se pudo obtener la ubicación. Usando temporizador estándar.",
+                  "circadianManaged": "Controlado por el sol"
 
 
 

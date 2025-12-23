@@ -809,4 +809,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsLongest => 'Longest';
+
+  @override
+  String get circadianTitle => 'Circadian Rhythm';
+
+  @override
+  String get circadianIntroTitle => 'Eat with the Sun ☀️';
+
+  @override
+  String get circadianIntroDesc => 'Your metabolism is linked to the sun.\n\n• Sunrise: Best time to wake up and hydrate.\n• Daytime: High metabolism. Ideal for eating.\n• Sunset: Metabolism slows down. Stop eating.\n• Night: Deep repair mode. Fasting is effortless.\n\nThis mode automatically adjusts your fasting goals to sunrise and sunset times in your location.';
+
+  @override
+  String get circadianBtnEnable => 'Enable Circadian Mode';
+
+  @override
+  String get circadianBtnDisable => 'Disable';
+
+  @override
+  String get circadianTargetSunrise => 'Until Sunrise';
+
+  @override
+  String get circadianTargetSunset => 'Until Sunset';
+
+  @override
+  String get circadianPhaseDay => 'Daytime (Eat)';
+
+  @override
+  String get circadianPhaseNight => 'Nighttime (Fast)';
+
+  @override
+  String get circadianWarnDayTitle => 'It\'s Daytime ☀️';
+
+  @override
+  String get circadianWarnDayDesc => 'The sun is up! Your body is ready for food. Ideally, wait until sunset to start fasting.';
+
+  @override
+  String get circadianWarnBtnStart => 'Start Anyway';
+
+  @override
+  String get circadianWarnBtnWait => 'Wait for Sunset';
+
+  @override
+  String get circadianBonusTime => 'Bonus Time 🔥';
+
+  @override
+  String get circadianSyncing => 'Syncing with the Sun...';
+
+  @override
+  String get circadianError => 'Could not get location. Using standard timer.';
+
+  @override
+  String get circadianManaged => 'Solar Controlled';
 }

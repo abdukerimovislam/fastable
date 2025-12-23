@@ -809,4 +809,55 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get statsLongest => 'Más largo';
+
+  @override
+  String get circadianTitle => 'Ritmo circadiano';
+
+  @override
+  String get circadianIntroTitle => 'Come con el sol ☀️';
+
+  @override
+  String get circadianIntroDesc => 'Tu metabolismo está conectado con el sol.\n\n• Amanecer: el mejor momento para despertar e hidratarte.\n• Día: metabolismo alto. Ideal para comer.\n• Atardecer: el metabolismo se ralentiza. Es mejor dejar de comer.\n• Noche: modo de reparación profunda. Ayunar se vuelve más fácil.\n\nEste modo ajusta automáticamente tus objetivos de ayuno según las horas de amanecer y atardecer de tu ubicación.';
+
+  @override
+  String get circadianBtnEnable => 'Activar modo circadiano';
+
+  @override
+  String get circadianBtnDisable => 'Desactivar';
+
+  @override
+  String get circadianTargetSunrise => 'Hasta el amanecer';
+
+  @override
+  String get circadianTargetSunset => 'Hasta el atardecer';
+
+  @override
+  String get circadianPhaseDay => 'Día (Comer)';
+
+  @override
+  String get circadianPhaseNight => 'Noche (Ayuno)';
+
+  @override
+  String get circadianWarnDayTitle => 'Es de día ☀️';
+
+  @override
+  String get circadianWarnDayDesc => '¡El sol ya está arriba! Tu cuerpo está listo para comer. Idealmente, espera hasta el atardecer para comenzar el ayuno.';
+
+  @override
+  String get circadianWarnBtnStart => 'Empezar de todos modos';
+
+  @override
+  String get circadianWarnBtnWait => 'Esperar al atardecer';
+
+  @override
+  String get circadianBonusTime => 'Tiempo extra 🔥';
+
+  @override
+  String get circadianSyncing => 'Sincronizando con el sol...';
+
+  @override
+  String get circadianError => 'No se pudo obtener la ubicación. Usando temporizador estándar.';
+
+  @override
+  String get circadianManaged => 'Controlado por el sol';
 }

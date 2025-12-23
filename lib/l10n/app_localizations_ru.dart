@@ -809,4 +809,55 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get statsLongest => 'Максимум';
+
+  @override
+  String get circadianTitle => 'Циркадный ритм';
+
+  @override
+  String get circadianIntroTitle => 'Питание по Солнцу ☀️';
+
+  @override
+  String get circadianIntroDesc => 'Ваш метаболизм зависит от солнца.\n\n• Восход: Пробуждение. Лучше время для воды.\n• День: Пик метаболизма. Идеально для еды.\n• Закат: Организм готовится ко сну. Стоп еда.\n• Ночь: Время восстановления. Естественный голод.\n\nЭтот режим автоматически подстраивает цели голодания под восход и закат в вашей локации.';
+
+  @override
+  String get circadianBtnEnable => 'Включить режим';
+
+  @override
+  String get circadianBtnDisable => 'Отключить';
+
+  @override
+  String get circadianTargetSunrise => 'До восхода';
+
+  @override
+  String get circadianTargetSunset => 'До заката';
+
+  @override
+  String get circadianPhaseDay => 'День (Можно есть)';
+
+  @override
+  String get circadianPhaseNight => 'Ночь (Голодание)';
+
+  @override
+  String get circadianWarnDayTitle => 'Сейчас день ☀️';
+
+  @override
+  String get circadianWarnDayDesc => 'Солнце высоко! Организм ждет пищу. Лучше всего начать голодание после заката.';
+
+  @override
+  String get circadianWarnBtnStart => 'Всё равно начать';
+
+  @override
+  String get circadianWarnBtnWait => 'Ждать заката';
+
+  @override
+  String get circadianBonusTime => 'Сверх нормы 🔥';
+
+  @override
+  String get circadianSyncing => 'Синхронизация с солнцем...';
+
+  @override
+  String get circadianError => 'Нет геопозиции. Включен обычный таймер.';
+
+  @override
+  String get circadianManaged => 'По Солнцу';
 }
