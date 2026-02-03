@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart'; // <--- ДОБАВЛЕНО
 
 // DI & Bloc
 import 'package:fastable/injection.dart';
@@ -30,9 +31,21 @@ class HistoryScreen extends StatelessWidget {
     required this.waterRepository,
   });
 
+  String _getDateHeader(DateTime date, AppLocalizations l10n) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final checkDate = DateTime(date.year, date.month, date.day);
+
+    if (checkDate == today) return "Today";
+    if (checkDate == yesterday) return "Yesterday";
+    return DateFormat('MMMM d').format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final haptic = getIt<HapticService>();
 
     return BlocProvider(
       create: (context) => getIt<HistoryBloc>()..add(SubscribeHistory()),
@@ -41,42 +54,45 @@ class HistoryScreen extends StatelessWidget {
         body: SafeArea(
           bottom: false,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ЗАГОЛОВОК
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      l10n.navHistory,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                child: Text(
+                  l10n.navHistory,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
 
-              // СТАТИСТИКА (HEADER)
+              // СТАТИСТИКА И ГРАФИК
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: BlocBuilder<HistoryBloc, HistoryState>(
                   builder: (context, state) {
-                    final totalHours = state.totalFastingTime.inHours;
-                    final totalFasts = state.records.length;
-
                     return GlassCard(
-                      // FIX: Убрали фиксированную высоту (height: 100), чтобы не было Overflow
-                      // Теперь высота зависит от контента + отступов
-                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
                         children: [
-                          _buildStatItem(totalFasts.toString(), "Total Fasts", Colors.blueAccent),
-                          Container(width: 1, height: 40, color: Colors.white.withOpacity(0.1)),
-                          _buildStatItem("$totalHours h", "Total Hours", Colors.greenAccent),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildMiniStat(state.records.length.toString(), "Total Fasts", Colors.blueAccent),
+                              _buildMiniStat("${state.totalFastingTime.inHours}h", "Total Time", Colors.greenAccent),
+                              _buildMiniStat("${state.averageDuration.inHours}h", "Avg. Time", Colors.orangeAccent),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          // WEEKLY CHART
+                          SizedBox(
+                            height: 80,
+                            child: BarChart(
+                              _buildWeeklyChartData(state.records),
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -84,14 +100,11 @@ class HistoryScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              // СПИСОК
               Expanded(
                 child: BlocBuilder<HistoryBloc, HistoryState>(
                   builder: (context, state) {
                     if (state.status == HistoryStatus.loading) {
-                      return const Center(child: CircularProgressIndicator(color: Colors.white));
+                      return const Center(child: CircularProgressIndicator(color: Colors.white24));
                     }
 
                     if (state.records.isEmpty) {
@@ -101,10 +114,7 @@ class HistoryScreen extends StatelessWidget {
                           children: [
                             Icon(Icons.history_toggle_off, size: 64, color: Colors.white.withOpacity(0.2)),
                             const SizedBox(height: 16),
-                            Text(
-                              "No history yet",
-                              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
-                            ),
+                            Text("No history yet", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16)),
                           ],
                         ),
                       );
@@ -115,7 +125,22 @@ class HistoryScreen extends StatelessWidget {
                       itemCount: state.records.length,
                       itemBuilder: (context, index) {
                         final record = state.records[index];
-                        return _buildHistoryItem(context, record, l10n);
+                        final String header = _getDateHeader(record.endTime, l10n);
+                        final bool showHeader = index == 0 ||
+                            _getDateHeader(state.records[index - 1].endTime, l10n) != header;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (showHeader)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 20, 0, 10),
+                                child: Text(header.toUpperCase(),
+                                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                              ),
+                            _buildHistoryItem(context, record, haptic),
+                          ],
+                        );
                       },
                     );
                   },
@@ -128,55 +153,91 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String value, String label, Color color) {
+  // --- CHART HELPERS ---
+
+  BarChartData _buildWeeklyChartData(List<FastingRecord> records) {
+    // 1. Calculate last 7 days data
+    Map<int, double> last7Days = {};
+    for (int i = 0; i < 7; i++) last7Days[i] = 0;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    for (var record in records) {
+      final recordDate = DateTime(record.endTime.year, record.endTime.month, record.endTime.day);
+      final diff = today.difference(recordDate).inDays;
+
+      if (diff < 7 && diff >= 0) {
+        // 6 is today (rightmost), 0 is 6 days ago
+        int index = 6 - diff;
+        last7Days[index] = (last7Days[index] ?? 0) + record.duration.inMinutes / 60.0;
+      }
+    }
+
+    // 2. Build BarGroups
+    List<BarChartGroupData> barGroups = [];
+    for (int i = 0; i < 7; i++) {
+      double value = last7Days[i] ?? 0;
+      barGroups.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: value,
+              color: value >= 16 ? const Color(0xFF43C6AC) : Colors.white.withOpacity(0.3),
+              width: 8,
+              borderRadius: BorderRadius.circular(4),
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                toY: 24, // Max hours per day
+                color: Colors.white.withOpacity(0.05),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return BarChartData(
+      alignment: BarChartAlignment.spaceBetween,
+      maxY: 24,
+      titlesData: FlTitlesData(show: false), // Hide titles for mini-chart
+      gridData: FlGridData(show: false),
+      borderData: FlBorderData(show: false),
+      barGroups: barGroups,
+      barTouchData: BarTouchData(enabled: false), // Disable touch for mini-chart
+    );
+  }
+
+  Widget _buildMiniStat(String val, String label, Color color) {
     return Column(
-      mainAxisSize: MainAxisSize.min, // FIX: Занимаем минимум места по вертикали
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 12,
-          ),
-        ),
+        Text(val, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
       ],
     );
   }
 
-  Widget _buildHistoryItem(BuildContext context, FastingRecord record, AppLocalizations l10n) {
-    final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('HH:mm');
+  Widget _buildHistoryItem(BuildContext context, FastingRecord record, HapticService haptic) {
     final duration = record.duration;
-
-    Color iconColor = Colors.blueAccent;
-    if (duration.inHours >= 16) iconColor = Colors.greenAccent;
-    if (duration.inHours >= 20) iconColor = Colors.orangeAccent;
+    final timeFormat = DateFormat('HH:mm');
+    final bool isSuccess = duration.inHours >= 16;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Dismissible(
-        key: ValueKey(record.startTime.toString()),
+        key: ValueKey(record.startTime.toIso8601String()),
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          decoration: BoxDecoration(
-            color: Colors.redAccent.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(Icons.delete_outline, color: Colors.white),
+          padding: const EdgeInsets.only(right: 24),
+          decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.15), borderRadius: BorderRadius.circular(24)),
+          child: const Icon(Icons.delete_sweep_rounded, color: Colors.redAccent, size: 28),
         ),
-        onDismissed: (direction) {
-          getIt<HapticService>().mediumImpact();
+        onDismissed: (_) {
+          haptic.mediumImpact();
           context.read<HistoryBloc>().add(DeleteRecordEvent(record));
         },
         child: GlassCard(
@@ -184,50 +245,19 @@ class HistoryScreen extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    "${duration.inHours}h",
-                    style: TextStyle(
-                      color: iconColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                width: 52, height: 52,
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                child: Icon(Icons.bolt_rounded, color: isSuccess ? Colors.orangeAccent : Colors.blueAccent, size: 28),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      dateFormat.format(record.startTime),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "${timeFormat.format(record.startTime)} - ${timeFormat.format(record.endTime)}",
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text("${duration.inHours}h ${duration.inMinutes % 60}m", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text("${timeFormat.format(record.startTime)} — ${timeFormat.format(record.endTime)}", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13)),
+                ]),
               ),
-              Icon(
-                Icons.check_circle_outline_rounded,
-                color: Colors.white.withOpacity(0.3),
-              ),
+              if (isSuccess) const Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 20),
             ],
           ),
         ),

@@ -768,7 +768,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestUser.
   ///
   /// In en, this message translates to:
-  /// **'Guest'**
+  /// **'Guest User'**
   String get guestUser;
 
   /// No description provided for @defaultUser.
@@ -864,7 +864,7 @@ abstract class AppLocalizations {
   /// No description provided for @authSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sync your progress and reach your goals.'**
+  /// **'Sign in to sync data'**
   String get authSubtitle;
 
   /// No description provided for @signInGoogle.
@@ -1170,7 +1170,7 @@ abstract class AppLocalizations {
   /// No description provided for @achFirstFastDesc.
   ///
   /// In en, this message translates to:
-  /// **'Complete your first fast.'**
+  /// **'Complete your first fasting session.'**
   String get achFirstFastDesc;
 
   /// No description provided for @achStreak3Title.
@@ -1182,7 +1182,7 @@ abstract class AppLocalizations {
   /// No description provided for @achStreak3Desc.
   ///
   /// In en, this message translates to:
-  /// **'Maintain a 3-day streak.'**
+  /// **'Maintain a 3-day fasting streak.'**
   String get achStreak3Desc;
 
   /// No description provided for @achStreak7Title.
@@ -1194,7 +1194,7 @@ abstract class AppLocalizations {
   /// No description provided for @achStreak7Desc.
   ///
   /// In en, this message translates to:
-  /// **'Maintain a 7-day streak.'**
+  /// **'Reach a 7-day streak.'**
   String get achStreak7Desc;
 
   /// No description provided for @achTotal10Title.
@@ -1206,7 +1206,7 @@ abstract class AppLocalizations {
   /// No description provided for @achTotal10Desc.
   ///
   /// In en, this message translates to:
-  /// **'Complete 10 fasts.'**
+  /// **'Complete 10 total fasts.'**
   String get achTotal10Desc;
 
   /// No description provided for @achTotalHours100Title.
@@ -1218,7 +1218,7 @@ abstract class AppLocalizations {
   /// No description provided for @achTotalHours100Desc.
   ///
   /// In en, this message translates to:
-  /// **'Fast for a total of 100 hours.'**
+  /// **'Accumulate 100 hours of fasting.'**
   String get achTotalHours100Desc;
 
   /// No description provided for @journalTitle.
@@ -1584,7 +1584,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingTitle.
   ///
   /// In en, this message translates to:
-  /// **'Let\'s personalize\nyour journey'**
+  /// **'Personalize Your Plan'**
   String get onboardingTitle;
 
   /// No description provided for @onboardingHeightTitle.
@@ -1952,6 +1952,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get permContinue;
+
+  /// No description provided for @achFirstFast.
+  ///
+  /// In en, this message translates to:
+  /// **'First Step'**
+  String get achFirstFast;
+
+  /// No description provided for @achStreak3.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get achStreak3;
+
+  /// No description provided for @achStreak7.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstoppable'**
+  String get achStreak7;
+
+  /// No description provided for @achTotal10.
+  ///
+  /// In en, this message translates to:
+  /// **'Dedicated'**
+  String get achTotal10;
+
+  /// No description provided for @achTotalHours100.
+  ///
+  /// In en, this message translates to:
+  /// **'Centurion'**
+  String get achTotalHours100;
+
+  /// No description provided for @onboardingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s calculate your metabolic rate.'**
+  String get onboardingDesc;
+
+  /// No description provided for @btnContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get btnContinue;
+
+  /// No description provided for @btnStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Journey'**
+  String get btnStart;
+
+  /// No description provided for @selectGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get selectGender;
+
+  /// No description provided for @selectAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get selectAge;
+
+  /// No description provided for @selectWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get selectWeight;
+
+  /// No description provided for @selectHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get selectHeight;
+
+  /// No description provided for @selectActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Level'**
+  String get selectActivity;
+
+  /// No description provided for @genderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get genderMale;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get genderFemale;
+
+  /// No description provided for @activitySedentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sedentary'**
+  String get activitySedentary;
+
+  /// No description provided for @activityModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get activityModerate;
+
+  /// No description provided for @activityActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Active'**
+  String get activityActive;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Support'**
+  String get contactSupport;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

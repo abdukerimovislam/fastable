@@ -277,7 +277,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get themeSystem => 'Sistema';
 
   @override
-  String get settingsHealthConnect => 'Health Connect';
+  String get settingsHealthConnect => 'Conexão de saúde';
 
   @override
   String get settingsSyncWeight => 'Sincronizar peso e passos';
@@ -346,7 +346,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tabPartner => 'Parceiro';
 
   @override
-  String get guestUser => 'Convidado';
+  String get guestUser => 'Usuário convidado';
 
   @override
   String get defaultUser => 'Usuário';
@@ -394,7 +394,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get authWelcome => 'Bem-vindo ao Fastable';
 
   @override
-  String get authSubtitle => 'Sincronize seu progresso e alcance seus objetivos.';
+  String get authSubtitle => 'Faça login para sincronizar os dados';
 
   @override
   String get signInGoogle => 'Entrar com Google';
@@ -549,31 +549,31 @@ class AppLocalizationsPt extends AppLocalizations {
   String get achFirstFastTitle => 'Primeiro Jejum!';
 
   @override
-  String get achFirstFastDesc => 'Complete seu primeiro jejum.';
+  String get achFirstFastDesc => 'Complete sua primeira sessão de jejum.';
 
   @override
   String get achStreak3Title => 'Bom Começo';
 
   @override
-  String get achStreak3Desc => 'Mantenha uma sequência de 3 dias.';
+  String get achStreak3Desc => 'Mantenha uma sequência de jejum por 3 dias.';
 
   @override
   String get achStreak7Title => 'Consistente';
 
   @override
-  String get achStreak7Desc => 'Mantenha uma sequência de 7 dias.';
+  String get achStreak7Desc => 'Alcance uma sequência de 7 dias.';
 
   @override
   String get achTotal10Title => 'Novato';
 
   @override
-  String get achTotal10Desc => 'Complete 10 jejuns.';
+  String get achTotal10Desc => 'Complete 10 jejuns no total.';
 
   @override
   String get achTotalHours100Title => 'Clube das 100 Horas';
 
   @override
-  String get achTotalHours100Desc => 'Jejue por um total de 100 horas.';
+  String get achTotalHours100Desc => 'Acumule 100 horas de jejum.';
 
   @override
   String get journalTitle => 'Nota do diário';
@@ -764,7 +764,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get onboardingTitle => 'Vamos personalizar\nsua jornada';
+  String get onboardingTitle => 'Personalize seu plano';
 
   @override
   String get onboardingHeightTitle => 'Qual é a sua altura?';
@@ -950,4 +950,61 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get permContinue => 'Continuar';
+
+  @override
+  String get achFirstFast => 'Primeiro passo';
+
+  @override
+  String get achStreak3 => 'Consistência';
+
+  @override
+  String get achStreak7 => 'Imparável';
+
+  @override
+  String get achTotal10 => 'Dedicação';
+
+  @override
+  String get achTotalHours100 => 'Centurião';
+
+  @override
+  String get onboardingDesc => 'Vamos calcular sua taxa metabólica.';
+
+  @override
+  String get btnContinue => 'Continuar';
+
+  @override
+  String get btnStart => 'Iniciar jornada';
+
+  @override
+  String get selectGender => 'Gênero';
+
+  @override
+  String get selectAge => 'Idade';
+
+  @override
+  String get selectWeight => 'Peso';
+
+  @override
+  String get selectHeight => 'Altura';
+
+  @override
+  String get selectActivity => 'Nível de atividade';
+
+  @override
+  String get genderMale => 'Masculino';
+
+  @override
+  String get genderFemale => 'Feminino';
+
+  @override
+  String get activitySedentary => 'Sedentário';
+
+  @override
+  String get activityModerate => 'Moderado';
+
+  @override
+  String get activityActive => 'Muito ativo';
+
+  @override
+  String get contactSupport => 'Contato com suporte';
 }

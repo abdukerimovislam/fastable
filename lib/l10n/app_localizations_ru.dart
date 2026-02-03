@@ -271,13 +271,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get themeLight => 'Светлая';
 
   @override
-  String get themeDark => 'Темная';
+  String get themeDark => 'Тёмная';
 
   @override
   String get themeSystem => 'Системная';
 
   @override
-  String get settingsHealthConnect => 'Здоровье (Health Connect)';
+  String get settingsHealthConnect => 'Подключение к здоровью';
 
   @override
   String get settingsSyncWeight => 'Синхронизация веса и шагов';
@@ -346,7 +346,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tabPartner => 'Партнеры';
 
   @override
-  String get guestUser => 'Гость';
+  String get guestUser => 'Гостевой пользователь';
 
   @override
   String get defaultUser => 'Пользователь';
@@ -394,7 +394,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authWelcome => 'Добро пожаловать в Fastable';
 
   @override
-  String get authSubtitle => 'Синхронизируйте прогресс и достигайте целей.';
+  String get authSubtitle => 'Войдите, чтобы синхронизировать данные';
 
   @override
   String get signInGoogle => 'Войти через Google';
@@ -555,13 +555,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get achStreak3Title => 'Хорошее начало';
 
   @override
-  String get achStreak3Desc => 'Держите серию 3 дня.';
+  String get achStreak3Desc => 'Поддерживайте серию из 3 дней голодания.';
 
   @override
   String get achStreak7Title => 'Стабильность';
 
   @override
-  String get achStreak7Desc => 'Держите серию 7 дней.';
+  String get achStreak7Desc => 'Достигните серии из 7 дней.';
 
   @override
   String get achTotal10Title => 'Новичок';
@@ -573,7 +573,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get achTotalHours100Title => 'Клуб 100 часов';
 
   @override
-  String get achTotalHours100Desc => 'Наберите 100 часов голодания суммарно.';
+  String get achTotalHours100Desc => 'Накопите 100 часов голодания.';
 
   @override
   String get journalTitle => 'Заметка в журнал';
@@ -764,7 +764,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get onboardingTitle => 'Настроим ваш\nпрофиль';
+  String get onboardingTitle => 'Настройте свой план';
 
   @override
   String get onboardingHeightTitle => 'Ваш рост';
@@ -950,4 +950,61 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get permContinue => 'Продолжить';
+
+  @override
+  String get achFirstFast => 'Первый шаг';
+
+  @override
+  String get achStreak3 => 'Постоянство';
+
+  @override
+  String get achStreak7 => 'Неостановимый';
+
+  @override
+  String get achTotal10 => 'Преданность';
+
+  @override
+  String get achTotalHours100 => 'Центурион';
+
+  @override
+  String get onboardingDesc => 'Давайте рассчитаем ваш метаболизм.';
+
+  @override
+  String get btnContinue => 'Продолжить';
+
+  @override
+  String get btnStart => 'Начать путь';
+
+  @override
+  String get selectGender => 'Пол';
+
+  @override
+  String get selectAge => 'Возраст';
+
+  @override
+  String get selectWeight => 'Вес';
+
+  @override
+  String get selectHeight => 'Рост';
+
+  @override
+  String get selectActivity => 'Уровень активности';
+
+  @override
+  String get genderMale => 'Мужской';
+
+  @override
+  String get genderFemale => 'Женский';
+
+  @override
+  String get activitySedentary => 'Низкая активность';
+
+  @override
+  String get activityModerate => 'Умеренная активность';
+
+  @override
+  String get activityActive => 'Высокая активность';
+
+  @override
+  String get contactSupport => 'Связаться с поддержкой';
 }

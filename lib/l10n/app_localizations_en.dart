@@ -346,7 +346,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabPartner => 'Partner';
 
   @override
-  String get guestUser => 'Guest';
+  String get guestUser => 'Guest User';
 
   @override
   String get defaultUser => 'User';
@@ -394,7 +394,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authWelcome => 'Welcome to Modern Fasting';
 
   @override
-  String get authSubtitle => 'Sync your progress and reach your goals.';
+  String get authSubtitle => 'Sign in to sync data';
 
   @override
   String get signInGoogle => 'Sign in with Google';
@@ -549,31 +549,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achFirstFastTitle => 'First Fast!';
 
   @override
-  String get achFirstFastDesc => 'Complete your first fast.';
+  String get achFirstFastDesc => 'Complete your first fasting session.';
 
   @override
   String get achStreak3Title => 'Getting Started';
 
   @override
-  String get achStreak3Desc => 'Maintain a 3-day streak.';
+  String get achStreak3Desc => 'Maintain a 3-day fasting streak.';
 
   @override
   String get achStreak7Title => 'Consistent';
 
   @override
-  String get achStreak7Desc => 'Maintain a 7-day streak.';
+  String get achStreak7Desc => 'Reach a 7-day streak.';
 
   @override
   String get achTotal10Title => 'Novice';
 
   @override
-  String get achTotal10Desc => 'Complete 10 fasts.';
+  String get achTotal10Desc => 'Complete 10 total fasts.';
 
   @override
   String get achTotalHours100Title => '100 Hour Club';
 
   @override
-  String get achTotalHours100Desc => 'Fast for a total of 100 hours.';
+  String get achTotalHours100Desc => 'Accumulate 100 hours of fasting.';
 
   @override
   String get journalTitle => 'Journal Note';
@@ -764,7 +764,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get onboardingTitle => 'Let\'s personalize\nyour journey';
+  String get onboardingTitle => 'Personalize Your Plan';
 
   @override
   String get onboardingHeightTitle => 'What is your height?';
@@ -950,4 +950,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permContinue => 'Continue';
+
+  @override
+  String get achFirstFast => 'First Step';
+
+  @override
+  String get achStreak3 => 'Consistency';
+
+  @override
+  String get achStreak7 => 'Unstoppable';
+
+  @override
+  String get achTotal10 => 'Dedicated';
+
+  @override
+  String get achTotalHours100 => 'Centurion';
+
+  @override
+  String get onboardingDesc => 'Let\'s calculate your metabolic rate.';
+
+  @override
+  String get btnContinue => 'Continue';
+
+  @override
+  String get btnStart => 'Start Journey';
+
+  @override
+  String get selectGender => 'Gender';
+
+  @override
+  String get selectAge => 'Age';
+
+  @override
+  String get selectWeight => 'Weight';
+
+  @override
+  String get selectHeight => 'Height';
+
+  @override
+  String get selectActivity => 'Activity Level';
+
+  @override
+  String get genderMale => 'Male';
+
+  @override
+  String get genderFemale => 'Female';
+
+  @override
+  String get activitySedentary => 'Sedentary';
+
+  @override
+  String get activityModerate => 'Moderate';
+
+  @override
+  String get activityActive => 'Very Active';
+
+  @override
+  String get contactSupport => 'Contact Support';
 }

@@ -359,7 +359,65 @@
                 "permHealthTitle": "Apple Health",
                 "permHealthDesc": "Sincronize dados de peso e consumo de água.",
                 "permAllow": "Permitir",
-                "permContinue": "Continuar"
+                "permContinue": "Continuar",
+                "achFirstFast": "Primeiro passo",
+                  "achFirstFastDesc": "Complete seu primeiro jejum.",
+                  "achStreak3": "Consistência",
+                  "achStreak3Desc": "Mantenha uma sequência de jejum por 3 dias.",
+                  "achStreak7": "Imparável",
+                  "achStreak7Desc": "Alcance uma sequência de 7 dias. Você está em chamas!",
+                  "achTotal10": "Dedicação",
+                  "achTotal10Desc": "Complete 10 jejuns no total.",
+                  "achTotalHours100": "Centurião",
+                  "achTotalHours100Desc": "Acumule 100 horas de jejum.",
+                  "navProfile": "Perfil",
+                    "guestUser": "Usuário convidado",
+                    "defaultUser": "Usuário",
+                    "authSubtitle": "Faça login para sincronizar os dados",
+                    "signInGoogle": "Entrar com Google",
+                    "signOut": "Sair",
+
+                    "onboardingTitle": "Personalize seu plano",
+                    "onboardingDesc": "Vamos calcular sua taxa metabólica.",
+                    "btnContinue": "Continuar",
+                    "btnStart": "Iniciar jornada",
+
+                    "selectGender": "Gênero",
+                    "selectAge": "Idade",
+                    "selectWeight": "Peso",
+                    "selectHeight": "Altura",
+                    "selectActivity": "Nível de atividade",
+
+                    "genderMale": "Masculino",
+                    "genderFemale": "Feminino",
+
+                    "activitySedentary": "Sedentário",
+                    "activityModerate": "Moderado",
+                    "activityActive": "Muito ativo",
+
+                    "achFirstFast": "Primeiro passo",
+                    "achFirstFastDesc": "Complete sua primeira sessão de jejum.",
+                    "achStreak3": "Consistência",
+                    "achStreak3Desc": "Mantenha uma sequência de jejum por 3 dias.",
+                    "achStreak7": "Imparável",
+                    "achStreak7Desc": "Alcance uma sequência de 7 dias.",
+                    "achTotal10": "Dedicação",
+                    "achTotal10Desc": "Complete 10 jejuns no total.",
+                    "achTotalHours100": "Centurião",
+                    "achTotalHours100Desc": "Acumule 100 horas de jejum.",
+
+                    "settingLanguage": "Idioma",
+                    "settingTheme": "Tema",
+                    "settingHeight": "Altura",
+                    "settingsNotifications": "Notificações",
+                    "settingsHealthConnect": "Conexão de saúde",
+                    "themeLight": "Claro",
+                    "themeDark": "Escuro",
+                    "themeSystem": "Sistema",
+
+                    "privacyPolicy": "Política de privacidade",
+                    "termsOfService": "Termos de uso",
+                    "contactSupport": "Contato com suporte"
 
 
 

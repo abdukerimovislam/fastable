@@ -1,4 +1,4 @@
-import 'dart:io'; // Для Platform
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,14 +47,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   InterstitialAd? _interstitialAd;
   bool _isBodyView = false;
 
-  // Дубликат планов для UI (должен совпадать с BLoC)
-  final List<FastingPlan> _plans = [
-    FastingPlan(fastingDuration: const Duration(hours: 16), eatingDuration: const Duration(hours: 8), translationKey: "fastingPlan16_8"),
-    FastingPlan(fastingDuration: const Duration(hours: 18), eatingDuration: const Duration(hours: 6), translationKey: "fastingPlan18_6"),
-    FastingPlan(fastingDuration: const Duration(hours: 20), eatingDuration: const Duration(hours: 4), translationKey: "fastingPlan20_4"),
-    FastingPlan(fastingDuration: const Duration(hours: 24), eatingDuration: const Duration(hours: 24), translationKey: "fastingPlanEatStopEat"),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -71,7 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _loadInterstitialAd() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712',
+      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
@@ -82,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildBannerAd() {
     final BannerAd bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test ID
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(onAdFailedToLoad: (ad, err) => ad.dispose()),
@@ -100,7 +92,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _onStartFastingPressed() {
     if (_interstitialAd != null) {
-      try { _interstitialAd!.show(); _interstitialAd = null; } catch (e) {}
+      try {
+        _interstitialAd!.show();
+        _interstitialAd = null;
+      } catch (e) {
+        debugPrint("Ad show error: $e");
+      }
     } else {
       _loadInterstitialAd();
     }
@@ -124,134 +121,152 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final l10n = AppLocalizations.of(context)!;
     final isAndroid = Platform.isAndroid;
 
-    return BlocBuilder<FastingBloc, FastingState>(
-        builder: (context, fastingState) {
-          return BlocBuilder<WeightBloc, WeightState>(
-              builder: (context, weightState) {
-                return BlocBuilder<WaterBloc, WaterState>(
-                    builder: (context, waterState) {
-                      return BlocBuilder<ProBloc, ProState>(
-                          builder: (context, proState) {
+    return BlocBuilder<FastingBloc, FastingState>(builder: (context, fastingState) {
+      return BlocBuilder<WeightBloc, WeightState>(builder: (context, weightState) {
+        return BlocBuilder<WaterBloc, WaterState>(builder: (context, waterState) {
+          return BlocBuilder<ProBloc, ProState>(builder: (context, proState) {
+            final isPro = proState.isPro;
+            final showAds = isAndroid || !isPro;
+            final showProBanner = !isAndroid && !isPro;
 
-                            final isPro = proState.isPro;
-                            final showAds = isAndroid || !isPro;
-                            final showProBanner = !isAndroid && !isPro;
+            final bmiStr = weightState.bmi.toStringAsFixed(1);
+            final bmiColor = _getBMIColor(weightState.bmi);
 
-                            final bmiStr = weightState.bmi.toStringAsFixed(1);
-                            final bmiColor = _getBMIColor(weightState.bmi);
+            return SafeArea(
+              bottom: false,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // HEADER
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.dashboardToday, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16)),
+                            Text(l10n.dashboardOverview, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
 
-                            return SafeArea(
-                              bottom: false,
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // HEADER
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(l10n.dashboardToday, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16)),
-                                            Text(l10n.dashboardOverview, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 24),
+                    // MAIN TIMER CARD
+                    _buildTimerGlassCard(fastingState, weightState),
 
-                                    // MAIN TIMER
-                                    _buildTimerGlassCard(fastingState, weightState),
+                    const SizedBox(height: 16),
 
-                                    const SizedBox(height: 16),
+                    // STATS ROW
+                    GlassCard(
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildInfoItem(
+                              icon: Icons.local_fire_department_rounded,
+                              color: Colors.orangeAccent,
+                              label: l10n.metricPhase,
+                              value: fastingState.phase == FastingPhase.fasting ? l10n.fastingPhase : l10n.eatingWindow,
+                              onTap: () {}),
+                          Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
+                          _buildInfoItem(icon: Icons.bolt_rounded, color: const Color(0xFFF9D423), label: l10n.metricStreak, value: l10n.valStreakDays(1), onTap: () {}),
+                          Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
+                          _buildInfoItem(icon: Icons.health_and_safety_rounded, color: bmiColor, label: l10n.bmiScore, value: bmiStr, onTap: () {}),
+                        ],
+                      ),
+                    ),
 
-                                    // STATS ROW
-                                    GlassCard(
-                                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          _buildInfoItem(icon: Icons.local_fire_department_rounded, color: Colors.orangeAccent, label: l10n.metricPhase, value: fastingState.phase == FastingPhase.fasting ? l10n.fastingPhase : l10n.eatingWindow, onTap: () {}),
-                                          Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
-                                          _buildInfoItem(icon: Icons.bolt_rounded, color: const Color(0xFFF9D423), label: l10n.metricStreak, value: l10n.valStreakDays(1), onTap: () {}),
-                                          Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
-                                          _buildInfoItem(icon: Icons.health_and_safety_rounded, color: bmiColor, label: l10n.bmiScore, value: bmiStr, onTap: () {}),
-                                        ],
-                                      ),
-                                    ),
+                    const SizedBox(height: 16),
 
-                                    const SizedBox(height: 16),
+                    // WATER & WEIGHT
+                    Row(
+                      children: [
+                        Expanded(
+                            flex: 5,
+                            child: GestureDetector(
+                                onTap: () {
+                                  _soundService.playWaterSound();
+                                  _hapticService.lightImpact();
+                                  context.read<WaterBloc>().add(AddWaterCup());
+                                },
+                                onLongPress: () => _showWaterMenu(waterState),
+                                child: GlassCard(
+                                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                                        Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle),
+                                            child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20)),
+                                        Text("${(waterState.progress * 100).toInt()}%", style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold))
+                                      ]),
+                                      const SizedBox(height: 12),
+                                      Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                                      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                                        Text("${waterState.consumedCups}", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                                        Padding(
+                                            padding: const EdgeInsets.only(bottom: 4, left: 4),
+                                            child: Text("/ ${waterState.dailyGoal}", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))
+                                      ])
+                                    ])))),
+                        const SizedBox(width: 12),
+                        Expanded(
+                            flex: 4,
+                            child: GlassCard(
+                                onTap: () => _showWeightPicker(weightState),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                                    Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(color: const Color(0xFF00FA9A).withOpacity(0.2), shape: BoxShape.circle),
+                                        child: const Icon(Icons.show_chart_rounded, color: Color(0xFF00FA9A), size: 20)),
+                                    Icon(Icons.arrow_right_alt_rounded, color: const Color(0xFF00FA9A).withOpacity(0.8), size: 16)
+                                  ]),
+                                  const SizedBox(height: 12),
+                                  Text(l10n.currentWeight, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                                  Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                                    Text(weightState.currentWeight.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                                    Padding(
+                                        padding: const EdgeInsets.only(bottom: 4, left: 2),
+                                        child: Text(l10n.unitKg, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))
+                                  ])
+                                ]))),
+                      ],
+                    ),
 
-                                    // WATER & WEIGHT
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                            flex: 5,
-                                            child: GestureDetector(
-                                                onTap: () {
-                                                  _soundService.playWaterSound();
-                                                  _hapticService.lightImpact();
-                                                  context.read<WaterBloc>().add(AddWaterCup());
-                                                },
-                                                onLongPress: () => _showWaterMenu(waterState),
-                                                child: GlassCard(
-                                                    child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.water_drop_rounded, color: Colors.blueAccent, size: 20)), Text("${(waterState.progress * 100).toInt()}%", style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.bold))]),
-                                                          const SizedBox(height: 12),
-                                                          Text(l10n.waterIntake, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                                                          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text("${waterState.consumedCups}", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 4), child: Text("/ ${waterState.dailyGoal}", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])
-                                                        ]
-                                                    )
-                                                )
-                                            )
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                            flex: 4,
-                                            child: GlassCard(
-                                                onTap: () => _showWeightPicker(weightState),
-                                                child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFF00FA9A).withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.show_chart_rounded, color: Color(0xFF00FA9A), size: 20)), Icon(Icons.arrow_right_alt_rounded, color: const Color(0xFF00FA9A).withOpacity(0.8), size: 16)]),
-                                                      const SizedBox(height: 12),
-                                                      Text(l10n.currentWeight, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                                                      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(weightState.currentWeight.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)), Padding(padding: const EdgeInsets.only(bottom: 4, left: 2), child: Text(l10n.unitKg, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)))])
-                                                    ]
-                                                )
-                                            )
-                                        ),
-                                      ],
-                                    ),
+                    const SizedBox(height: 16),
 
-                                    const SizedBox(height: 16),
+                    if (showProBanner)
+                      GlassCard(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
+                        child: Row(children: [
+                          Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle),
+                              child: const Icon(Icons.star, color: Colors.amber)),
+                          const SizedBox(width: 16),
+                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))
+                          ]),
+                          const Spacer(),
+                          Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))
+                        ]),
+                      ),
 
-                                    if (showProBanner)
-                                      GlassCard(
-                                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
-                                        child: Row(children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle), child: const Icon(Icons.star, color: Colors.amber)), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)), Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))]), const Spacer(), Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))]),
-                                      ),
+                    const SizedBox(height: 20),
 
-                                    const SizedBox(height: 20),
-
-                                    if (showAds)
-                                      _buildBannerAd(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                      );
-                    }
-                );
-              }
-          );
-        }
-    );
+                    if (showAds) _buildBannerAd(),
+                  ],
+                ),
+              ),
+            );
+          });
+        });
+      });
+    });
   }
 
   Widget _buildTimerGlassCard(FastingState state, WeightState weightState) {
@@ -260,17 +275,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final Color stateColor = _getPhaseColor(state);
 
     String stateText;
-    if (isFasting) stateText = l10n.fastingPhase;
-    else if (state.phase == FastingPhase.eating) stateText = l10n.eatingWindow;
-    else stateText = l10n.readyToFast;
+    if (isFasting) {
+      stateText = l10n.fastingPhase;
+    } else if (state.phase == FastingPhase.eating) {
+      stateText = l10n.eatingWindow;
+    } else {
+      stateText = l10n.readyToFast;
+    }
 
-    final double percent = (state.phase == FastingPhase.stopped) ? 0.0 : state.progress;
-    final timeLeft = (state.phase == FastingPhase.stopped) ? Duration.zero : state.remaining;
-
-    // ИСПРАВЛЕНИЕ: Берем целевое время из текущего плана, если таймер остановлен
-    final String timeString = (state.phase == FastingPhase.stopped)
-        ? _formatDuration(_plans[state.planIndex].fastingDuration) // Берем длительность плана (напр. 18:00:00)
-        : _formatDuration(timeLeft);
+    final timeLeft = (state.phase == FastingPhase.stopped) ? state.goalDuration : state.remaining;
+    final timeString = _formatDuration(timeLeft);
 
     final stageInfo = _getCurrentStageDetail(l10n, state);
     final String detailText = isFasting ? stageInfo['title']! : "";
@@ -290,8 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       btnLabel = l10n.endCycle;
     }
 
-    // Текущий план (16:8, 18:6 и т.д.)
-    final currentPlan = _plans[state.planIndex];
+    final currentPlan = FastingPlan.defaultPlans[state.planIndex];
     final planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
 
     return GlassCard(
@@ -304,11 +317,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
+                    // ANIMATED TEXT: Название фазы (Fasting / Eating)
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 500),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return FadeTransition(opacity: animation, child: SlideTransition(
+                          position: Tween<Offset>(begin: const Offset(0.0, 0.2), end: Offset.zero).animate(animation),
+                          child: child,
+                        ));
+                      },
+                      child: Text(
+                        stateText,
+                        key: ValueKey<String>(stateText),
+                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+
                     if (isFasting && !_isBodyView)
                       GestureDetector(
                         onTap: () => _showBodyTimeline(state),
-                        child: Padding(padding: const EdgeInsets.only(top: 4), child: Row(mainAxisSize: MainAxisSize.min, children: [Text(detailText, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)), const SizedBox(width: 4), Icon(Icons.info_outline, color: Colors.white.withOpacity(0.4), size: 14)])),
+                        child: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(mainAxisSize: MainAxisSize.min, children: [
+                              // ANIMATED TEXT: Детали стадии
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: Text(
+                                  detailText,
+                                  key: ValueKey<String>(detailText),
+                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Icons.info_outline, color: Colors.white.withOpacity(0.4), size: 14)
+                            ])),
                       ),
                   ],
                 ),
@@ -320,7 +362,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _hapticService.selectionClick();
                       setState(() => _isBodyView = !_isBodyView);
                     },
-                    child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle, border: Border.all(color: _isBodyView ? stateColor : Colors.white.withOpacity(0.2))), child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white, size: 18)),
+                    child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: _isBodyView ? stateColor : Colors.white.withOpacity(0.2))),
+                        child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white, size: 18)),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
@@ -333,7 +381,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         if (mounted) context.read<FastingBloc>().add(ChangePlan(newIdx));
                       }
                     },
-                    child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.2))), child: Row(children: [Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)), const SizedBox(width: 4), const Icon(Icons.edit, color: Colors.white70, size: 12)])),
+                    child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.2))),
+                        child: Row(children: [
+                          Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.edit, color: Colors.white70, size: 12)
+                        ])),
                   ),
                 ],
               ),
@@ -346,29 +404,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: _isBodyView
                 ? Center(
                 child: BodyVisualizer(
-                    weight: weightState.currentWeight,
-                    height: weightState.heightCm,
-                    phaseColor: stateColor,
-                    isFasting: isFasting
-                )
-            )
+                    weight: weightState.currentWeight, height: weightState.heightCm, phaseColor: stateColor, isFasting: isFasting))
                 : SizedBox(
-              width: 240, height: 240,
-              child: GradientTimerBlob(
-                percent: percent, isFasting: isFasting,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(timeString, style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white, fontFeatures: [FontFeature.tabularFigures()])),
-                    const SizedBox(height: 8),
-                    if (isFasting)
-                      GestureDetector(
-                        onTap: () => _showBodyTimeline(state),
-                        child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: stateColor.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: stateColor.withOpacity(0.5))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(stageIcon, color: stateColor, size: 14), const SizedBox(width: 6), Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))])),
-                      )
-                    else
-                      Text(l10n.targetGoal, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
-                  ],
+              width: 240,
+              height: 240,
+              // ANIMATED SWITCHER для всего блоба (плавный переход цветов)
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 800),
+                child: GradientTimerBlob(
+                  key: ValueKey<bool>(isFasting), // Ключ для смены виджета
+                  percent: (state.phase == FastingPhase.stopped) ? 0.0 : state.progress,
+                  isFasting: isFasting,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              timeString,
+                              style: const TextStyle(
+                                  fontSize: 44, fontWeight: FontWeight.w700, color: Colors.white, fontFeatures: [FontFeature.tabularFigures()]),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (isFasting)
+                          GestureDetector(
+                            onTap: () => _showBodyTimeline(state),
+                            child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                    color: stateColor.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: stateColor.withOpacity(0.5))),
+                                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                  Icon(stageIcon, color: stateColor, size: 14),
+                                  const SizedBox(width: 6),
+                                  Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))
+                                ])),
+                          )
+                        else
+                          Text(l10n.targetGoal, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -377,8 +459,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           GestureDetector(
             onTap: onAction,
             child: Container(
-              width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18),
-              decoration: BoxDecoration(color: stateColor.withOpacity(0.8), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))]),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                  color: stateColor.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))]),
               child: Center(child: Text(btnLabel, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
             ),
           ),
@@ -387,15 +473,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // --- WIDGET HELPERS ---
-
+  // ... (Остальные методы _buildInfoItem, _showWaterMenu и т.д. остаются БЕЗ ИЗМЕНЕНИЙ)
   Widget _buildInfoItem({required IconData icon, required Color color, required String label, required String value, required VoidCallback onTap}) {
     return Expanded(child: GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: Column(children: [Icon(icon, color: color, size: 24), const SizedBox(height: 4), Text(value, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)), Text(label, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10))])));
   }
-
-  // ... (Остальные методы _showWaterMenu, _showWeightPicker и т.д. остаются без изменений)
-  // Я их скрыл для краткости, так как они не менялись.
-  // Если нужно, я могу прислать их полный код, но они такие же, как в предыдущем файле.
 
   void _showWaterMenu(WaterState state) {
     _hapticService.mediumImpact();
@@ -433,7 +514,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final l10n = AppLocalizations.of(context)!;
     final String timeString = _formatDuration(duration);
     showModalBottomSheet(context: context, backgroundColor: Colors.transparent, isScrollControlled: true, builder: (ctx) {
-      return BackdropFilter(filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), child: Container(decoration: BoxDecoration(color: const Color(0xFF1E1E1E).withOpacity(0.9), borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1))), padding: const EdgeInsets.fromLTRB(24, 16, 24, 40), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2))), const SizedBox(height: 30), Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.15), shape: BoxShape.circle), child: const Icon(Icons.emoji_events_rounded, color: Colors.greenAccent, size: 40)), const SizedBox(height: 20), Text(l10n.fastComplete, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), const SizedBox(height: 8), Text("You successfully completed a fast cycle!", textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14)), const SizedBox(height: 30), Text(timeString, style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()], letterSpacing: 2)), const SizedBox(height: 8), Text("TOTAL DURATION", style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)), const SizedBox(height: 40), GestureDetector(onTap: () { context.read<FastingBloc>().add(const EndFasting()); Navigator.pop(ctx); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fasting saved! 🏆"), backgroundColor: Colors.green)); }, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF43C6AC), Color(0xFF191654)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(20)), child: Center(child: Text(l10n.save, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))))), const SizedBox(height: 16), TextButton(onPressed: () { _hapticService.mediumImpact(); Navigator.pop(ctx); }, child: Text(l10n.discard, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16)))])));
+      return BackdropFilter(filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), child: Container(decoration: BoxDecoration(color: const Color(0xFF1E1E1E).withOpacity(0.9), borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1))), padding: const EdgeInsets.fromLTRB(24, 16, 24, 40), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2))), const SizedBox(height: 30), Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.15), shape: BoxShape.circle), child: const Icon(Icons.emoji_events_rounded, color: Colors.greenAccent, size: 40)), const SizedBox(height: 20), Text(l10n.fastComplete, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), const SizedBox(height: 8), const Text("You successfully completed a fast cycle!", textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 14)), const SizedBox(height: 30), Text(timeString, style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()], letterSpacing: 2)), const SizedBox(height: 8), Text("TOTAL DURATION", style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)), const SizedBox(height: 40), GestureDetector(onTap: () { context.read<FastingBloc>().add(const EndFasting()); Navigator.pop(ctx); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fasting saved! 🏆"), backgroundColor: Colors.green)); }, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF43C6AC), Color(0xFF191654)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(20)), child: Center(child: Text(l10n.save, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))))), const SizedBox(height: 16), TextButton(onPressed: () { _hapticService.mediumImpact(); Navigator.pop(ctx); }, child: Text(l10n.discard, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16)))])));
     });
   }
 
@@ -453,7 +534,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  // Helpers
   String _formatDuration(Duration d) => "${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
   Color _getPhaseColor(FastingState state) { if (state.phase == FastingPhase.eating) return const Color(0xFF84FAB0); if (state.phase == FastingPhase.stopped) return Colors.blueAccent; final h = state.elapsed.inHours; if (h < 12) return Colors.blueAccent; if (h < 16) return Colors.orangeAccent; if (h < 18) return Colors.purpleAccent; return const Color(0xFFFFD700); }
   IconData _getPhaseIcon(FastingState state) { if (state.phase == FastingPhase.eating) return Icons.restaurant; final h = state.elapsed.inHours; if (h < 12) return Icons.bloodtype; if (h < 16) return Icons.local_fire_department; if (h < 18) return Icons.bolt; return Icons.auto_awesome; }

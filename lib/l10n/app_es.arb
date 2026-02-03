@@ -403,7 +403,65 @@
                     "permHealthTitle": "Apple Health",
                     "permHealthDesc": "Sincroniza datos de peso y agua.",
                     "permAllow": "Permitir",
-                    "permContinue": "Continuar"
+                    "permContinue": "Continuar",
+                    "achFirstFast": "Primer paso",
+                      "achFirstFastDesc": "Completa tu primer ayuno.",
+                      "achStreak3": "Constancia",
+                      "achStreak3Desc": "Mantén una racha de ayuno de 3 días.",
+                      "achStreak7": "Imparable",
+                      "achStreak7Desc": "Alcanza una racha de 7 días. ¡Estás imparable!",
+                      "achTotal10": "Compromiso",
+                      "achTotal10Desc": "Completa 10 ayunos en total.",
+                      "achTotalHours100": "Centurión",
+                      "achTotalHours100Desc": "Acumula 100 horas de ayuno.",
+                      "navProfile": "Perfil",
+                        "guestUser": "Usuario invitado",
+                        "defaultUser": "Usuario",
+                        "authSubtitle": "Inicia sesión para sincronizar datos",
+                        "signInGoogle": "Iniciar sesión con Google",
+                        "signOut": "Cerrar sesión",
+
+                        "onboardingTitle": "Personaliza tu plan",
+                        "onboardingDesc": "Calculemos tu tasa metabólica.",
+                        "btnContinue": "Continuar",
+                        "btnStart": "Comenzar el viaje",
+
+                        "selectGender": "Género",
+                        "selectAge": "Edad",
+                        "selectWeight": "Peso",
+                        "selectHeight": "Altura",
+                        "selectActivity": "Nivel de actividad",
+
+                        "genderMale": "Masculino",
+                        "genderFemale": "Femenino",
+
+                        "activitySedentary": "Sedentario",
+                        "activityModerate": "Moderado",
+                        "activityActive": "Muy activo",
+
+                        "achFirstFast": "Primer paso",
+                        "achFirstFastDesc": "Completa tu primera sesión de ayuno.",
+                        "achStreak3": "Constancia",
+                        "achStreak3Desc": "Mantén una racha de ayuno de 3 días.",
+                        "achStreak7": "Imparable",
+                        "achStreak7Desc": "Alcanza una racha de 7 días.",
+                        "achTotal10": "Compromiso",
+                        "achTotal10Desc": "Completa 10 ayunos en total.",
+                        "achTotalHours100": "Centurión",
+                        "achTotalHours100Desc": "Acumula 100 horas de ayuno.",
+
+                        "settingLanguage": "Idioma",
+                        "settingTheme": "Tema",
+                        "settingHeight": "Altura",
+                        "settingsNotifications": "Notificaciones",
+                        "settingsHealthConnect": "Conexión de salud",
+                        "themeLight": "Claro",
+                        "themeDark": "Oscuro",
+                        "themeSystem": "Sistema",
+
+                        "privacyPolicy": "Política de privacidad",
+                        "termsOfService": "Términos del servicio",
+                        "contactSupport": "Contactar soporte"
 
 
 

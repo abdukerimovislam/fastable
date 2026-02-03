@@ -1,6 +1,8 @@
+import 'package:injectable/injectable.dart';
 import 'package:fastable/models/achievement.dart';
 import 'package:fastable/models/fasting_record.dart';
 
+@lazySingleton
 class AchievementService {
 
   List<Achievement> getUnlockedAchievements(List<FastingRecord> records) {
@@ -12,7 +14,7 @@ class AchievementService {
     int totalHours = (totalSeconds / 3600).floor();
     int currentStreak = _calculateStreak(records);
 
-    // Фильтруем список всех достижений
+    // Проверяем все возможные достижения
     return Achievement.all.where((ach) {
       return ach.condition(totalFasts, totalHours, currentStreak);
     }).toList();
@@ -20,17 +22,23 @@ class AchievementService {
 
   int _calculateStreak(List<FastingRecord> records) {
     if (records.isEmpty) return 0;
+
+    // Создаем копию и сортируем
     var sorted = List<FastingRecord>.from(records);
-    sorted.sort((a, b) => b.endTime.compareTo(a.endTime));
+    sorted.sort((a, b) => b.endTime.compareTo(a.endTime)); // От новых к старым
 
     DateTime today = DateTime.now();
     DateTime todayDate = DateTime(today.year, today.month, today.day);
+
+    // Дата последнего голодания (без времени)
     DateTime lastFastDate = DateTime(
         sorted.first.endTime.year, sorted.first.endTime.month, sorted.first.endTime.day);
 
     int streak = 0;
-    if (_isSameDay(lastFastDate, todayDate) ||
-        _isSameDay(lastFastDate, todayDate.subtract(const Duration(days: 1)))) {
+
+    // Если последнее голодание было сегодня или вчера — стрик жив
+    if (lastFastDate.isAtSameMomentAs(todayDate) ||
+        lastFastDate.isAtSameMomentAs(todayDate.subtract(const Duration(days: 1)))) {
       streak = 1;
       DateTime checkDate = lastFastDate.subtract(const Duration(days: 1));
 
@@ -38,18 +46,16 @@ class AchievementService {
         DateTime currentFastDate = DateTime(
             sorted[i].endTime.year, sorted[i].endTime.month, sorted[i].endTime.day);
 
-        if (_isSameDay(currentFastDate, checkDate)) {
+        if (currentFastDate.isAtSameMomentAs(checkDate)) {
           streak++;
           checkDate = checkDate.subtract(const Duration(days: 1));
-        } else if (!_isSameDay(currentFastDate, lastFastDate)) { // Игнорируем дубликаты за один день
-          if (currentFastDate.isBefore(checkDate)) break;
+        } else if (currentFastDate.isBefore(checkDate)) {
+          // Разрыв в днях — стрик прерван
+          break;
         }
+        // Если дата та же (несколько голоданий в день), просто идем дальше
       }
     }
     return streak;
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }

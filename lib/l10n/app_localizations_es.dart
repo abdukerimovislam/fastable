@@ -277,7 +277,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get themeSystem => 'Sistema';
 
   @override
-  String get settingsHealthConnect => 'Health Connect';
+  String get settingsHealthConnect => 'Conexión de salud';
 
   @override
   String get settingsSyncWeight => 'Sincronizar peso y pasos';
@@ -346,7 +346,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tabPartner => 'Socio';
 
   @override
-  String get guestUser => 'Invitado';
+  String get guestUser => 'Usuario invitado';
 
   @override
   String get defaultUser => 'Usuario';
@@ -394,7 +394,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authWelcome => 'Bienvenido a Fastable';
 
   @override
-  String get authSubtitle => 'Sincroniza tu progreso y alcanza tus metas.';
+  String get authSubtitle => 'Inicia sesión para sincronizar datos';
 
   @override
   String get signInGoogle => 'Iniciar sesión con Google';
@@ -549,31 +549,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get achFirstFastTitle => '¡Primer ayuno!';
 
   @override
-  String get achFirstFastDesc => 'Completa tu primer ayuno.';
+  String get achFirstFastDesc => 'Completa tu primera sesión de ayuno.';
 
   @override
   String get achStreak3Title => 'Buen comienzo';
 
   @override
-  String get achStreak3Desc => 'Mantén una racha de 3 días.';
+  String get achStreak3Desc => 'Mantén una racha de ayuno de 3 días.';
 
   @override
   String get achStreak7Title => 'Constante';
 
   @override
-  String get achStreak7Desc => 'Mantén una racha de 7 días.';
+  String get achStreak7Desc => 'Alcanza una racha de 7 días.';
 
   @override
   String get achTotal10Title => 'Novato';
 
   @override
-  String get achTotal10Desc => 'Completa 10 ayunos.';
+  String get achTotal10Desc => 'Completa 10 ayunos en total.';
 
   @override
   String get achTotalHours100Title => 'Club de 100 horas';
 
   @override
-  String get achTotalHours100Desc => 'Ayuna un total de 100 horas.';
+  String get achTotalHours100Desc => 'Acumula 100 horas de ayuno.';
 
   @override
   String get journalTitle => 'Nota del diario';
@@ -764,7 +764,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get onboardingTitle => 'Personalicemos\n tu recorrido';
+  String get onboardingTitle => 'Personaliza tu plan';
 
   @override
   String get onboardingHeightTitle => '¿Cuál es tu altura?';
@@ -950,4 +950,61 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get permContinue => 'Continuar';
+
+  @override
+  String get achFirstFast => 'Primer paso';
+
+  @override
+  String get achStreak3 => 'Constancia';
+
+  @override
+  String get achStreak7 => 'Imparable';
+
+  @override
+  String get achTotal10 => 'Compromiso';
+
+  @override
+  String get achTotalHours100 => 'Centurión';
+
+  @override
+  String get onboardingDesc => 'Calculemos tu tasa metabólica.';
+
+  @override
+  String get btnContinue => 'Continuar';
+
+  @override
+  String get btnStart => 'Comenzar el viaje';
+
+  @override
+  String get selectGender => 'Género';
+
+  @override
+  String get selectAge => 'Edad';
+
+  @override
+  String get selectWeight => 'Peso';
+
+  @override
+  String get selectHeight => 'Altura';
+
+  @override
+  String get selectActivity => 'Nivel de actividad';
+
+  @override
+  String get genderMale => 'Masculino';
+
+  @override
+  String get genderFemale => 'Femenino';
+
+  @override
+  String get activitySedentary => 'Sedentario';
+
+  @override
+  String get activityModerate => 'Moderado';
+
+  @override
+  String get activityActive => 'Muy activo';
+
+  @override
+  String get contactSupport => 'Contactar soporte';
 }

@@ -2,97 +2,118 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:fastable/bloc/weight/weight_event.dart';
 import 'package:fastable/bloc/weight/weight_state.dart';
 import 'package:fastable/repositories/weight_repository.dart';
-import 'package:fastable/services/health_service.dart';
 import 'package:fastable/models/weight_entry.dart';
 
 @injectable
 class WeightBloc extends Bloc<WeightEvent, WeightState> {
-  final WeightRepository _weightRepository;
-  final HealthService _healthService; // Для синхронизации с Apple Health
+  final WeightRepository _repository;
 
-  WeightBloc(this._weightRepository, this._healthService) : super(const WeightState()) {
+  WeightBloc(this._repository) : super(const WeightState()) {
     on<LoadWeightData>(_onLoadData);
-    on<AddWeightEntry>(_onAddWeight);
+
+    // Основные метрики
     on<UpdateHeight>(_onUpdateHeight);
+    on<AddWeightEntry>(_onAddEntry);
+
+    // Персонализация (BMR/TDEE)
+    on<UpdateAge>(_onUpdateAge);
+    on<UpdateGender>(_onUpdateGender);
+    on<UpdateActivityLevel>(_onUpdateActivity);
   }
 
   Future<void> _onLoadData(LoadWeightData event, Emitter<WeightState> emit) async {
     emit(state.copyWith(status: WeightStatus.loading));
 
-    final prefs = await SharedPreferences.getInstance();
-    final height = (prefs.getInt('user_height') ?? 175).toDouble();
-    final goal = (prefs.getDouble('user_goal_weight') ?? 65.0); // Используем double, не int
-
-    // 1. Получаем текущий вес из репозитория (БД)
-    double? current = await _weightRepository.getCurrentWeight();
-
-    // 2. Если в БД пусто, пробуем Apple Health (Fallback)
-    if (current == null) {
-      // Требует прав, но метод безопасен (вернет null если нет прав)
-      final healthWeight = await _healthService.fetchWeight();
-      if (healthWeight != null) current = healthWeight;
-    }
-
-    current = current ?? 70.0;
-
-    // 3. Получаем историю (если в репозитории есть метод getHistory, иначе пустой список)
-    // Допустим, пока просто список, чтобы не усложнять.
-    // final history = await _weightRepository.getHistory();
-    final List<WeightEntry> history = [];
-
-    final bmi = _calculateBMI(current, height);
-
-    emit(state.copyWith(
-      status: WeightStatus.success,
-      currentWeight: current,
-      heightCm: height,
-      goalWeight: goal,
-      bmi: bmi,
-      history: history,
-    ));
-  }
-
-  Future<void> _onAddWeight(AddWeightEntry event, Emitter<WeightState> emit) async {
-    // Оптимистичное обновление UI
-    final newBmi = _calculateBMI(event.weight, state.heightCm);
-    emit(state.copyWith(
-      currentWeight: event.weight,
-      bmi: newBmi,
-    ));
-
-    // Асинхронное сохранение
     try {
-      // 1. Локальная БД / Firestore
-      await _weightRepository.addWeightOrUpdateToday(event.weight);
+      final prefs = await SharedPreferences.getInstance();
 
-      // 2. Apple Health / Google Fit
-      await _healthService.saveWeight(event.weight);
+      // 1. Загружаем простые типы
+      final height = prefs.getDouble('user_height') ?? 170.0;
+      final currentWeight = prefs.getDouble('user_weight') ?? 70.0;
+      final age = prefs.getInt('user_age') ?? 25;
 
-      // 3. Можно перезагрузить историю, если нужно
+      // 2. Безопасная загрузка Enums (защита от crash при неверном индексе)
+      final genderIdx = prefs.getInt('user_gender') ?? 0;
+      final gender = Gender.values.asMap()[genderIdx] ?? Gender.male;
+
+      final activityIdx = prefs.getInt('user_activity') ?? 1; // 1 = Moderate
+      final activity = ActivityLevel.values.asMap()[activityIdx] ?? ActivityLevel.moderate;
+
+      // 3. Загружаем историю из репозитория (БД/Hive/Firestore)
+      // Если репозиторий возвращает Stream, здесь можно подписаться, но для примера берем Future
+      List<WeightEntry> history = [];
+      try {
+        history = await _repository.getWeightHistory();
+      } catch (e) {
+        // Если история не загрузилась, не ломаем весь стейт, просто оставляем пустой
+        // debugPrint("History load failed: $e");
+      }
+
+      emit(state.copyWith(
+        status: WeightStatus.success,
+        heightCm: height,
+        currentWeight: currentWeight,
+        age: age,
+        gender: gender,
+        activityLevel: activity,
+        history: history,
+      ));
     } catch (e) {
-      // Обработка ошибок (можно добавить поле error в state)
-      print("Weight save error: $e");
+      emit(state.copyWith(status: WeightStatus.failure));
     }
   }
 
   Future<void> _onUpdateHeight(UpdateHeight event, Emitter<WeightState> emit) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('user_height', event.heightCm.toInt());
-
-    final newBmi = _calculateBMI(state.currentWeight, event.heightCm);
-
-    emit(state.copyWith(
-      heightCm: event.heightCm,
-      bmi: newBmi,
-    ));
+    await prefs.setDouble('user_height', event.heightCm);
+    emit(state.copyWith(heightCm: event.heightCm));
   }
 
-  double _calculateBMI(double weight, double heightCm) {
-    if (heightCm <= 0) return 0;
-    double heightM = heightCm / 100.0;
-    return weight / (heightM * heightM);
+  Future<void> _onAddEntry(AddWeightEntry event, Emitter<WeightState> emit) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // 1. Обновляем "Текущий вес" (быстрый доступ)
+      await prefs.setDouble('user_weight', event.weight);
+
+      // 2. Добавляем запись в историю через репозиторий
+      final newEntry = WeightEntry(date: DateTime.now(), weight: event.weight);
+      await _repository.addWeightEntry(newEntry);
+
+      // 3. Обновляем список истории в стейте
+      // (Можно либо перезапросить весь список, либо добавить локально для скорости)
+      final updatedHistory = List<WeightEntry>.from(state.history)..add(newEntry);
+      // Сортируем от новых к старым, если нужно
+      updatedHistory.sort((a, b) => b.date.compareTo(a.date));
+
+      emit(state.copyWith(
+        currentWeight: event.weight,
+        history: updatedHistory,
+      ));
+    } catch (e) {
+      // Можно добавить обработку ошибок (например, SnackBar через Listener в UI)
+    }
+  }
+
+  Future<void> _onUpdateAge(UpdateAge event, Emitter<WeightState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_age', event.age);
+    emit(state.copyWith(age: event.age));
+  }
+
+  Future<void> _onUpdateGender(UpdateGender event, Emitter<WeightState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_gender', event.gender.index);
+    emit(state.copyWith(gender: event.gender));
+  }
+
+  Future<void> _onUpdateActivity(UpdateActivityLevel event, Emitter<WeightState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_activity', event.level.index);
+    emit(state.copyWith(activityLevel: event.level));
   }
 }
