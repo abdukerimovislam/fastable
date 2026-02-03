@@ -2066,6 +2066,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact Support'**
   String get contactSupport;
+
+  /// No description provided for @metabolicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Metabolic Profile'**
+  String get metabolicProfile;
+
+  /// No description provided for @ageYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{age} y.o.'**
+  String ageYears(int age);
+
+  /// No description provided for @metricBmrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'BMR'**
+  String get metricBmrTitle;
+
+  /// No description provided for @metricBmrSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Basal'**
+  String get metricBmrSubtitle;
+
+  /// No description provided for @metricBmrDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Basal Metabolic Rate. Calories burned at complete rest.'**
+  String get metricBmrDesc;
+
+  /// No description provided for @metricTdeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TDEE'**
+  String get metricTdeeTitle;
+
+  /// No description provided for @metricTdeeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get metricTdeeSubtitle;
+
+  /// No description provided for @metricTdeeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Daily Energy Expenditure. Calories needed to maintain current weight.'**
+  String get metricTdeeDesc;
+
+  /// No description provided for @dialogStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When did your fast start?'**
+  String get dialogStartTitle;
+
+  /// No description provided for @btnStartFasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Fasting'**
+  String get btnStartFasting;
+
+  /// No description provided for @btnCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get btnCancel;
+
+  /// No description provided for @stage2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood sugar is dropping 📉'**
+  String get stage2Title;
+
+  /// No description provided for @stage2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body is calming down. If you feel hungry, drink some water. 💧'**
+  String get stage2Body;
+
+  /// No description provided for @stage4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Insulin is dropping ⬇️'**
+  String get stage4Title;
+
+  /// No description provided for @stage4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Great! Your body stops storing fat and starts preparing to burn it.'**
+  String get stage4Body;
+
+  /// No description provided for @stage8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup started ✨'**
+  String get stage8Title;
+
+  /// No description provided for @stage8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'8 hours in. Your stomach is resting. You are doing great for your health!'**
+  String get stage8Body;
+
+  /// No description provided for @stage11Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Burning Mode 🔥'**
+  String get stage11Title;
+
+  /// No description provided for @stage11Body.
+  ///
+  /// In en, this message translates to:
+  /// **'The fun part begins! Your body switches to internal reserves.'**
+  String get stage11Body;
+
+  /// No description provided for @stage12Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ketosis Activated 🚀'**
+  String get stage12Title;
+
+  /// No description provided for @stage12Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat cells are turning into energy. Your mind is clearer now.'**
+  String get stage12Body;
+
+  /// No description provided for @stage14Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Ketosis 🔥'**
+  String get stage14Title;
+
+  /// No description provided for @stage14Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in the fat-burning zone! Detox is happening fast now.'**
+  String get stage14Body;
+
+  /// No description provided for @stage16Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Autophagy (Cell Repair) 🧬'**
+  String get stage16Title;
+
+  /// No description provided for @stage16Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cells are renewing themselves. This is the fountain of youth!'**
+  String get stage16Body;
+
+  /// No description provided for @stage18Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth Hormone Peak 📈'**
+  String get stage18Title;
+
+  /// No description provided for @stage18Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth hormone helps muscle and burns fat. You are getting stronger!'**
+  String get stage18Body;
+
+  /// No description provided for @stage24Title.
+  ///
+  /// In en, this message translates to:
+  /// **'24 Hours! 🏆'**
+  String get stage24Title;
+
+  /// No description provided for @stage24Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Incredible! Full day complete. Deep cleaning is in full effect.'**
+  String get stage24Body;
+
+  /// No description provided for @notifyHalfwayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Halfway there! ⛰️'**
+  String get notifyHalfwayTitle;
+
+  /// No description provided for @notifyHalfwayBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The hardest part is over. Your body thanks you.'**
+  String get notifyHalfwayBody;
+
+  /// No description provided for @notify1hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home Stretch! 🏁'**
+  String get notify1hTitle;
+
+  /// No description provided for @notify1hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only 1 hour left. You are doing amazing!'**
+  String get notify1hBody;
+
+  /// No description provided for @notifyGoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Reached! 🎉'**
+  String get notifyGoalTitle;
+
+  /// No description provided for @notifyGoalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! Break your fast gently.'**
+  String get notifyGoalBody;
+
+  /// No description provided for @notifyEatCloseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating window closing 🛑'**
+  String get notifyEatCloseTitle;
+
+  /// No description provided for @notifyEatCloseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to start your next fast. Check the app!'**
+  String get notifyEatCloseBody;
+
+  /// No description provided for @notifyEat30mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'30 mins left 🥗'**
+  String get notifyEat30mTitle;
+
+  /// No description provided for @notifyEat30mBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t forget to drink water or eat a last snack.'**
+  String get notifyEat30mBody;
+
+  /// No description provided for @learnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn & Eat'**
+  String get learnTitle;
+
+  /// No description provided for @tabArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles'**
+  String get tabArticles;
+
+  /// No description provided for @catBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Basics'**
+  String get catBasics;
+
+  /// No description provided for @catNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get catNutrition;
+
+  /// No description provided for @catHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get catHealth;
+
+  /// No description provided for @catKeto.
+  ///
+  /// In en, this message translates to:
+  /// **'Keto'**
+  String get catKeto;
+
+  /// No description provided for @headerLatestArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest Articles'**
+  String get headerLatestArticles;
+
+  /// No description provided for @headerHealthyChoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy Choices'**
+  String get headerHealthyChoices;
+
+  /// No description provided for @statusNoArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles found.'**
+  String get statusNoArticles;
+
+  /// No description provided for @msgComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon...'**
+  String get msgComingSoon;
+
+  /// No description provided for @learnBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock 500+ Recipes'**
+  String get learnBannerTitle;
+
+  /// No description provided for @learnBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get full access with PRO'**
+  String get learnBannerSubtitle;
+
+  /// No description provided for @labelPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'PREMIUM'**
+  String get labelPremium;
+
+  /// No description provided for @bannerRecipeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy Recipes'**
+  String get bannerRecipeTitle;
+
+  /// No description provided for @bannerRecipeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keto, Low-Carb & More'**
+  String get bannerRecipeSubtitle;
+
+  /// No description provided for @unitKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get unitKcal;
+
+  /// No description provided for @unitMin.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get unitMin;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

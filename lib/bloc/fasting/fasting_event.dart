@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fastable/models/fasting_record.dart'; // Импорт enum
 
 abstract class FastingEvent extends Equatable {
   const FastingEvent();
@@ -11,27 +12,53 @@ abstract class FastingEvent extends Equatable {
 class CheckFastingState extends FastingEvent {}
 
 /// Пользователь нажал "Start Fasting"
-class StartFasting extends FastingEvent {}
+class StartFasting extends FastingEvent {
+  // Если null, значит старт "сейчас". Если передано значение — это ручной выбор времени.
+  final DateTime? startTime;
+
+  const StartFasting({this.startTime});
+
+  @override
+  List<Object?> get props => [startTime];
+}
 
 /// Пользователь нажал "End Fasting" (раньше времени или вовремя)
 class EndFasting extends FastingEvent {
   final bool isManual; // true если прервал руками
-  const EndFasting({this.isManual = true});
+  final FastingMood? mood;
+  // Если null, значит конец "сейчас". Если передано значение — ручной выбор.
+  final DateTime? endTime;
+
+  const EndFasting({
+    this.isManual = true,
+    this.endTime,
+    this.mood,
+  });
+
+  @override
+  List<Object?> get props => [isManual, endTime, mood];
 }
 
 /// Пользователь нажал "End Eating" (начать новый цикл)
+/// Обычно это синоним StartFasting, но для окна еды
 class EndEatingWindow extends FastingEvent {}
 
 /// Сработал тик таймера (каждую секунду)
 class TickTimer extends FastingEvent {
   final Duration elapsed;
   const TickTimer(this.elapsed);
+
+  @override
+  List<Object?> get props => [elapsed];
 }
 
 /// Пользователь сменил план (16:8 -> 18:6)
 class ChangePlan extends FastingEvent {
   final int planIndex;
   const ChangePlan(this.planIndex);
+
+  @override
+  List<Object?> get props => [planIndex];
 }
 
 /// Сброс всего (Reset)

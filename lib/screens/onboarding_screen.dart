@@ -13,6 +13,7 @@ import 'package:fastable/bloc/fasting/fasting_event.dart';
 // --- MODELS & SERVICES ---
 import 'package:fastable/models/fasting_plan.dart';
 import 'package:fastable/services/haptic_service.dart';
+import 'package:fastable/l10n/app_localizations.dart'; // Локализация
 
 // --- WIDGETS ---
 import 'package:fastable/widgets/mesh_background.dart';
@@ -71,6 +72,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     // Прогресс бар теперь делим на 5 частей
     return Scaffold(
       body: Stack(
@@ -103,11 +106,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: (idx) => setState(() => _currentPage = idx),
                     children: [
-                      _buildIntroPage(),
-                      _buildGenderAgePage(), // NEW
-                      _buildBodyMetricsPage(), // Weight/Height
-                      _buildActivityPage(),  // NEW
-                      _buildPlanPage(),
+                      _buildIntroPage(l10n),
+                      _buildGenderAgePage(l10n), // NEW
+                      _buildBodyMetricsPage(l10n), // Weight/Height
+                      _buildActivityPage(l10n),  // NEW
+                      _buildPlanPage(l10n),
                     ],
                   ),
                 ),
@@ -120,7 +123,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Center(
                         child: Text(
-                          _currentPage == 4 ? "Start Journey" : "Continue",
+                          _currentPage == 4 ? l10n.btnStart : l10n.btnContinue,
                           style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -136,7 +139,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // 1. INTRO
-  Widget _buildIntroPage() {
+  Widget _buildIntroPage(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -148,9 +151,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: const Icon(Icons.bolt_rounded, size: 80, color: Colors.amber),
           ),
           const SizedBox(height: 40),
-          const Text("Personalize Your Fast", style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          Text(l10n.onboardingTitle, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          Text("Let's build a plan tailored to your biology. We need a few details to calculate your metabolic rate.",
+          Text(l10n.onboardingDesc,
               style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16, height: 1.5), textAlign: TextAlign.center),
         ],
       ),
@@ -158,26 +161,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // 2. GENDER & AGE (NEW)
-  Widget _buildGenderAgePage() {
+  Widget _buildGenderAgePage(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text("Who are you?", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+          Text(l10n.selectGender, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 30),
 
           // Gender
           Row(
             children: [
-              Expanded(child: _buildGenderCard("Male", Icons.male, Gender.male)),
+              Expanded(child: _buildGenderCard(l10n.genderMale, Icons.male, Gender.male)),
               const SizedBox(width: 16),
-              Expanded(child: _buildGenderCard("Female", Icons.female, Gender.female)),
+              Expanded(child: _buildGenderCard(l10n.genderFemale, Icons.female, Gender.female)),
             ],
           ),
 
           const SizedBox(height: 40),
-          const Text("Age", style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(l10n.selectAge, style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
 
           // Age Picker
@@ -233,7 +236,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // 3. BODY METRICS
-  Widget _buildBodyMetricsPage() {
+  Widget _buildBodyMetricsPage(AppLocalizations l10n) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -243,9 +246,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("Weight (kg)", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+            Text(l10n.selectWeight, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
             const SizedBox(width: 40),
-            const Text("Height (cm)", style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+            Text(l10n.selectHeight, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
           ],
         ),
 
@@ -291,22 +294,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // 4. ACTIVITY LEVEL (NEW)
-  Widget _buildActivityPage() {
+  Widget _buildActivityPage(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text("Daily Activity", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+          Text(l10n.selectActivity, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Text("Used to calculate your daily energy burn (TDEE).", style: TextStyle(color: Colors.white.withOpacity(0.6)), textAlign: TextAlign.center),
           const SizedBox(height: 30),
 
-          _buildActivityCard("Sedentary", "Office job, little exercise", ActivityLevel.sedentary),
+          _buildActivityCard(l10n.activitySedentary, "Office job, little exercise", ActivityLevel.sedentary),
           const SizedBox(height: 12),
-          _buildActivityCard("Moderate", "Active job or exercise 3-4x", ActivityLevel.moderate),
+          _buildActivityCard(l10n.activityModerate, "Active job or exercise 3-4x", ActivityLevel.moderate),
           const SizedBox(height: 12),
-          _buildActivityCard("Very Active", "Physical job or daily training", ActivityLevel.active),
+          _buildActivityCard(l10n.activityActive, "Physical job or daily training", ActivityLevel.active),
         ],
       ),
     );
@@ -346,14 +349,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // 5. PLAN SELECTION
-  Widget _buildPlanPage() {
+  // 5. PLAN SELECTION (С УМНОЙ РЕКОМЕНДАЦИЕЙ)
+  Widget _buildPlanPage(AppLocalizations l10n) {
+    // 1. Логика рекомендации
+    int recommendedIndex = 0; // По умолчанию 12-12 (Beginner)
+
+    // Если мужчина и возраст от 18 до 60 -> 16-8 (Index 1)
+    if (_gender == Gender.male && _age >= 18 && _age < 60) {
+      recommendedIndex = 1;
+    }
+    // Если активный образ жизни -> 16-8
+    if (_activity == ActivityLevel.active) {
+      recommendedIndex = 1;
+    }
+
+    // Если пользователь еще не выбирал, можем подставить рекомендованный (опционально)
+    // if (_planIndex == 0 && _currentPage < 4) _planIndex = recommendedIndex;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text("Choose Your Goal", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          // Показываем пояснение
+          if (recommendedIndex == 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text("Based on your gender and activity, we recommend the 16-8 plan.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 14)),
+            ),
+
           const SizedBox(height: 20),
           Expanded(
             child: ListView.separated(
@@ -362,39 +390,59 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               itemBuilder: (context, index) {
                 final plan = FastingPlan.defaultPlans[index];
                 final isSelected = _planIndex == index;
+                final isRecommended = index == recommendedIndex;
 
                 String label = "Beginner";
-                if (index == 1) label = "Popular";
-                if (index == 2) label = "Advanced";
-                if (index == 3) label = "Expert";
+                if (index == 1) label = "Popular (16:8)";
+                if (index == 2) label = "Advanced (18:6)";
+                if (index == 3) label = "Expert (OMAD)";
 
                 return GestureDetector(
                   onTap: () {
                     getIt<HapticService>().selectionClick();
                     setState(() => _planIndex = index);
                   },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.greenAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
-                      border: Border.all(color: isSelected ? Colors.greenAccent : Colors.transparent),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.greenAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+                          border: Border.all(
+                              color: isSelected ? Colors.greenAccent : (isRecommended ? Colors.amber.withOpacity(0.5) : Colors.transparent),
+                              width: isRecommended && !isSelected ? 1 : 1
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
                           children: [
-                            Text("${plan.fastingDuration.inHours}-${plan.eatingDuration.inHours}",
-                                style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                            Text(label, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("${plan.fastingDuration.inHours}-${plan.eatingDuration.inHours}",
+                                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                                Text(label, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                              ],
+                            ),
+                            const Spacer(),
+                            if (isSelected) const Icon(Icons.check_circle, color: Colors.greenAccent),
                           ],
                         ),
-                        const Spacer(),
-                        if (isSelected) const Icon(Icons.check_circle, color: Colors.greenAccent),
-                      ],
-                    ),
+                      ),
+                      // Бейджик рекомендации
+                      if (isRecommended)
+                        Positioned(
+                          top: -8,
+                          right: 20,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)),
+                            child: const Text("RECOMMENDED", style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                    ],
                   ),
                 );
               },

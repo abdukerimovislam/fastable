@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fastable/models/weight_entry.dart';
 
-// Enums для персонализации
+// 1. Enums для персонализации
 enum Gender { male, female }
 enum ActivityLevel { sedentary, moderate, active }
 enum WeightStatus { initial, loading, success, failure }
@@ -12,24 +12,24 @@ class WeightState extends Equatable {
   // Основные метрики
   final double currentWeight;
   final double startWeight;
-  final double targetWeight; // Целевой вес
+  final double goalWeight; // В прошлых версиях было targetWeight, оставляем как у тебя
   final double heightCm;
 
-  // Персонализация (для точных расчетов)
+  // 2. Новые поля для персонализации
   final int age;
   final Gender gender;
   final ActivityLevel activityLevel;
 
-  // История
+  // История веса
   final List<WeightEntry> history;
 
   const WeightState({
     this.status = WeightStatus.initial,
     this.currentWeight = 70.0,
     this.startWeight = 70.0,
-    this.targetWeight = 65.0,
-    this.heightCm = 170.0,
-    // Дефолтные значения для новых пользователей
+    this.goalWeight = 65.0,
+    this.heightCm = 175.0,
+    // Дефолтные значения персонализации
     this.age = 25,
     this.gender = Gender.male,
     this.activityLevel = ActivityLevel.moderate,
@@ -39,6 +39,7 @@ class WeightState extends Equatable {
   // --- УМНЫЕ РАСЧЕТЫ (Smart Features) ---
 
   /// 1. BMI (Индекс массы тела)
+  /// Рассчитывается автоматически, чтобы всегда быть актуальным
   double get bmi {
     if (heightCm <= 0) return 0;
     double heightM = heightCm / 100;
@@ -55,7 +56,7 @@ class WeightState extends Equatable {
   }
 
   /// 2. BMR (Базальный метаболизм) - Формула Миффлина-Сан Жеора
-  /// Сколько калорий тело сжигает в покое.
+  /// Сколько калорий тело сжигает в полном покое
   double get bmr {
     if (currentWeight <= 0 || heightCm <= 0) return 0;
 
@@ -66,7 +67,7 @@ class WeightState extends Equatable {
   }
 
   /// 3. TDEE (Суточный расход энергии)
-  /// Сколько калорий нужно, чтобы вес стоял на месте.
+  /// Сколько калорий нужно для поддержания веса с учетом активности
   double get tdee {
     double multiplier;
     switch (activityLevel) {
@@ -77,13 +78,11 @@ class WeightState extends Equatable {
     return bmr * multiplier;
   }
 
-  // --- COPY WITH ---
-
   WeightState copyWith({
     WeightStatus? status,
     double? currentWeight,
     double? startWeight,
-    double? targetWeight,
+    double? goalWeight,
     double? heightCm,
     int? age,
     Gender? gender,
@@ -94,7 +93,7 @@ class WeightState extends Equatable {
       status: status ?? this.status,
       currentWeight: currentWeight ?? this.currentWeight,
       startWeight: startWeight ?? this.startWeight,
-      targetWeight: targetWeight ?? this.targetWeight,
+      goalWeight: goalWeight ?? this.goalWeight,
       heightCm: heightCm ?? this.heightCm,
       age: age ?? this.age,
       gender: gender ?? this.gender,
@@ -105,7 +104,15 @@ class WeightState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status, currentWeight, startWeight, targetWeight,
-    heightCm, age, gender, activityLevel, history
+    status,
+    currentWeight,
+    startWeight,
+    goalWeight,
+    heightCm,
+    // bmi не нужен в props, так как он зависит от weight/height
+    age,
+    gender,
+    activityLevel,
+    history
   ];
 }

@@ -1007,4 +1007,174 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contactSupport => 'Contactar soporte';
+
+  @override
+  String get metabolicProfile => 'Perfil metabólico';
+
+  @override
+  String ageYears(int age) {
+    return '$age años';
+  }
+
+  @override
+  String get metricBmrTitle => 'BMR';
+
+  @override
+  String get metricBmrSubtitle => 'Basal';
+
+  @override
+  String get metricBmrDesc => 'Tasa metabólica basal. Calorías quemadas en reposo absoluto.';
+
+  @override
+  String get metricTdeeTitle => 'TDEE';
+
+  @override
+  String get metricTdeeSubtitle => 'Mantenimiento';
+
+  @override
+  String get metricTdeeDesc => 'Gasto energético diario total. Calorías necesarias para mantener el peso actual.';
+
+  @override
+  String get dialogStartTitle => '¿Cuándo comenzaste?';
+
+  @override
+  String get btnStartFasting => 'Iniciar ayuno';
+
+  @override
+  String get btnCancel => 'Cancelar';
+
+  @override
+  String get stage2Title => 'El azúcar en sangre está bajando 📉';
+
+  @override
+  String get stage2Body => 'Tu cuerpo se está calmando. Si sientes hambre, bebe un poco de agua. 💧';
+
+  @override
+  String get stage4Title => 'La insulina está bajando ⬇️';
+
+  @override
+  String get stage4Body => '¡Genial! Tu cuerpo deja de almacenar grasa y empieza a prepararse para quemarla.';
+
+  @override
+  String get stage8Title => 'Limpieza iniciada ✨';
+
+  @override
+  String get stage8Body => '8 horas cumplidas. Tu estómago está descansando. ¡Lo estás haciendo muy bien por tu salud!';
+
+  @override
+  String get stage11Title => 'Modo quema de grasa 🔥';
+
+  @override
+  String get stage11Body => '¡Empieza lo bueno! Tu cuerpo cambia a reservas internas.';
+
+  @override
+  String get stage12Title => 'Cetosis activada 🚀';
+
+  @override
+  String get stage12Body => 'Las células grasas se convierten en energía. Tu mente está más clara.';
+
+  @override
+  String get stage14Title => 'Cetosis profunda 🔥';
+
+  @override
+  String get stage14Body => '¡Estás en la zona de quema de grasa! La limpieza avanza más rápido.';
+
+  @override
+  String get stage16Title => 'Autofagia (reparación celular) 🧬';
+
+  @override
+  String get stage16Body => 'Tus células se están renovando. El cuerpo entra en modo reparación.';
+
+  @override
+  String get stage18Title => 'Pico de hormona de crecimiento 📈';
+
+  @override
+  String get stage18Body => 'La hormona de crecimiento ayuda a quemar grasa y mantener músculo. ¡Te estás fortaleciendo!';
+
+  @override
+  String get stage24Title => '¡24 horas! 🏆';
+
+  @override
+  String get stage24Body => '¡Increíble! Un día completo logrado. La limpieza profunda está en marcha.';
+
+  @override
+  String get notifyHalfwayTitle => '¡Mitad del camino! ⛰️';
+
+  @override
+  String get notifyHalfwayBody => 'La parte más difícil ya pasó. Tu cuerpo te lo agradece.';
+
+  @override
+  String get notify1hTitle => '¡Último tramo! 🏁';
+
+  @override
+  String get notify1hBody => 'Solo queda 1 hora. ¡Lo estás haciendo increíble!';
+
+  @override
+  String get notifyGoalTitle => '¡Objetivo alcanzado! 🎉';
+
+  @override
+  String get notifyGoalBody => '¡Felicidades! Rompe el ayuno con suavidad.';
+
+  @override
+  String get notifyEatCloseTitle => 'La ventana de comida se cierra 🛑';
+
+  @override
+  String get notifyEatCloseBody => 'Es hora de comenzar tu próximo ayuno. ¡Revisa la app!';
+
+  @override
+  String get notifyEat30mTitle => 'Quedan 30 minutos 🥗';
+
+  @override
+  String get notifyEat30mBody => 'No olvides beber agua o hacer una última comida ligera.';
+
+  @override
+  String get learnTitle => 'Aprender y comer';
+
+  @override
+  String get tabArticles => 'Artículos';
+
+  @override
+  String get catBasics => 'Conceptos básicos';
+
+  @override
+  String get catNutrition => 'Nutrición';
+
+  @override
+  String get catHealth => 'Salud';
+
+  @override
+  String get catKeto => 'Keto';
+
+  @override
+  String get headerLatestArticles => 'Últimos artículos';
+
+  @override
+  String get headerHealthyChoices => 'Opciones saludables';
+
+  @override
+  String get statusNoArticles => 'No se encontraron artículos.';
+
+  @override
+  String get msgComingSoon => 'Próximamente...';
+
+  @override
+  String get learnBannerTitle => 'Desbloquea más de 500 recetas';
+
+  @override
+  String get learnBannerSubtitle => 'Acceso completo con PRO';
+
+  @override
+  String get labelPremium => 'PREMIUM';
+
+  @override
+  String get bannerRecipeTitle => 'Recetas saludables';
+
+  @override
+  String get bannerRecipeSubtitle => 'Keto, bajas en carbohidratos y más';
+
+  @override
+  String get unitKcal => 'kcal';
+
+  @override
+  String get unitMin => 'min';
 }

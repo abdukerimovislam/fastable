@@ -461,7 +461,91 @@
 
                         "privacyPolicy": "Política de privacidad",
                         "termsOfService": "Términos del servicio",
-                        "contactSupport": "Contactar soporte"
+                        "contactSupport": "Contactar soporte",
+                        "metabolicProfile": "Perfil metabólico",
+                          "ageYears": "{age} años",
+                          "@ageYears": {
+                            "placeholders": {
+                              "age": { "type": "int" }
+                            }
+                          },
+
+                         "metricBmrTitle": "BMR",
+                          "metricBmrSubtitle": "Basal",
+                          "metricBmrDesc": "Tasa metabólica basal. Calorías quemadas en reposo absoluto.",
+
+                          "metricTdeeTitle": "TDEE",
+                          "metricTdeeSubtitle": "Mantenimiento",
+                          "metricTdeeDesc": "Gasto energético diario total. Calorías necesarias para mantener el peso actual.",
+                           "dialogStartTitle": "¿Cuándo comenzaste?",
+                            "btnStartFasting": "Iniciar ayuno",
+                            "btnCancel": "Cancelar",
+                            "stage2Title": "El azúcar en sangre está bajando 📉",
+                              "stage2Body": "Tu cuerpo se está calmando. Si sientes hambre, bebe un poco de agua. 💧",
+
+                              "stage4Title": "La insulina está bajando ⬇️",
+                              "stage4Body": "¡Genial! Tu cuerpo deja de almacenar grasa y empieza a prepararse para quemarla.",
+
+                              "stage8Title": "Limpieza iniciada ✨",
+                              "stage8Body": "8 horas cumplidas. Tu estómago está descansando. ¡Lo estás haciendo muy bien por tu salud!",
+
+                              "stage11Title": "Modo quema de grasa 🔥",
+                              "stage11Body": "¡Empieza lo bueno! Tu cuerpo cambia a reservas internas.",
+
+                              "stage12Title": "Cetosis activada 🚀",
+                              "stage12Body": "Las células grasas se convierten en energía. Tu mente está más clara.",
+
+                              "stage14Title": "Cetosis profunda 🔥",
+                              "stage14Body": "¡Estás en la zona de quema de grasa! La limpieza avanza más rápido.",
+
+                              "stage16Title": "Autofagia (reparación celular) 🧬",
+                              "stage16Body": "Tus células se están renovando. El cuerpo entra en modo reparación.",
+
+                              "stage18Title": "Pico de hormona de crecimiento 📈",
+                              "stage18Body": "La hormona de crecimiento ayuda a quemar grasa y mantener músculo. ¡Te estás fortaleciendo!",
+
+                              "stage24Title": "¡24 horas! 🏆",
+                              "stage24Body": "¡Increíble! Un día completo logrado. La limpieza profunda está en marcha.",
+
+                              "notifyHalfwayTitle": "¡Mitad del camino! ⛰️",
+                              "notifyHalfwayBody": "La parte más difícil ya pasó. Tu cuerpo te lo agradece.",
+
+                              "notify1hTitle": "¡Último tramo! 🏁",
+                              "notify1hBody": "Solo queda 1 hora. ¡Lo estás haciendo increíble!",
+
+                              "notifyGoalTitle": "¡Objetivo alcanzado! 🎉",
+                              "notifyGoalBody": "¡Felicidades! Rompe el ayuno con suavidad.",
+
+                              "notifyEatCloseTitle": "La ventana de comida se cierra 🛑",
+                              "notifyEatCloseBody": "Es hora de comenzar tu próximo ayuno. ¡Revisa la app!",
+
+                              "notifyEat30mTitle": "Quedan 30 minutos 🥗",
+                              "notifyEat30mBody": "No olvides beber agua o hacer una última comida ligera.",
+                              "learnTitle": "Aprender y comer",
+                                "tabArticles": "Artículos",
+                                "tabRecipes": "Recetas",
+
+                                "catBasics": "Conceptos básicos",
+                                "catNutrition": "Nutrición",
+                                "catHealth": "Salud",
+                                "catKeto": "Keto",
+
+                                "headerLatestArticles": "Últimos artículos",
+                                "headerHealthyChoices": "Opciones saludables",
+
+                                "statusNoArticles": "No se encontraron artículos.",
+                                "msgComingSoon": "Próximamente...",
+
+                                "learnBannerTitle": "Desbloquea más de 500 recetas",
+                                "learnBannerSubtitle": "Acceso completo con PRO",
+                                "labelPremium": "PREMIUM",
+                                "bannerRecipeTitle": "Recetas saludables",
+                                "bannerRecipeSubtitle": "Keto, bajas en carbohidratos y más",
+
+                                "unitKcal": "kcal",
+                                "unitMin": "min"
+
+
 
 
 

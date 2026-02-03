@@ -77,10 +77,28 @@ class ProfileScreen extends StatelessWidget {
       builder: (ctx) => _buildWheelPicker(
         ctx,
         title: "Height",
-        initialItem: (currentHeight - 100).toInt(),
+        initialItem: (currentHeight - 100).toInt().clamp(0, 149),
         count: 150,
         builder: (i) => "${100 + i} cm",
         onChanged: (i) => context.read<WeightBloc>().add(UpdateHeight(100.0 + i)),
+      ),
+    );
+  }
+
+  // НОВЫЙ ПИКЕР ВЕСА
+  void _showWeightPicker(BuildContext context, double currentWeight) {
+    getIt<HapticService>().mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.98),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _buildWheelPicker(
+        ctx,
+        title: "Weight",
+        initialItem: (currentWeight - 30).toInt().clamp(0, 199),
+        count: 200, // от 30 до 230 кг
+        builder: (i) => "${30 + i} kg",
+        onChanged: (i) => context.read<WeightBloc>().add(AddWeightEntry(30.0 + i)),
       ),
     );
   }
@@ -94,7 +112,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (ctx) => _buildWheelPicker(
         ctx,
         title: "Age",
-        initialItem: currentAge - 10,
+        initialItem: (currentAge - 10).clamp(0, 89),
         count: 90,
         builder: (i) => "${10 + i}",
         onChanged: (i) => context.read<WeightBloc>().add(UpdateAge(10 + i)),
@@ -262,7 +280,7 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
 
-              // 3. PERSONAL DATA (РАСШИРЕННЫЙ)
+              // 3. PERSONAL DATA (РАСШИРЕННЫЙ С ВЕСОМ)
               const SizedBox(height: 30),
               _sectionHeader("Personal Data"),
               BlocBuilder<WeightBloc, WeightState>(
@@ -273,6 +291,12 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         _buildSettingsTile(icon: Icons.height, title: l10n.selectHeight, value: "${weightState.heightCm.toInt()} cm", onTap: () => _showHeightPicker(context, weightState.heightCm)),
                         const Divider(height: 1, color: Colors.white10),
+
+                        // --- ДОБАВЛЕН ВЕС ---
+                        _buildSettingsTile(icon: Icons.monitor_weight_outlined, title: l10n.selectWeight, value: "${weightState.currentWeight.toInt()} kg", onTap: () => _showWeightPicker(context, weightState.currentWeight)),
+                        const Divider(height: 1, color: Colors.white10),
+                        // --------------------
+
                         _buildSettingsTile(icon: Icons.cake_outlined, title: l10n.selectAge, value: "${weightState.age}", onTap: () => _showAgePicker(context, weightState.age)),
                         const Divider(height: 1, color: Colors.white10),
                         _buildSettingsTile(icon: Icons.wc, title: l10n.selectGender, value: weightState.gender == Gender.male ? l10n.genderMale : l10n.genderFemale, onTap: () => _showGenderPicker(context, l10n)),

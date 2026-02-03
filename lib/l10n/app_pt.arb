@@ -417,7 +417,90 @@
 
                     "privacyPolicy": "Política de privacidade",
                     "termsOfService": "Termos de uso",
-                    "contactSupport": "Contato com suporte"
+                    "contactSupport": "Contato com suporte",
+                    "metabolicProfile": "Perfil metabólico",
+                      "ageYears": "{age} anos",
+                      "@ageYears": {
+                        "placeholders": {
+                          "age": { "type": "int" }
+                        }
+                      },
+ "metricBmrTitle": "BMR",
+  "metricBmrSubtitle": "Basal",
+  "metricBmrDesc": "Taxa metabólica basal. Calorias queimadas em repouso absoluto.",
+
+  "metricTdeeTitle": "TDEE",
+  "metricTdeeSubtitle": "Manutenção",
+  "metricTdeeDesc": "Gasto energético diário total. Calorias necessárias para manter o peso atual.",
+  "dialogStartTitle": "Quando você começou?",
+    "btnStartFasting": "Iniciar jejum",
+    "btnCancel": "Cancelar",
+    "stage2Title": "O açúcar no sangue está caindo 📉",
+      "stage2Body": "Seu corpo está se acalmando. Se sentir fome, beba um pouco de água. 💧",
+
+      "stage4Title": "A insulina está diminuindo ⬇️",
+      "stage4Body": "Ótimo! Seu corpo para de armazenar gordura e começa a se preparar para queimá-la.",
+
+      "stage8Title": "Limpeza iniciada ✨",
+      "stage8Body": "8 horas completas. Seu estômago está descansando. Você está cuidando bem da sua saúde!",
+
+      "stage11Title": "Modo queima de gordura 🔥",
+      "stage11Body": "A parte divertida começa! Seu corpo muda para reservas internas.",
+
+      "stage12Title": "Cetose ativada 🚀",
+      "stage12Body": "As células de gordura viram energia. Sua mente fica mais clara.",
+
+      "stage14Title": "Cetose profunda 🔥",
+      "stage14Body": "Você está na zona de queima de gordura! A limpeza acontece mais rápido.",
+
+      "stage16Title": "Autofagia (reparo celular) 🧬",
+      "stage16Body": "Suas células estão se renovando. O corpo entra em modo de reparo.",
+
+      "stage18Title": "Pico do hormônio do crescimento 📈",
+      "stage18Body": "O hormônio do crescimento ajuda a queimar gordura e preservar músculos. Você está ficando mais forte!",
+
+      "stage24Title": "24 horas! 🏆",
+      "stage24Body": "Incrível! Um dia completo concluído. A limpeza profunda está a todo vapor.",
+
+      "notifyHalfwayTitle": "Metade do caminho! ⛰️",
+      "notifyHalfwayBody": "A parte mais difícil já passou. Seu corpo agradece.",
+
+      "notify1hTitle": "Reta final! 🏁",
+      "notify1hBody": "Falta apenas 1 hora. Você está indo muito bem!",
+
+      "notifyGoalTitle": "Objetivo alcançado! 🎉",
+      "notifyGoalBody": "Parabéns! Quebre o jejum com cuidado.",
+
+      "notifyEatCloseTitle": "Janela de alimentação encerrando 🛑",
+      "notifyEatCloseBody": "Hora de iniciar o próximo jejum. Confira no app!",
+
+      "notifyEat30mTitle": "Faltam 30 minutos 🥗",
+      "notifyEat30mBody": "Não se esqueça de beber água ou fazer um último lanche leve.",
+      "learnTitle": "Aprender e comer",
+        "tabArticles": "Artigos",
+        "tabRecipes": "Receitas",
+
+        "catBasics": "Básico",
+        "catNutrition": "Nutrição",
+        "catHealth": "Saúde",
+        "catKeto": "Keto",
+
+        "headerLatestArticles": "Artigos mais recentes",
+        "headerHealthyChoices": "Escolhas saudáveis",
+
+        "statusNoArticles": "Nenhum artigo encontrado.",
+        "msgComingSoon": "Em breve...",
+
+        "learnBannerTitle": "Desbloqueie mais de 500 receitas",
+        "learnBannerSubtitle": "Acesso completo com PRO",
+        "labelPremium": "PREMIUM",
+        "bannerRecipeTitle": "Receitas saudáveis",
+        "bannerRecipeSubtitle": "Keto, baixo carboidrato e mais",
+
+        "unitKcal": "kcal",
+        "unitMin": "min"
+
+
 
 
 

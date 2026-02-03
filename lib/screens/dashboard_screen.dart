@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/cupertino.dart';
 
+// --- ИМПОРТЫ ---
 import 'package:fastable/injection.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/services/sound_service.dart';
@@ -30,6 +32,7 @@ import 'package:fastable/widgets/body_visualizer.dart';
 
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/models/fasting_plan.dart';
+import 'package:fastable/models/fasting_record.dart'; // Важно для FastingMood
 
 import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/screens/plan_selection_screen.dart';
@@ -101,12 +104,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       _loadInterstitialAd();
     }
-    context.read<FastingBloc>().add(StartFasting());
+    _showStartDialog(context);
   }
 
-  void _onEndFastingPressed(Duration currentDuration) {
+  void _onEndFastingPressed(FastingState state) {
     _hapticService.mediumImpact();
-    _showEndFastModal(currentDuration);
+    if (state.startTime != null) {
+      _showStopDialog(context, state.startTime!);
+    } else {
+      context.read<FastingBloc>().add(const EndFasting());
+    }
   }
 
   void _onStopEatingPressed() {
@@ -297,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onAction = _onStartFastingPressed;
       btnLabel = l10n.startFast;
     } else if (isFasting) {
-      onAction = () => _onEndFastingPressed(state.elapsed);
+      onAction = () => _onEndFastingPressed(state);
       btnLabel = l10n.endFast;
     } else {
       onAction = _onStopEatingPressed;
@@ -317,7 +324,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ANIMATED TEXT: Название фазы (Fasting / Eating)
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 500),
                       transitionBuilder: (Widget child, Animation<double> animation) {
@@ -338,14 +344,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onTap: () => _showBodyTimeline(state),
                         child: Padding(
                             padding: const EdgeInsets.only(top: 4),
+                            // ИСПРАВЛЕНИЕ #1: Добавлен Flexible и overflow для текста в заголовке
                             child: Row(mainAxisSize: MainAxisSize.min, children: [
-                              // ANIMATED TEXT: Детали стадии
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
-                                child: Text(
-                                  detailText,
-                                  key: ValueKey<String>(detailText),
-                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13),
+                              Flexible(
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 300),
+                                  child: Text(
+                                    detailText,
+                                    key: ValueKey<String>(detailText),
+                                    style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -408,11 +418,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 : SizedBox(
               width: 240,
               height: 240,
-              // ANIMATED SWITCHER для всего блоба (плавный переход цветов)
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 800),
                 child: GradientTimerBlob(
-                  key: ValueKey<bool>(isFasting), // Ключ для смены виджета
+                  key: ValueKey<bool>(isFasting),
                   percent: (state.phase == FastingPhase.stopped) ? 0.0 : state.progress,
                   isFasting: isFasting,
                   child: Padding(
@@ -443,7 +452,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                                   Icon(stageIcon, color: stateColor, size: 14),
                                   const SizedBox(width: 6),
-                                  Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))
+                                  // ИСПРАВЛЕНИЕ #2: Добавлен Flexible и overflow для текста внутри таймера
+                                  Flexible(
+                                    child: Text(
+                                      detailText,
+                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  )
                                 ])),
                           )
                         else
@@ -473,7 +490,231 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ... (Остальные методы _buildInfoItem, _showWaterMenu и т.д. остаются БЕЗ ИЗМЕНЕНИЙ)
+  // --- MODALS ---
+
+  void _showStartDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    DateTime selectedTime = DateTime.now();
+    final fastingBloc = context.read<FastingBloc>();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Container(
+          height: 320,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.dialogStartTitle, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Expanded(
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(brightness: Brightness.dark, textTheme: CupertinoTextThemeData(dateTimePickerTextStyle: TextStyle(color: Colors.white, fontSize: 20))),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.dateAndTime,
+                    initialDateTime: selectedTime,
+                    maximumDate: DateTime.now(),
+                    minimumDate: DateTime.now().subtract(const Duration(days: 2)),
+                    onDateTimeChanged: (val) => selectedTime = val,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), foregroundColor: Colors.white),
+                  onPressed: () {
+                    fastingBloc.add(StartFasting(startTime: selectedTime));
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(l10n.btnStartFasting, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showStopDialog(BuildContext context, DateTime startTime) {
+    final l10n = AppLocalizations.of(context)!;
+    DateTime selectedTime = DateTime.now();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Container(
+          height: 340,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("When did you end?", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Expanded(
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(brightness: Brightness.dark, textTheme: CupertinoTextThemeData(dateTimePickerTextStyle: TextStyle(color: Colors.white, fontSize: 20))),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.dateAndTime,
+                    initialDateTime: selectedTime,
+                    maximumDate: DateTime.now(),
+                    minimumDate: startTime,
+                    onDateTimeChanged: (val) => selectedTime = val,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), foregroundColor: Colors.white),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    final duration = selectedTime.difference(startTime);
+                    _showEndFastSummary(selectedTime, duration);
+                  },
+                  child: Text(l10n.endFast, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEndFastSummary(DateTime endTime, Duration duration) {
+    final l10n = AppLocalizations.of(context)!;
+    final String timeString = _formatDuration(duration);
+    final fastingBloc = context.read<FastingBloc>();
+
+    int selectedMoodIndex = 2;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E1E).withOpacity(0.95),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                  border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1)),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.15), shape: BoxShape.circle),
+                      child: const Icon(Icons.emoji_events_rounded, color: Colors.greenAccent, size: 40),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(l10n.fastComplete, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 20),
+                    Text(timeString, style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()], letterSpacing: 2)),
+                    Text("TOTAL DURATION", style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                    const SizedBox(height: 30),
+
+                    const Text("How do you feel?", style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: List.generate(5, (index) {
+                        final isSelected = selectedMoodIndex == index;
+                        final moods = ["😫", "😐", "🙂", "😁", "🔥"];
+                        return GestureDetector(
+                          onTap: () {
+                            _hapticService.selectionClick();
+                            setModalState(() => selectedMoodIndex = index);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+                              shape: BoxShape.circle,
+                              border: isSelected ? Border.all(color: Colors.white54) : null,
+                            ),
+                            child: Text(moods[index], style: const TextStyle(fontSize: 28)),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 30),
+
+                    GestureDetector(
+                      onTap: () {
+                        final moodValues = [
+                          FastingMood.terrible,
+                          FastingMood.bad,
+                          FastingMood.neutral,
+                          FastingMood.good,
+                          FastingMood.great
+                        ];
+                        final selectedMood = moodValues[selectedMoodIndex];
+
+                        fastingBloc.add(EndFasting(endTime: endTime, mood: selectedMood));
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fasting saved! 🏆"), backgroundColor: Colors.green));
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFF43C6AC), Color(0xFF191654)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [BoxShadow(color: const Color(0xFF43C6AC).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))]
+                        ),
+                        child: Center(child: Text(l10n.save, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        _hapticService.mediumImpact();
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(l10n.cancel, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showStopEatingModal() {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(context: context, backgroundColor: Colors.transparent, isScrollControlled: true, builder: (ctx) {
+      return BackdropFilter(filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), child: Container(decoration: BoxDecoration(color: const Color(0xFF1E1E1E).withOpacity(0.9), borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1))), padding: const EdgeInsets.fromLTRB(24, 16, 24, 40), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2))), const SizedBox(height: 30), const Icon(Icons.flag_rounded, color: Colors.orangeAccent, size: 40), const SizedBox(height: 20), Text(l10n.endCyclePrompt, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), const SizedBox(height: 30), GestureDetector(onTap: () { context.read<FastingBloc>().add(EndEatingWindow()); Navigator.pop(ctx); }, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFFF512F), Color(0xFFDD2476)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(20)), child: Center(child: Text(l10n.endCycle, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))))), const SizedBox(height: 16), TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16)))])));
+    });
+  }
+
+  void _showEndFastModal(Duration duration) {
+    _showEndFastSummary(DateTime.now(), duration);
+  }
+
+  // --- HELPERS ---
   Widget _buildInfoItem({required IconData icon, required Color color, required String label, required String value, required VoidCallback onTap}) {
     return Expanded(child: GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: Column(children: [Icon(icon, color: color, size: 24), const SizedBox(height: 4), Text(value, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)), Text(label, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10))])));
   }
@@ -507,21 +748,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const Spacer(),
         Padding(padding: const EdgeInsets.all(24.0), child: GestureDetector(onTap: () { context.read<WeightBloc>().add(AddWeightEntry(tempWeight)); Navigator.pop(ctx); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Weight saved"), backgroundColor: Colors.green)); }, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 16), decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)), child: Center(child: Text(l10n.saveWeight, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))))))
       ]));
-    });
-  }
-
-  void _showEndFastModal(Duration duration) {
-    final l10n = AppLocalizations.of(context)!;
-    final String timeString = _formatDuration(duration);
-    showModalBottomSheet(context: context, backgroundColor: Colors.transparent, isScrollControlled: true, builder: (ctx) {
-      return BackdropFilter(filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), child: Container(decoration: BoxDecoration(color: const Color(0xFF1E1E1E).withOpacity(0.9), borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1))), padding: const EdgeInsets.fromLTRB(24, 16, 24, 40), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2))), const SizedBox(height: 30), Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.15), shape: BoxShape.circle), child: const Icon(Icons.emoji_events_rounded, color: Colors.greenAccent, size: 40)), const SizedBox(height: 20), Text(l10n.fastComplete, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), const SizedBox(height: 8), const Text("You successfully completed a fast cycle!", textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 14)), const SizedBox(height: 30), Text(timeString, style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()], letterSpacing: 2)), const SizedBox(height: 8), Text("TOTAL DURATION", style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)), const SizedBox(height: 40), GestureDetector(onTap: () { context.read<FastingBloc>().add(const EndFasting()); Navigator.pop(ctx); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fasting saved! 🏆"), backgroundColor: Colors.green)); }, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF43C6AC), Color(0xFF191654)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(20)), child: Center(child: Text(l10n.save, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))))), const SizedBox(height: 16), TextButton(onPressed: () { _hapticService.mediumImpact(); Navigator.pop(ctx); }, child: Text(l10n.discard, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16)))])));
-    });
-  }
-
-  void _showStopEatingModal() {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(context: context, backgroundColor: Colors.transparent, isScrollControlled: true, builder: (ctx) {
-      return BackdropFilter(filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), child: Container(decoration: BoxDecoration(color: const Color(0xFF1E1E1E).withOpacity(0.9), borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1))), padding: const EdgeInsets.fromLTRB(24, 16, 24, 40), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2))), const SizedBox(height: 30), const Icon(Icons.flag_rounded, color: Colors.orangeAccent, size: 40), const SizedBox(height: 20), Text(l10n.endCyclePrompt, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), const SizedBox(height: 30), GestureDetector(onTap: () { context.read<FastingBloc>().add(EndEatingWindow()); Navigator.pop(ctx); }, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 18), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFFF512F), Color(0xFFDD2476)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(20)), child: Center(child: Text(l10n.endCycle, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))))), const SizedBox(height: 16), TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16)))])));
     });
   }
 

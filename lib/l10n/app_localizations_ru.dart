@@ -1007,4 +1007,174 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contactSupport => 'Связаться с поддержкой';
+
+  @override
+  String get metabolicProfile => 'Метаболический профиль';
+
+  @override
+  String ageYears(int age) {
+    return '$age лет';
+  }
+
+  @override
+  String get metricBmrTitle => 'BMR';
+
+  @override
+  String get metricBmrSubtitle => 'Базовый';
+
+  @override
+  String get metricBmrDesc => 'Базальный метаболизм. Калории, сжигаемые в состоянии полного покоя.';
+
+  @override
+  String get metricTdeeTitle => 'TDEE';
+
+  @override
+  String get metricTdeeSubtitle => 'Поддержание';
+
+  @override
+  String get metricTdeeDesc => 'Суточные энергозатраты. Калории, необходимые для поддержания текущего веса.';
+
+  @override
+  String get dialogStartTitle => 'Когда вы начали?';
+
+  @override
+  String get btnStartFasting => 'Начать голодание';
+
+  @override
+  String get btnCancel => 'Отмена';
+
+  @override
+  String get stage2Title => 'Уровень сахара снижается 📉';
+
+  @override
+  String get stage2Body => 'Организм начинает успокаиваться. Если чувствуете голод — выпейте воды. 💧';
+
+  @override
+  String get stage4Title => 'Инсулин снижается ⬇️';
+
+  @override
+  String get stage4Body => 'Отлично! Организм перестаёт запасать жир и готовится его сжигать.';
+
+  @override
+  String get stage8Title => 'Запуск очищения ✨';
+
+  @override
+  String get stage8Body => '8 часов прошло. Желудок отдыхает. Вы делаете большое дело для здоровья!';
+
+  @override
+  String get stage11Title => 'Режим сжигания жира 🔥';
+
+  @override
+  String get stage11Body => 'Самое интересное начинается! Организм переходит на внутренние резервы.';
+
+  @override
+  String get stage12Title => 'Кетоз активирован 🚀';
+
+  @override
+  String get stage12Body => 'Жировые клетки превращаются в энергию. Сознание становится яснее.';
+
+  @override
+  String get stage14Title => 'Глубокий кетоз 🔥';
+
+  @override
+  String get stage14Body => 'Вы в зоне сжигания жира! Процессы очищения идут быстрее.';
+
+  @override
+  String get stage16Title => 'Аутофагия (обновление клеток) 🧬';
+
+  @override
+  String get stage16Body => 'Клетки обновляются. Организм работает над восстановлением.';
+
+  @override
+  String get stage18Title => 'Пик гормона роста 📈';
+
+  @override
+  String get stage18Body => 'Гормон роста помогает сжигать жир и поддерживать мышцы. Вы становитесь сильнее!';
+
+  @override
+  String get stage24Title => '24 часа! 🏆';
+
+  @override
+  String get stage24Body => 'Невероятно! Полные сутки завершены. Глубокое очищение в самом разгаре.';
+
+  @override
+  String get notifyHalfwayTitle => 'Половина пути! ⛰️';
+
+  @override
+  String get notifyHalfwayBody => 'Самое сложное позади. Ваш организм благодарен вам.';
+
+  @override
+  String get notify1hTitle => 'Финишная прямая! 🏁';
+
+  @override
+  String get notify1hBody => 'Остался всего 1 час. Вы справляетесь отлично!';
+
+  @override
+  String get notifyGoalTitle => 'Цель достигнута! 🎉';
+
+  @override
+  String get notifyGoalBody => 'Поздравляем! Завершайте голодание мягко.';
+
+  @override
+  String get notifyEatCloseTitle => 'Окно питания закрывается 🛑';
+
+  @override
+  String get notifyEatCloseBody => 'Пора начинать следующее голодание. Загляните в приложение!';
+
+  @override
+  String get notifyEat30mTitle => 'Осталось 30 минут 🥗';
+
+  @override
+  String get notifyEat30mBody => 'Не забудьте выпить воды или сделать лёгкий приём пищи.';
+
+  @override
+  String get learnTitle => 'Обучение и питание';
+
+  @override
+  String get tabArticles => 'Статьи';
+
+  @override
+  String get catBasics => 'Основы';
+
+  @override
+  String get catNutrition => 'Питание';
+
+  @override
+  String get catHealth => 'Здоровье';
+
+  @override
+  String get catKeto => 'Кето';
+
+  @override
+  String get headerLatestArticles => 'Последние статьи';
+
+  @override
+  String get headerHealthyChoices => 'Полезный выбор';
+
+  @override
+  String get statusNoArticles => 'Статьи не найдены.';
+
+  @override
+  String get msgComingSoon => 'Скоро появится...';
+
+  @override
+  String get learnBannerTitle => 'Откройте 500+ рецептов';
+
+  @override
+  String get learnBannerSubtitle => 'Полный доступ с PRO';
+
+  @override
+  String get labelPremium => 'ПРЕМИУМ';
+
+  @override
+  String get bannerRecipeTitle => 'Полезные рецепты';
+
+  @override
+  String get bannerRecipeSubtitle => 'Кето, низкоуглеводные и другие';
+
+  @override
+  String get unitKcal => 'ккал';
+
+  @override
+  String get unitMin => 'мин';
 }

@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:ui'; // 1. Added for PlatformDispatcher
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/app_localizations.dart'; // 2. Added for lookupAppLocalizations
+
 import 'package:fastable/bloc/fasting/fasting_event.dart';
 import 'package:fastable/bloc/fasting/fasting_state.dart';
 import 'package:fastable/models/fasting_plan.dart';
@@ -17,7 +20,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
   final HistoryRepository _historyRepository;
 
   Timer? _ticker;
-  final List<FastingPlan> _plans = FastingPlan.defaultPlans; // Используем общие планы
+  final List<FastingPlan> _plans = FastingPlan.defaultPlans;
 
   FastingBloc(this._notificationService, this._hapticService, this._historyRepository)
       : super(const FastingState()) {
@@ -61,19 +64,33 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
 
   Future<void> _onStartFasting(StartFasting event, Emitter<FastingState> emit) async {
     _hapticService.mediumImpact();
-    final now = DateTime.now();
+
+    // Use passed time or current time
+    final startDate = event.startTime ?? DateTime.now();
     final goal = _plans[state.planIndex].fastingDuration;
 
+    // Save state
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('app_state', FastingPhase.fasting.name);
-    await prefs.setString('cycle_start_time', now.toIso8601String());
+    await prefs.setString('cycle_start_time', startDate.toIso8601String());
 
-    _notificationService.scheduleFastCompletion(now.add(goal), "Fasting Goal Reached!");
+    // --- UPDATED NOTIFICATION LOGIC ---
+    // Get current locale to ensure notifications are in the correct language
+    final locale = PlatformDispatcher.instance.locale;
+    final l10n = await lookupAppLocalizations(locale);
+
+    // Schedule all smart notifications (Stages, 50%, 1h left, Finish)
+    await _notificationService.scheduleFastingNotifications(
+      startTime: startDate,
+      duration: goal,
+      l10n: l10n,
+    );
+    // ----------------------------------
 
     emit(state.copyWith(
       phase: FastingPhase.fasting,
-      startTime: now,
-      elapsed: Duration.zero,
+      startTime: startDate,
+      elapsed: DateTime.now().difference(startDate),
       goalDuration: goal,
       isGoalReached: false,
     ));
@@ -84,29 +101,44 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
     _ticker?.cancel();
     _hapticService.success();
 
+    // Use passed time or current time
+    final endDate = event.endTime ?? DateTime.now();
+
+    // 1. Save record to history WITH MOOD
     if (state.startTime != null && state.phase == FastingPhase.fasting) {
       final record = FastingRecord(
         startTime: state.startTime!,
-        endTime: DateTime.now(),
-        duration: state.elapsed,
+        endTime: endDate,
+        duration: endDate.difference(state.startTime!),
+        mood: event.mood,
       );
       await _historyRepository.addRecord(record);
     }
 
-    // ПЕРЕХОД К ЕДЕ (Eating Window)
-    final now = DateTime.now();
+    // 2. Transition to Eating Window
     final eatGoal = _plans[state.planIndex].eatingDuration;
 
+    // Save state
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('app_state', FastingPhase.eating.name);
-    await prefs.setString('cycle_start_time', now.toIso8601String());
+    await prefs.setString('cycle_start_time', endDate.toIso8601String());
 
-    _notificationService.scheduleEatingCompletion(now.add(eatGoal));
+    // --- UPDATED NOTIFICATION LOGIC ---
+    // Get locale and schedule eating window notifications
+    final locale = PlatformDispatcher.instance.locale;
+    final l10n = await lookupAppLocalizations(locale);
+
+    await _notificationService.scheduleEatingNotifications(
+      startTime: endDate,
+      duration: eatGoal,
+      l10n: l10n,
+    );
+    // ----------------------------------
 
     emit(state.copyWith(
       phase: FastingPhase.eating,
-      startTime: now,
-      elapsed: Duration.zero,
+      startTime: endDate,
+      elapsed: DateTime.now().difference(endDate),
       goalDuration: eatGoal,
       isGoalReached: false,
     ));
@@ -124,7 +156,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('app_state');
     await prefs.remove('cycle_start_time');
-    await _notificationService.cancelAllNotifications();
+
+    // Cancel all fasting related notifications
+    await _notificationService.cancelFastingNotifications();
 
     emit(state.copyWith(
       phase: FastingPhase.stopped,
@@ -139,7 +173,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('fast_plan_index', event.planIndex);
 
-    // Если таймер стоит, цифры на нем обновятся мгновенно
     Duration newGoal = state.phase == FastingPhase.eating
         ? _plans[event.planIndex].eatingDuration
         : _plans[event.planIndex].fastingDuration;

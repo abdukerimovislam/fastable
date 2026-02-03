@@ -1007,4 +1007,174 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactSupport => 'Contact Support';
+
+  @override
+  String get metabolicProfile => 'Metabolic Profile';
+
+  @override
+  String ageYears(int age) {
+    return '$age y.o.';
+  }
+
+  @override
+  String get metricBmrTitle => 'BMR';
+
+  @override
+  String get metricBmrSubtitle => 'Basal';
+
+  @override
+  String get metricBmrDesc => 'Basal Metabolic Rate. Calories burned at complete rest.';
+
+  @override
+  String get metricTdeeTitle => 'TDEE';
+
+  @override
+  String get metricTdeeSubtitle => 'Maintenance';
+
+  @override
+  String get metricTdeeDesc => 'Total Daily Energy Expenditure. Calories needed to maintain current weight.';
+
+  @override
+  String get dialogStartTitle => 'When did your fast start?';
+
+  @override
+  String get btnStartFasting => 'Start Fasting';
+
+  @override
+  String get btnCancel => 'Cancel';
+
+  @override
+  String get stage2Title => 'Blood sugar is dropping 📉';
+
+  @override
+  String get stage2Body => 'Your body is calming down. If you feel hungry, drink some water. 💧';
+
+  @override
+  String get stage4Title => 'Insulin is dropping ⬇️';
+
+  @override
+  String get stage4Body => 'Great! Your body stops storing fat and starts preparing to burn it.';
+
+  @override
+  String get stage8Title => 'Cleanup started ✨';
+
+  @override
+  String get stage8Body => '8 hours in. Your stomach is resting. You are doing great for your health!';
+
+  @override
+  String get stage11Title => 'Fat Burning Mode 🔥';
+
+  @override
+  String get stage11Body => 'The fun part begins! Your body switches to internal reserves.';
+
+  @override
+  String get stage12Title => 'Ketosis Activated 🚀';
+
+  @override
+  String get stage12Body => 'Fat cells are turning into energy. Your mind is clearer now.';
+
+  @override
+  String get stage14Title => 'Deep Ketosis 🔥';
+
+  @override
+  String get stage14Body => 'You are in the fat-burning zone! Detox is happening fast now.';
+
+  @override
+  String get stage16Title => 'Autophagy (Cell Repair) 🧬';
+
+  @override
+  String get stage16Body => 'Your cells are renewing themselves. This is the fountain of youth!';
+
+  @override
+  String get stage18Title => 'Growth Hormone Peak 📈';
+
+  @override
+  String get stage18Body => 'Growth hormone helps muscle and burns fat. You are getting stronger!';
+
+  @override
+  String get stage24Title => '24 Hours! 🏆';
+
+  @override
+  String get stage24Body => 'Incredible! Full day complete. Deep cleaning is in full effect.';
+
+  @override
+  String get notifyHalfwayTitle => 'Halfway there! ⛰️';
+
+  @override
+  String get notifyHalfwayBody => 'The hardest part is over. Your body thanks you.';
+
+  @override
+  String get notify1hTitle => 'Home Stretch! 🏁';
+
+  @override
+  String get notify1hBody => 'Only 1 hour left. You are doing amazing!';
+
+  @override
+  String get notifyGoalTitle => 'Goal Reached! 🎉';
+
+  @override
+  String get notifyGoalBody => 'Congratulations! Break your fast gently.';
+
+  @override
+  String get notifyEatCloseTitle => 'Eating window closing 🛑';
+
+  @override
+  String get notifyEatCloseBody => 'Time to start your next fast. Check the app!';
+
+  @override
+  String get notifyEat30mTitle => '30 mins left 🥗';
+
+  @override
+  String get notifyEat30mBody => 'Don\'t forget to drink water or eat a last snack.';
+
+  @override
+  String get learnTitle => 'Learn & Eat';
+
+  @override
+  String get tabArticles => 'Articles';
+
+  @override
+  String get catBasics => 'Basics';
+
+  @override
+  String get catNutrition => 'Nutrition';
+
+  @override
+  String get catHealth => 'Health';
+
+  @override
+  String get catKeto => 'Keto';
+
+  @override
+  String get headerLatestArticles => 'Latest Articles';
+
+  @override
+  String get headerHealthyChoices => 'Healthy Choices';
+
+  @override
+  String get statusNoArticles => 'No articles found.';
+
+  @override
+  String get msgComingSoon => 'Coming soon...';
+
+  @override
+  String get learnBannerTitle => 'Unlock 500+ Recipes';
+
+  @override
+  String get learnBannerSubtitle => 'Get full access with PRO';
+
+  @override
+  String get labelPremium => 'PREMIUM';
+
+  @override
+  String get bannerRecipeTitle => 'Healthy Recipes';
+
+  @override
+  String get bannerRecipeSubtitle => 'Keto, Low-Carb & More';
+
+  @override
+  String get unitKcal => 'kcal';
+
+  @override
+  String get unitMin => 'min';
 }

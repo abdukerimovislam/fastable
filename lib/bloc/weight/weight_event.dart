@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-// Импортируем State, так как там лежат Enums (Gender, ActivityLevel)
+// Импортируем State, чтобы видеть Enums (Gender, ActivityLevel)
 import 'package:fastable/bloc/weight/weight_state.dart';
 
 abstract class WeightEvent extends Equatable {
@@ -8,7 +8,7 @@ abstract class WeightEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Загрузка сохраненных данных при старте
+/// Загрузка всех данных (профиль, вес, история)
 class LoadWeightData extends WeightEvent {}
 
 /// Обновление роста
@@ -20,7 +20,7 @@ class UpdateHeight extends WeightEvent {
   List<Object?> get props => [heightCm];
 }
 
-/// Добавление веса (и запись в историю)
+/// Добавление нового веса (запись в историю + обновление текущего)
 class AddWeightEntry extends WeightEvent {
   final double weight;
   const AddWeightEntry(this.weight);
@@ -29,7 +29,16 @@ class AddWeightEntry extends WeightEvent {
   List<Object?> get props => [weight];
 }
 
-// --- НОВЫЕ СОБЫТИЯ ПЕРСОНАЛИЗАЦИИ ---
+/// Обновление целевого веса (Goal) — ДОБАВЛЕНО ДЛЯ ПОЛНОТЫ
+class UpdateGoalWeight extends WeightEvent {
+  final double targetWeight;
+  const UpdateGoalWeight(this.targetWeight);
+
+  @override
+  List<Object?> get props => [targetWeight];
+}
+
+// --- СОБЫТИЯ ПЕРСОНАЛИЗАЦИИ (BMR / TDEE) ---
 
 /// Обновление возраста
 class UpdateAge extends WeightEvent {

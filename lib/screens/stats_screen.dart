@@ -1,281 +1,325 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 
-// Core & DI
-import 'package:fastable/injection.dart';
-import 'package:fastable/services/haptic_service.dart';
-
-// BLoC
+// --- DI & BLOCS ---
 import 'package:fastable/bloc/stats/stats_bloc.dart';
-import 'package:fastable/bloc/stats/stats_event.dart';
 import 'package:fastable/bloc/stats/stats_state.dart';
+import 'package:fastable/bloc/weight/weight_bloc.dart';
+import 'package:fastable/bloc/weight/weight_state.dart';
 
-// UI Components
+// --- WIDGETS ---
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/l10n/app_localizations.dart';
-import 'package:fastable/repositories/history_repository.dart';
-import 'package:fastable/screens/pro_screen.dart';
 
 class StatsScreen extends StatelessWidget {
-  final HistoryRepository repository;
-
-  const StatsScreen({super.key, required this.repository});
-
-  Color _getRateColor(double rate) {
-    if (rate >= 80) return const Color(0xFF43C6AC); // Изумрудный
-    if (rate >= 50) return Colors.orangeAccent;
-    return Colors.redAccent;
-  }
+  const StatsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final haptic = getIt<HapticService>();
 
-    return BlocProvider(
-      create: (_) => getIt<StatsBloc>()..add(LoadStats()),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          bottom: false,
-          child: BlocBuilder<StatsBloc, StatsState>(
-            builder: (context, state) {
-              if (state.status == StatsStatus.loading) {
-                return const Center(child: CircularProgressIndicator(color: Colors.white24));
-              }
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 20),
+                child: Text(
+                  l10n.navStats,
+                  style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold),
+                ),
+              ),
 
-              final successCount = (state.totalFasts * (state.successRate / 100)).round();
+              // 1. БЛОК МЕТАБОЛИЗМА (ОБНОВЛЕННЫЙ)
+              _buildMetabolicCard(context, l10n),
 
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.navStats,
-                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 24),
+              const SizedBox(height: 24),
+              _sectionHeader(l10n.fastingPhase), // Используем заголовок как "Fasting Stats"
 
-                    // 1. КАРТОЧКА УСПЕХА (БОЛЬШАЯ)
-                    GlassCard(
-                      padding: const EdgeInsets.all(24),
-                      child: Row(
-                        children: [
-                          _buildCircularIndicator(state.successRate),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.statsSuccessRate,
-                                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  state.totalFasts > 0
-                                      ? l10n.statsSuccessDesc(successCount, state.totalFasts)
-                                      : "Start your journey today!",
-                                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13, height: 1.4),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+              // 2. ОБЩАЯ СТАТИСТИКА ГОЛОДАНИЯ
+              BlocBuilder<StatsBloc, StatsState>(
+                builder: (context, state) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatItem(
+                          title: l10n.statsTotalFasts,
+                          value: "${state.totalFasts}",
+                          icon: Icons.check_circle_outline,
+                          color: Colors.greenAccent,
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // 2. ГРАФИК АКТИВНОСТИ
-                    const Text(
-                      "7-DAY ACTIVITY",
-                      style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                    ),
-                    const SizedBox(height: 16),
-                    GlassCard(
-                      height: 240,
-                      padding: const EdgeInsets.fromLTRB(10, 24, 16, 8),
-                      child: BarChart(
-                        _mainBarData(state),
-                        swapAnimationDuration: const Duration(milliseconds: 400),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatItem(
+                          title: l10n.statsTotalHours,
+                          value: "${state.totalHours.toStringAsFixed(1)} h",
+                          icon: Icons.access_time,
+                          color: Colors.blueAccent,
+                        ),
                       ),
-                    ),
+                    ],
+                  );
+                },
+              ),
 
-                    const SizedBox(height: 32),
+              const SizedBox(height: 12),
 
-                    // 3. СЕТКА СТАТИСТИКИ (2x2)
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.4,
+              // 3. ДОЛГАЯ СЕРИЯ (STREAK)
+              BlocBuilder<StatsBloc, StatsState>(
+                builder: (context, state) {
+                  return GlassCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
                       children: [
-                        _buildMetricCard(l10n.statsTotalFasts, "${state.totalFasts}", Icons.check_circle_rounded, Colors.blueAccent),
-                        _buildMetricCard(l10n.statsTotalHours, "${state.totalHours.toInt()}h", Icons.timer_rounded, Colors.purpleAccent),
-                        _buildMetricCard(l10n.statsAverage, "${state.averageDuration.toStringAsFixed(1)}h", Icons.analytics_rounded, Colors.orangeAccent),
-                        _buildMetricCard(l10n.fastingStatsCurrentStreak, "${state.currentStreak}d", Icons.local_fire_department_rounded, Colors.redAccent),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.orangeAccent.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 28),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.fastingStatsCurrentStreak, style: const TextStyle(color: Colors.white, fontSize: 16)),
+                            Text("${state.currentStreak} ${l10n.valStreakDays(state.currentStreak).replaceAll(RegExp(r'[0-9]'), '').trim()}",
+                                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                          ],
+                        )
                       ],
                     ),
+                  );
+                },
+              ),
 
-                    const SizedBox(height: 24),
-
-                    // 4. PRO BANNER (Стейкхолдер для удержания)
-                    _buildProBanner(context, haptic),
-                  ],
-                ),
-              );
-            },
+              const SizedBox(height: 100), // Отступ для нижнего меню
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCircularIndicator(double rate) {
-    return SizedBox(
-      height: 84, width: 84,
-      child: Stack(
-        children: [
-          Center(
-            child: SizedBox(
-              width: 84, height: 84,
-              child: CircularProgressIndicator(
-                value: rate / 100,
-                backgroundColor: Colors.white.withOpacity(0.05),
-                color: _getRateColor(rate),
-                strokeWidth: 10,
-                strokeCap: StrokeCap.round,
+  // --- WIDGETS ---
+
+  Widget _buildMetabolicCard(BuildContext context, AppLocalizations l10n) {
+    return BlocBuilder<WeightBloc, WeightState>(
+      builder: (context, state) {
+        Color bmiColor = Colors.greenAccent;
+        String bmiStatus = l10n.bmiNormal;
+
+        if (state.bmi < 18.5) {
+          bmiColor = Colors.blueAccent;
+          bmiStatus = l10n.bmiUnderweight;
+        } else if (state.bmi >= 25 && state.bmi < 30) {
+          bmiColor = Colors.orangeAccent;
+          bmiStatus = l10n.bmiOverweight;
+        } else if (state.bmi >= 30) {
+          bmiColor = Colors.redAccent;
+          bmiStatus = l10n.bmiObese;
+        }
+
+        return GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            l10n.metabolicProfile,
+                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => _showMetabolicInfo(context, l10n),
+                          child: Icon(Icons.info_outline, color: Colors.white.withOpacity(0.5), size: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
+                    child: Text(l10n.ageYears(state.age), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  ),
+                ],
               ),
-            ),
+              const SizedBox(height: 20),
+
+              // BMI Section
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("BMI", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Text(state.bmi.toStringAsFixed(1), style: TextStyle(color: bmiColor, fontSize: 28, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          bmiStatus,
+                          style: TextStyle(color: bmiColor, fontSize: 16, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (state.bmi / 40).clamp(0.0, 1.0),
+                            backgroundColor: Colors.white10,
+                            valueColor: AlwaysStoppedAnimation(bmiColor),
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const Divider(color: Colors.white10, height: 24),
+
+              // BMR & TDEE (Basal -> Maintenance)
+              Row(
+                children: [
+                  _buildMiniMetric(l10n.metricBmrTitle, "${state.bmr.toInt()}", "kcal", l10n.metricBmrSubtitle, Colors.blueAccent.withOpacity(0.8)),
+                  Container(width: 1, height: 40, color: Colors.white10, margin: const EdgeInsets.symmetric(horizontal: 16)),
+                  _buildMiniMetric(l10n.metricTdeeTitle, "${state.tdee.toInt()}", "kcal", l10n.metricTdeeSubtitle, Colors.greenAccent.withOpacity(0.8)),
+                ],
+              ),
+            ],
           ),
-          Center(
-            child: Text(
-              "${rate.toInt()}%",
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
-            ),
+        );
+      },
+    );
+  }
+
+  // Обновленный виджет мини-метрики с поддержкой цвета для лейбла
+  Widget _buildMiniMetric(String title, String value, String unit, String subtitle, Color subtitleColor) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 6),
+              // Бейджик "Basal" / "Maintenance"
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: subtitleColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: subtitleColor.withOpacity(0.3), width: 0.5),
+                ),
+                child: Text(
+                    subtitle.toUpperCase(),
+                    style: TextStyle(color: subtitleColor, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 4),
+              Text(unit, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+            ],
           ),
         ],
       ),
     );
   }
 
-  BarChartData _mainBarData(StatsState state) {
-    return BarChartData(
-      maxY: (state.maxChartValue < 24) ? 24 : state.maxChartValue,
-      barTouchData: BarTouchData(
-        touchTooltipData: BarTouchTooltipData(
-          tooltipBgColor: const Color(0xFF1E1E1E),
-          tooltipRoundedRadius: 12,
-          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-            return BarTooltipItem(
-              "${rod.toY.toStringAsFixed(1)} h",
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            );
-          },
-        ),
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: (value, meta) {
-              final now = DateTime.now();
-              final date = now.subtract(Duration(days: 6 - value.toInt()));
-              final dayName = DateFormat.E().format(date)[0]; // Первая буква дня
-              return Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text(dayName, style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12, fontWeight: FontWeight.bold)),
-              );
-            },
-          ),
-        ),
-      ),
-      gridData: const FlGridData(show: false),
-      borderData: FlBorderData(show: false),
-      barGroups: state.weeklyChartData.asMap().entries.map((e) {
-        final isSuccess = e.value >= 16;
-        return BarChartGroupData(
-          x: e.key,
-          barRods: [
-            BarChartRodData(
-              toY: e.value,
-              width: 14,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-              gradient: LinearGradient(
-                colors: isSuccess
-                    ? [const Color(0xFF43C6AC), const Color(0xFF191654)] // Успех
-                    : [Colors.blueAccent, Colors.blueAccent.withOpacity(0.5)], // В процессе
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-              ),
-              backDrawRodData: BackgroundBarChartRodData(
-                show: true,
-                toY: 24,
-                color: Colors.white.withOpacity(0.03),
-              ),
-            ),
+  void _showMetabolicInfo(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text(l10n.metabolicProfile, style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildInfoRow(l10n.metricBmrTitle, l10n.metricBmrDesc),
+            const SizedBox(height: 16),
+            _buildInfoRow(l10n.metricTdeeTitle, l10n.metricTdeeDesc),
           ],
-        );
-      }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.btnGotIt, style: const TextStyle(color: Colors.blueAccent)),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildMetricCard(String title, String val, IconData icon, Color color) {
+  Widget _buildInfoRow(String title, String desc) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 4),
+        Text(desc, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+      ],
+    );
+  }
+
+  
+
+  Widget _buildStatItem({required String title, required String value, required IconData icon, required Color color}) {
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
-          const Spacer(),
-          Text(val, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 2),
-          Text(title, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.bold)),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 12),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(title, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
         ],
       ),
     );
   }
 
-  Widget _buildProBanner(BuildContext context, HapticService haptic) {
-    return GestureDetector(
-      onTap: () {
-        haptic.selectionClick();
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
-      },
-      child: GlassCard(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.auto_graph_rounded, color: Colors.amberAccent),
-            ),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Deep Analytics", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                  SizedBox(height: 2),
-                  Text("Monthly trends & correlation data", style: TextStyle(color: Colors.white54, fontSize: 12)),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.2)),
-          ],
-        ),
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 10),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
       ),
     );
   }
