@@ -2,26 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-<key>PermissionGroupNotification</key>
-<string>We need to send you fasting notifications.</string>
-
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>Fastable uses your location to calculate accurate sunset and sunrise times for the Circadian Fasting mode.</string>
-
-<key>NSUserTrackingUsageDescription</key>
-<string>This identifier will be used to deliver personalized ads to you.</string>
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>We need your location to calculate accurate sunset times for Circadian Fasting.</string>
-<key>GADApplicationIdentifier</key>
-    <string>ca-app-pub-3940256099942544~1458002511</string>
-
-    <key>SKAdNetworkItems</key>
-    <array>
-        <dict>
-            <key>SKAdNetworkIdentifier</key>
-            <string>cstr6suwn9.skadnetwork</string>
-        </dict>
-    </array>
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-7039790177400209~7108266261</string>
+    <key>NSHealthShareUsageDescription</key>
+    <string>We sync your weight and water data with Apple Health to keep your progress up to date.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>We sync your weight and water data with Apple Health to keep your progress up to date.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -33,7 +19,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>test_app</string>
+	<string>fastable</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

@@ -1772,6 +1772,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Solar Controlled'**
   String get circadianManaged;
+
+  /// No description provided for @notifBio4hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Sugar Stabilized 🩸'**
+  String get notifBio4hTitle;
+
+  /// No description provided for @notifBio4hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your insulin levels are dropping. False hunger pangs may disappear.'**
+  String get notifBio4hBody;
+
+  /// No description provided for @notifBio8hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stomach is Empty ✅'**
+  String get notifBio8hTitle;
+
+  /// No description provided for @notifBio8hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Digestion is complete. Your body is shifting into repair mode.'**
+  String get notifBio8hBody;
+
+  /// No description provided for @notifBio12hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Entering Ketosis 🔥'**
+  String get notifBio12hTitle;
+
+  /// No description provided for @notifBio12hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body has started burning stored fat for energy!'**
+  String get notifBio12hBody;
+
+  /// No description provided for @notifBio16hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Burning Peak ⚡️'**
+  String get notifBio16hTitle;
+
+  /// No description provided for @notifBio16hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Metabolism is accelerated. You are in the intense burning zone.'**
+  String get notifBio16hBody;
+
+  /// No description provided for @notifBio18hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Autophagy Started ♻️'**
+  String get notifBio18hTitle;
+
+  /// No description provided for @notifBio18hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Cellular cleaning active. Your body is recycling old cells.'**
+  String get notifBio18hBody;
+
+  /// No description provided for @notifBio24hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HGH Spike 🛡'**
+  String get notifBio24hTitle;
+
+  /// No description provided for @notifBio24hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth hormone levels are up to protect your muscles.'**
+  String get notifBio24hBody;
+
+  /// No description provided for @notifProg50Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Halfway There! 🚀'**
+  String get notifProg50Title;
+
+  /// No description provided for @notifProg50Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You passed 50% of your goal. Keep going!'**
+  String get notifProg50Body;
+
+  /// No description provided for @notifProg1hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Hour Left ⏳'**
+  String get notifProg1hTitle;
+
+  /// No description provided for @notifProg1hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost done! You can start preparing your meal.'**
+  String get notifProg1hBody;
+
+  /// No description provided for @notifProgFinishTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Reached! 🏆'**
+  String get notifProgFinishTitle;
+
+  /// No description provided for @notifProgFinishBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You did it! Don\'t forget to stop the timer.'**
+  String get notifProgFinishBody;
+
+  /// No description provided for @notifWaterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drink Water 💧'**
+  String get notifWaterTitle;
+
+  /// No description provided for @notifWaterBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration boosts your metabolism and reduces hunger.'**
+  String get notifWaterBody;
+
+  /// No description provided for @notifWeightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning Weigh-in ⚖️'**
+  String get notifWeightTitle;
+
+  /// No description provided for @notifWeightBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning is the best time to track your weight.'**
+  String get notifWeightBody;
+
+  /// No description provided for @permTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Permissions'**
+  String get permTitle;
+
+  /// No description provided for @permDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'To give you the best experience, Fastable needs access to notifications and health data.'**
+  String get permDesc;
+
+  /// No description provided for @permNotifTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get permNotifTitle;
+
+  /// No description provided for @permNotifDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on track with fasting alerts.'**
+  String get permNotifDesc;
+
+  /// No description provided for @permHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health'**
+  String get permHealthTitle;
+
+  /// No description provided for @permHealthDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync weight & water data.'**
+  String get permHealthDesc;
+
+  /// No description provided for @permAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get permAllow;
+
+  /// No description provided for @permContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get permContinue;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1,32 +1,81 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:injectable/injectable.dart';
 
-const String kProStatusKey = 'is_pro_user';
-const String kProExpiryKey = 'pro_expiry_date';
-
+@lazySingleton
 class ProService {
-  // Синглтон
-  static final ProService _instance = ProService._internal();
-  factory ProService() => _instance;
-  ProService._internal();
+  final String _apiKeyIOS = 'appl_YOUR_IOS_KEY';
+  // Android ключ не нужен, так как там нет подписок
 
-  Future<bool> isPro() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bool isActive = prefs.getBool(kProStatusKey) ?? false;
+  bool _isInitialized = false;
 
-    // В реальном приложении здесь будет логика проверки даты истечения
-    return isActive;
+  Future<void> init() async {
+    // Если это Android, мы просто выходим. RevenueCat не нужен.
+    if (Platform.isAndroid) return;
+
+    if (_isInitialized) return;
+    await Purchases.setLogLevel(LogLevel.debug);
+
+    PurchasesConfiguration? configuration;
+    if (Platform.isIOS) {
+      configuration = PurchasesConfiguration(_apiKeyIOS);
+    }
+
+    if (configuration != null) {
+      await Purchases.configure(configuration);
+      _isInitialized = true;
+    }
   }
 
-  Future<void> activateProSubscription() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kProStatusKey, true);
-    await prefs.setString(kProExpiryKey, DateTime.now().add(const Duration(days: 365)).toIso8601String());
+  Future<bool> checkProStatus() async {
+    if (Platform.isAndroid) return false; // На Андроиде всегда "Не PRO" (чтобы показывать рекламу)
+
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      return customerInfo.entitlements.all['pro']?.isActive ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    }
   }
 
-  // --- НОВЫЙ МЕТОД: Отмена подписки ---
-  Future<void> deactivateProSubscription() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kProStatusKey, false);
-    await prefs.remove(kProExpiryKey);
+  Future<List<Package>> fetchOfferings() async {
+    if (Platform.isAndroid) return []; // Нет тарифов
+
+    try {
+      final offerings = await Purchases.getOfferings();
+      return offerings.current?.availablePackages ?? [];
+    } on PlatformException catch (_) {
+      return [];
+    }
+  }
+
+  Future<bool> purchasePackage(Package package) async {
+    if (Platform.isAndroid) return false;
+
+    try {
+      var result = await Purchases.purchasePackage(package);
+      dynamic dynamicResult = result;
+      CustomerInfo info;
+      try {
+        info = dynamicResult.customerInfo;
+      } catch (e) {
+        info = dynamicResult;
+      }
+      return info.entitlements.all['pro']?.isActive ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> restorePurchases() async {
+    if (Platform.isAndroid) return false;
+
+    try {
+      final customerInfo = await Purchases.restorePurchases();
+      return customerInfo.entitlements.all['pro']?.isActive ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    }
   }
 }

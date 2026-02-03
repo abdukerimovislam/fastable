@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:injectable/injectable.dart';
+
 
 class WeightRecord {
   final DateTime date;
@@ -19,7 +21,7 @@ class WeightRecord {
     );
   }
 }
-
+@lazySingleton
 class WeightRepository {
   static const String _key = 'weight_history';
   static const String _currentWeightKey = 'user_current_weight';

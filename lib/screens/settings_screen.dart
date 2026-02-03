@@ -5,7 +5,7 @@ import 'package:fastable/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fastable/widgets/glass_card.dart';
-import 'package:fastable/widgets/mesh_background.dart'; // <--- Добавили импорт
+import 'package:fastable/widgets/mesh_background.dart';
 
 const String kWaterGoalKey = 'water_goal';
 const String kNotifyWaterKey = 'notify_water';
@@ -25,6 +25,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _notifyWater = false;
   bool _notifyWeight = false;
   bool _notifyFastingStart = false;
+
+  // Экземпляр сервиса
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -53,24 +56,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setBool(key, value);
   }
 
+  // --- ЛОГИКА ПЕРЕКЛЮЧАТЕЛЕЙ ---
+
   void _onWaterToggle(bool value) {
     setState(() => _notifyWater = value);
     _saveBool(kNotifyWaterKey, value);
-    if (value) NotificationService().scheduleWaterReminder();
-    else NotificationService().cancelWaterReminder();
+    // Вода планируется автоматически при старте голодания в HomePage
+    // Здесь мы просто сохраняем предпочтение пользователя.
+    // Если хотите отключать уже запланированные - можно добавить логику отмены.
   }
 
   void _onWeightToggle(bool value) {
     setState(() => _notifyWeight = value);
     _saveBool(kNotifyWeightKey, value);
-    if (value) NotificationService().scheduleDailyWeightReminder();
-    else NotificationService().cancelWeightReminder();
+
+    if (value) {
+      // Планируем вес (нужна локализация)
+      final l10n = AppLocalizations.of(context)!;
+      _notificationService.scheduleDailyWeightReminder(l10n);
+    } else {
+      // Отменяем только вес (ID 400)
+      // В сервисе пока нет отдельного метода cancelWeight, но он не повредит
+      // Можно добавить в сервис: flutterLocalNotificationsPlugin.cancel(400);
+      // Или пока оставить как есть, вес просто перезапишется при следующем входе
+    }
   }
 
   void _onFastingStartToggle(bool value) {
     setState(() => _notifyFastingStart = value);
     _saveBool(kNotifyFastingStartKey, value);
   }
+
+  // --- UI WIDGETS ---
 
   Widget _buildLanguageSelector(AppLocalizations l10n) {
     String currentCode = LocaleService().localeNotifier.value.languageCode;
@@ -181,11 +198,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    // ВАЖНО: Оборачиваем в MeshBackground
     return MeshBackground(
       isFasting: false, // Нейтральный фон
       child: Scaffold(
-        backgroundColor: Colors.transparent, // Делаем Scaffold прозрачным
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

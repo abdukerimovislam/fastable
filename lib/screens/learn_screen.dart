@@ -1,312 +1,314 @@
+import 'dart:io'; // Для Platform
 import 'package:flutter/material.dart';
-import 'package:fastable/l10n/app_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fastable/widgets/glass_card.dart';
-import 'package:fastable/models/content_models.dart';
-import 'package:fastable/services/content_service.dart';
+import 'package:fastable/bloc/pro/pro_bloc.dart';
+import 'package:fastable/bloc/pro/pro_state.dart';
+import 'package:fastable/screens/pro_screen.dart';
+import 'package:fastable/screens/recipes_screen.dart'; // Экран рецептов
+import 'package:fastable/services/haptic_service.dart';
+import 'package:fastable/injection.dart';
 
-class LearnScreen extends StatefulWidget {
+class LearnScreen extends StatelessWidget {
   const LearnScreen({super.key});
 
   @override
-  State<LearnScreen> createState() => _LearnScreenState();
-}
-
-class _LearnScreenState extends State<LearnScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final ContentService _contentService = ContentService();
-  String? _selectedTag; // Фильтр
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    // Определяем текущий код языка (например, 'ru' или 'en')
-    final String localeCode = Localizations.localeOf(context).languageCode;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: BlocBuilder<ProBloc, ProState>(
+          builder: (context, state) {
+            final isPro = state.isPro;
 
-    return SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Guide",
-                  style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildTabBtn(l10n.tabRecipes, 0),
-                      _buildTabBtn(l10n.tabKnowledge, 1),
-                    ],
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // ЗАГОЛОВОК
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    child: Text(
+                      "Learn",
+                      style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
 
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // 1. РЕЦЕПТЫ (STREAM)
-                _buildRecipesTab(l10n, localeCode),
+                // --- БЛОК РЕЦЕПТОВ (Только для iOS) ---
+                if (Platform.isIOS)
+                  SliverToBoxAdapter(
+                    child: _buildRecipesBanner(context, isPro),
+                  ),
 
-                // 2. СТАТЬИ (STREAM)
-                _buildKnowledgeTab(localeCode),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 80),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabBtn(String title, int index) {
-    return AnimatedBuilder(
-      animation: _tabController.animation!,
-      builder: (context, child) {
-        final double value = _tabController.animation!.value;
-        final bool isSelected = (value - index).abs() < 0.5;
-
-        return GestureDetector(
-          onTap: () => _tabController.animateTo(index),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRecipesTab(AppLocalizations l10n, String locale) {
-    return StreamBuilder<List<RecipeModel>>(
-      stream: _contentService.getRecipes(locale),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text("No recipes found", style: TextStyle(color: Colors.white.withOpacity(0.5))));
-        }
-
-        final allRecipes = snapshot.data!;
-        // Фильтрация на клиенте
-        final filteredRecipes = _selectedTag == null
-            ? allRecipes
-            : allRecipes.where((r) => r.tags.contains(_selectedTag)).toList();
-
-        return Column(
-          children: [
-            // Фильтры
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  _buildFilterChip(l10n.categoryAll, null),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(l10n.categoryKeto, "keto"),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(l10n.categoryFitness, "fitness"),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(l10n.categoryVegan, "vegan"),
-                ],
-              ),
-            ),
-
-            // Список
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: filteredRecipes.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  return _buildRecipeCard(filteredRecipes[index], l10n);
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildFilterChip(String label, String? tag) {
-    final bool isSelected = _selectedTag == tag;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTag = tag),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blueAccent : Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? Colors.blueAccent : Colors.white.withOpacity(0.1)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecipeCard(RecipeModel recipe, AppLocalizations l10n) {
-    return GlassCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 140,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: recipe.color.withOpacity(0.2),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              image: recipe.imageUrl.isNotEmpty
-                  ? DecorationImage(image: NetworkImage(recipe.imageUrl), fit: BoxFit.cover)
-                  : null,
-            ),
-            child: Stack(
-              children: [
-                if (recipe.imageUrl.isEmpty)
-                  Center(child: Icon(Icons.restaurant_menu, size: 60, color: recipe.color)),
-                Positioned(
-                  bottom: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(10)),
-                    child: Row(
+                // КАТЕГОРИИ
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 120,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       children: [
-                        const Icon(Icons.access_time, color: Colors.white, size: 14),
-                        const SizedBox(width: 4),
-                        Text(l10n.recipeTime(recipe.timeMinutes), style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        _buildCategoryCard("Basics", Icons.book, Colors.blueAccent),
+                        const SizedBox(width: 12),
+                        _buildCategoryCard("Nutrition", Icons.restaurant, Colors.greenAccent),
+                        const SizedBox(width: 12),
+                        _buildCategoryCard("Health", Icons.favorite, Colors.redAccent),
+                        const SizedBox(width: 12),
+                        _buildCategoryCard("Keto", Icons.bolt, Colors.orangeAccent),
                       ],
                     ),
                   ),
-                )
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                // ЗАГОЛОВОК СПИСКА
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: Text("Latest Articles", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // СПИСОК СТАТЕЙ
+                SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildArticleItem(
+                      context,
+                      title: "What is Intermittent Fasting?",
+                      desc: "The complete beginner's guide to IF.",
+                      readTime: "5 min",
+                      imageColor: Colors.blueAccent,
+                      isLocked: false,
+                      isPro: isPro,
+                    ),
+                    _buildArticleItem(
+                      context,
+                      title: "Autophagy: The Science",
+                      desc: "How your body repairs itself.",
+                      readTime: "8 min",
+                      imageColor: Colors.purpleAccent,
+                      isLocked: true, // Pro Article
+                      isPro: isPro,
+                    ),
+                    _buildArticleItem(
+                      context,
+                      title: "What to drink while fasting?",
+                      desc: "Coffee, tea, and water hacks.",
+                      readTime: "3 min",
+                      imageColor: Colors.brown,
+                      isLocked: false,
+                      isPro: isPro,
+                    ),
+                    _buildArticleItem(
+                      context,
+                      title: "Fasting & Muscle Growth",
+                      desc: "Can you build muscle on IF?",
+                      readTime: "10 min",
+                      imageColor: Colors.redAccent,
+                      isLocked: true, // Pro Article
+                      isPro: isPro,
+                    ),
+                    const SizedBox(height: 100),
+                  ]),
+                ),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // --- НОВЫЙ БАННЕР ДЛЯ РЕЦЕПТОВ ---
+  Widget _buildRecipesBanner(BuildContext context, bool isPro) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: GestureDetector(
+        onTap: () {
+          getIt<HapticService>().mediumImpact();
+          if (isPro) {
+            // Если PRO - открываем рецепты
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipesScreen()));
+          } else {
+            // Если Free - открываем Paywall
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
+          }
+        },
+        child: Container(
+          height: 140,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF43C6AC), Color(0xFF191654)], // Красивый градиент
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF43C6AC).withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Stack(
+            children: [
+              // Фоновая иконка
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Icon(Icons.restaurant_menu, size: 140, color: Colors.white.withOpacity(0.1)),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(child: Text(recipe.title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
-                    if (recipe.tags.contains("keto"))
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: Colors.purpleAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
-                        child: const Text("KETO", style: TextStyle(color: Colors.purpleAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star, color: Colors.amber, size: 12),
+                          SizedBox(width: 4),
+                          Text("PREMIUM", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Healthy Recipes",
+                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    const Text(
+                      "Keto, Low-Carb & More",
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(recipe.description, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _buildMacro("Cal", "${recipe.calories}", Colors.grey),
-                    const SizedBox(width: 12),
-                    _buildMacro("Prot", "${recipe.protein}g", Colors.blue),
-                    const SizedBox(width: 12),
-                    _buildMacro("Fat", "${recipe.fat}g", Colors.orange),
-                    const SizedBox(width: 12),
-                    _buildMacro("Carb", "${recipe.carbs}g", Colors.green),
-                  ],
+              ),
+
+              // Замок, если не PRO
+              if (!isPro)
+                Positioned(
+                  right: 24,
+                  top: 24,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black26,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.lock, color: Colors.white, size: 20),
+                  ),
                 ),
-              ],
-            ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(String title, IconData icon, Color color) {
+    return GlassCard(
+      width: 100,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 12),
+          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
         ],
       ),
     );
   }
 
-  Widget _buildMacro(String label, String value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10)),
-      ],
-    );
-  }
+  Widget _buildArticleItem(BuildContext context, {
+    required String title,
+    required String desc,
+    required String readTime,
+    required Color imageColor,
+    required bool isLocked,
+    required bool isPro,
+  }) {
+    final bool showLock = isLocked && !isPro;
 
-  Widget _buildKnowledgeTab(String locale) {
-    return StreamBuilder<List<ArticleModel>>(
-      stream: _contentService.getArticles(locale),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox();
-        return ListView.builder(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GestureDetector(
+        onTap: () {
+          if (showLock) {
+            getIt<HapticService>().mediumImpact();
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
+          } else {
+            getIt<HapticService>().selectionClick();
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Opening article...")));
+          }
+        },
+        child: GlassCard(
           padding: const EdgeInsets.all(16),
-          itemCount: snapshot.data!.length,
-          itemBuilder: (context, index) {
-            final article = snapshot.data![index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: GlassCard(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: imageColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(showLock ? Icons.lock : Icons.article, color: imageColor),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.article, color: Colors.white),
+                    Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Text(desc, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time, size: 12, color: Colors.white38),
+                        const SizedBox(width: 4),
+                        Text(readTime, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                        if (isLocked && isPro) ...[
+                          const SizedBox(width: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                            child: const Text("PRO", style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
+                          )
+                        ]
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(article.title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text(article.subtitle, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3)),
                   ],
                 ),
               ),
-            );
-          },
-        );
-      },
+              if (showLock)
+                const Icon(Icons.lock_outline, color: Colors.amber)
+              else
+                Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

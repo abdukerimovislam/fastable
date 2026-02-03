@@ -860,4 +860,94 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get circadianManaged => 'По Солнцу';
+
+  @override
+  String get notifBio4hTitle => 'Сахар в норме 🩸';
+
+  @override
+  String get notifBio4hBody => 'Инсулин падает. Ложный голод должен скоро пройти.';
+
+  @override
+  String get notifBio8hTitle => 'Желудок пуст ✅';
+
+  @override
+  String get notifBio8hBody => 'Пищеварение завершено. Тело переходит в режим отдыха.';
+
+  @override
+  String get notifBio12hTitle => 'Вход в Кетоз 🔥';
+
+  @override
+  String get notifBio12hBody => 'Организм начал сжигать жировые запасы для энергии!';
+
+  @override
+  String get notifBio16hTitle => 'Пик жиросжигания ⚡️';
+
+  @override
+  String get notifBio16hBody => 'Метаболизм ускорен. Вы в зоне максимальной эффективности.';
+
+  @override
+  String get notifBio18hTitle => 'Старт Аутофагии ♻️';
+
+  @override
+  String get notifBio18hBody => 'Клеточное очищение. Организм перерабатывает старые клетки.';
+
+  @override
+  String get notifBio24hTitle => 'Рост иммунитета 🛡';
+
+  @override
+  String get notifBio24hBody => 'Гормон роста повышен для защиты мышц и обновления тканей.';
+
+  @override
+  String get notifProg50Title => 'Половина пути! 🚀';
+
+  @override
+  String get notifProg50Body => 'Вы прошли 50% цели. Так держать!';
+
+  @override
+  String get notifProg1hTitle => 'Остался 1 час ⏳';
+
+  @override
+  String get notifProg1hBody => 'Почти всё! Можно начинать готовить еду.';
+
+  @override
+  String get notifProgFinishTitle => 'Цель достигнута! 🏆';
+
+  @override
+  String get notifProgFinishBody => 'Вы справились! Не забудьте остановить таймер.';
+
+  @override
+  String get notifWaterTitle => 'Время воды 💧';
+
+  @override
+  String get notifWaterBody => 'Вода ускоряет метаболизм и притупляет чувство голода.';
+
+  @override
+  String get notifWeightTitle => 'Утреннее взвешивание ⚖️';
+
+  @override
+  String get notifWeightBody => 'Утро — лучшее время, чтобы зафиксировать прогресс.';
+
+  @override
+  String get permTitle => 'Разрешения';
+
+  @override
+  String get permDesc => 'Чтобы обеспечить лучший опыт, Fastable требуется доступ к уведомлениям и данным здоровья.';
+
+  @override
+  String get permNotifTitle => 'Уведомления';
+
+  @override
+  String get permNotifDesc => 'Помогают не сбиваться с графика голодания.';
+
+  @override
+  String get permHealthTitle => 'Apple Health';
+
+  @override
+  String get permHealthDesc => 'Синхронизация данных о весе и воде.';
+
+  @override
+  String get permAllow => 'Разрешить';
+
+  @override
+  String get permContinue => 'Продолжить';
 }

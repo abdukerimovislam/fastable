@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fastable/widgets/glass_card.dart'; // Ваш виджет
-import 'package:fastable/widgets/mesh_background.dart'; // Ваш фон
+
+import 'package:fastable/injection.dart';
 import 'package:fastable/home_page.dart';
-import 'package:fastable/screens/onboarding_screen.dart';
+import 'package:fastable/services/haptic_service.dart';
+import 'package:fastable/services/notification_service.dart';
+import 'package:fastable/services/health_service.dart';
+
+import 'package:fastable/bloc/settings/settings_bloc.dart';
+import 'package:fastable/bloc/settings/settings_event.dart';
+
+import 'package:fastable/widgets/glass_card.dart';
+import 'package:fastable/widgets/mesh_background.dart';
+import 'package:fastable/l10n/app_localizations.dart';
 
 class PermissionsScreen extends StatefulWidget {
   const PermissionsScreen({super.key});
@@ -14,53 +23,33 @@ class PermissionsScreen extends StatefulWidget {
 }
 
 class _PermissionsScreenState extends State<PermissionsScreen> {
-  // Статусы разрешений
-  PermissionStatus _notificationStatus = PermissionStatus.denied;
-  PermissionStatus _locationStatus = PermissionStatus.denied;
-  PermissionStatus _trackingStatus = PermissionStatus.denied; // iOS Tracking
+  // Локальное состояние для UI переключателей
+  bool _notificationsGranted = false;
+  bool _healthGranted = false;
 
   @override
   void initState() {
     super.initState();
-    _checkStatuses();
+    _checkInitialStatuses();
   }
 
-  Future<void> _checkStatuses() async {
-    final notif = await Permission.notification.status;
-    final loc = await Permission.locationWhenInUse.status;
-    final track = await Permission.appTrackingTransparency.status;
+  Future<void> _checkInitialStatuses() async {
+    final notifStatus = await Permission.notification.status;
+    // HealthService проверяем через наш сервис (он может вернуть false если прав нет)
+    // Но для первичного UI можно просто оставить выключенным
 
-    setState(() {
-      _notificationStatus = notif;
-      _locationStatus = loc;
-      _trackingStatus = track;
-    });
-  }
-
-  Future<void> _requestPermission(Permission permission) async {
-    final status = await permission.request();
-
-    // Если пользователь навсегда запретил, отправляем в настройки
-    if (status.isPermanentlyDenied) {
-      openAppSettings();
-    }
-
-    _checkStatuses(); // Обновляем UI
-  }
-
-  Future<void> _finishOnboarding() async {
-    // Не сохраняем is_first_run здесь!
-    // Переходим к вводу данных
     if (mounted) {
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OnboardingScreen())
-      );
+      setState(() {
+        _notificationsGranted = notifStatus.isGranted;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final haptic = getIt<HapticService>();
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: MeshBackground(
@@ -71,78 +60,95 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
-                const Text(
-                  "Let's set up\nyour experience",
-                  style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 40),
+                const Icon(Icons.shield_outlined, size: 60, color: Colors.blueAccent),
+                const SizedBox(height: 24),
                 Text(
-                  "To make Fastable work perfectly, we need a few permissions.",
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16),
+                  l10n.permTitle, // "Enable Permissions"
+                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.permDesc, // "To give you..."
+                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16, height: 1.5),
                 ),
                 const SizedBox(height: 40),
 
-                // 1. УВЕДОМЛЕНИЯ
-                _buildPermissionItem(
+                // 1. NOTIFICATIONS
+                _buildPermissionCard(
                   icon: Icons.notifications_active,
-                  title: "Notifications",
-                  desc: "To remind you when your fast ends.",
-                  status: _notificationStatus,
-                  onTap: () => _requestPermission(Permission.notification),
-                ),
+                  color: Colors.orangeAccent,
+                  title: l10n.permNotifTitle,
+                  desc: l10n.permNotifDesc,
+                  value: _notificationsGranted,
+                  onChanged: (val) async {
+                    haptic.selectionClick();
+                    if (val) {
+                      // Запрашиваем через наш сервис
+                      await getIt<NotificationService>().requestPermissions();
 
-                const SizedBox(height: 16),
+                      // Проверяем результат
+                      final status = await Permission.notification.status;
+                      setState(() => _notificationsGranted = status.isGranted);
 
-                // 2. ГЕОЛОКАЦИЯ
-                _buildPermissionItem(
-                  icon: Icons.wb_sunny,
-                  title: "Location",
-                  desc: "For Circadian Rhythm (Sunset/Sunrise).",
-                  status: _locationStatus,
-                  onTap: () => _requestPermission(Permission.locationWhenInUse),
-                ),
-
-                const SizedBox(height: 16),
-
-                // 3. ТРЕКИНГ (Только iOS, на Android скроется или будет granted)
-                // Полезно для AdMob
-                FutureBuilder(
-                  future: Permission.appTrackingTransparency.status,
-                  builder: (context, snapshot) {
-                    // Показываем только если не Android или если реально нужно
-                    // Обычно на Android этот пермишен всегда denied или не используется
-                    // Поэтому можно показывать только на iOS
-                    if (Theme.of(context).platform == TargetPlatform.iOS) {
-                      return _buildPermissionItem(
-                        icon: Icons.ad_units,
-                        title: "Tracking",
-                        desc: "To show personalized ads.",
-                        status: _trackingStatus,
-                        onTap: () => _requestPermission(Permission.appTrackingTransparency),
-                      );
+                      // Сохраняем в глобальные настройки
+                      if (mounted && status.isGranted) {
+                        context.read<SettingsBloc>().add(const ToggleNotifications(true));
+                      }
+                    } else {
+                      // Если юзер отключает свитч (опционально можно открыть настройки)
+                      openAppSettings();
                     }
-                    return const SizedBox.shrink();
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // 2. HEALTH
+                _buildPermissionCard(
+                  icon: Icons.favorite,
+                  color: Colors.redAccent,
+                  title: l10n.permHealthTitle,
+                  desc: l10n.permHealthDesc,
+                  value: _healthGranted,
+                  onChanged: (val) async {
+                    haptic.selectionClick();
+                    if (val) {
+                      // Запрашиваем через наш сервис
+                      final granted = await getIt<HealthService>().requestPermissions();
+                      setState(() => _healthGranted = granted);
+
+                      // Сохраняем в глобальные настройки
+                      if (mounted && granted) {
+                        context.read<SettingsBloc>().add(const ToggleHealthSync(true));
+                      }
+                    }
                   },
                 ),
 
                 const Spacer(),
 
-                // КНОПКА "CONTINUE"
+                // CONTINUE BUTTON
                 GestureDetector(
-                  onTap: _finishOnboarding,
+                  onTap: () {
+                    haptic.mediumImpact();
+                    // Переход на Главную
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const HomePage()),
+                    );
+                  },
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.blueAccent.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 10))],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [BoxShadow(color: Colors.white.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 5))],
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Text(
-                        "Start Fasting",
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        l10n.permContinue, // "Continue"
+                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ),
                   ),
@@ -156,51 +162,38 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     );
   }
 
-  Widget _buildPermissionItem({
+  Widget _buildPermissionCard({
     required IconData icon,
+    required Color color,
     required String title,
     required String desc,
-    required PermissionStatus status,
-    required VoidCallback onTap,
+    required bool value,
+    required ValueChanged<bool> onChanged,
   }) {
-    final bool isGranted = status.isGranted;
-
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isGranted ? Colors.green.withOpacity(0.2) : Colors.white.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isGranted ? Icons.check : icon,
-              color: isGranted ? Colors.green : Colors.white,
-              size: 24,
-            ),
+            decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
+            child: Icon(icon, color: color),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(desc, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(desc, style: TextStyle(color: Colors.white54, fontSize: 13)),
               ],
             ),
           ),
-          if (!isGranted)
-            TextButton(
-              onPressed: onTap,
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text("Allow", style: TextStyle(color: Colors.blueAccent)),
-            ),
+          Switch(
+            value: value,
+            activeColor: Colors.blueAccent,
+            onChanged: onChanged,
+          ),
         ],
       ),
     );

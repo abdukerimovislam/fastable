@@ -860,4 +860,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get circadianManaged => 'Solar Controlled';
+
+  @override
+  String get notifBio4hTitle => 'Blood Sugar Stabilized 🩸';
+
+  @override
+  String get notifBio4hBody => 'Your insulin levels are dropping. False hunger pangs may disappear.';
+
+  @override
+  String get notifBio8hTitle => 'Stomach is Empty ✅';
+
+  @override
+  String get notifBio8hBody => 'Digestion is complete. Your body is shifting into repair mode.';
+
+  @override
+  String get notifBio12hTitle => 'Entering Ketosis 🔥';
+
+  @override
+  String get notifBio12hBody => 'Your body has started burning stored fat for energy!';
+
+  @override
+  String get notifBio16hTitle => 'Fat Burning Peak ⚡️';
+
+  @override
+  String get notifBio16hBody => 'Metabolism is accelerated. You are in the intense burning zone.';
+
+  @override
+  String get notifBio18hTitle => 'Autophagy Started ♻️';
+
+  @override
+  String get notifBio18hBody => 'Cellular cleaning active. Your body is recycling old cells.';
+
+  @override
+  String get notifBio24hTitle => 'HGH Spike 🛡';
+
+  @override
+  String get notifBio24hBody => 'Growth hormone levels are up to protect your muscles.';
+
+  @override
+  String get notifProg50Title => 'Halfway There! 🚀';
+
+  @override
+  String get notifProg50Body => 'You passed 50% of your goal. Keep going!';
+
+  @override
+  String get notifProg1hTitle => '1 Hour Left ⏳';
+
+  @override
+  String get notifProg1hBody => 'Almost done! You can start preparing your meal.';
+
+  @override
+  String get notifProgFinishTitle => 'Goal Reached! 🏆';
+
+  @override
+  String get notifProgFinishBody => 'You did it! Don\'t forget to stop the timer.';
+
+  @override
+  String get notifWaterTitle => 'Drink Water 💧';
+
+  @override
+  String get notifWaterBody => 'Hydration boosts your metabolism and reduces hunger.';
+
+  @override
+  String get notifWeightTitle => 'Morning Weigh-in ⚖️';
+
+  @override
+  String get notifWeightBody => 'Morning is the best time to track your weight.';
+
+  @override
+  String get permTitle => 'Enable Permissions';
+
+  @override
+  String get permDesc => 'To give you the best experience, Fastable needs access to notifications and health data.';
+
+  @override
+  String get permNotifTitle => 'Notifications';
+
+  @override
+  String get permNotifDesc => 'Stay on track with fasting alerts.';
+
+  @override
+  String get permHealthTitle => 'Apple Health';
+
+  @override
+  String get permHealthDesc => 'Sync weight & water data.';
+
+  @override
+  String get permAllow => 'Allow';
+
+  @override
+  String get permContinue => 'Continue';
 }

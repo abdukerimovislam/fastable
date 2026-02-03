@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart'; // Для DateUtils
 import 'package:fastable/models/water_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:injectable/injectable.dart';
 
+@lazySingleton
 class WaterRepository {
   static const String _kWaterKey = 'water_history_log';
 

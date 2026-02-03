@@ -351,7 +351,15 @@
               "circadianBonusTime": "Tempo bônus 🔥",
               "circadianSyncing": "Sincronizando com o sol...",
               "circadianError": "Não foi possível obter a localização. Usando temporizador padrão.",
-              "circadianManaged": "Controlado pelo sol"
+              "circadianManaged": "Controlado pelo sol",
+              "permTitle": "Ativar permissões",
+                "permDesc": "Para oferecer a melhor experiência, o Fastable precisa de acesso às notificações e aos dados de saúde.",
+                "permNotifTitle": "Notificações",
+                "permNotifDesc": "Acompanhe seus alertas de jejum.",
+                "permHealthTitle": "Apple Health",
+                "permHealthDesc": "Sincronize dados de peso e consumo de água.",
+                "permAllow": "Permitir",
+                "permContinue": "Continuar"
 
 
 

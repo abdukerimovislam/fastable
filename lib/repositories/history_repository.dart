@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fastable/models/fasting_record.dart';
+import 'package:injectable/injectable.dart'; // <--- ДОБАВИТЬ ИМПОРТ
 
+@lazySingleton
 class HistoryRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
