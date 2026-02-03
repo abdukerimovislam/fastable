@@ -1,4 +1,4 @@
-import 'dart:io'; // Для проверки Platform.isAndroid
+import 'dart:io'; // Для Platform
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,7 +21,7 @@ import 'package:fastable/bloc/weight/weight_bloc.dart';
 import 'package:fastable/bloc/weight/weight_event.dart';
 import 'package:fastable/bloc/weight/weight_state.dart';
 
-import 'package:fastable/bloc/pro/pro_bloc.dart'; // <--- Добавили ProBloc
+import 'package:fastable/bloc/pro/pro_bloc.dart';
 import 'package:fastable/bloc/pro/pro_state.dart';
 
 import 'package:fastable/widgets/glass_card.dart';
@@ -47,6 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   InterstitialAd? _interstitialAd;
   bool _isBodyView = false;
 
+  // Дубликат планов для UI (должен совпадать с BLoC)
   final List<FastingPlan> _plans = [
     FastingPlan(fastingDuration: const Duration(hours: 16), eatingDuration: const Duration(hours: 8), translationKey: "fastingPlan16_8"),
     FastingPlan(fastingDuration: const Duration(hours: 18), eatingDuration: const Duration(hours: 6), translationKey: "fastingPlan18_6"),
@@ -69,9 +70,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _loadInterstitialAd() {
-    // Реклама загружается везде (на Android всегда, на iOS пока не купили Pro)
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
+      adUnitId: 'ca-app-pub-3940256099942544/1033173712',
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
@@ -82,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildBannerAd() {
     final BannerAd bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test ID
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(onAdFailedToLoad: (ad, err) => ad.dispose()),
@@ -99,9 +99,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // --- ACTIONS ---
 
   void _onStartFastingPressed() {
-    // Показываем интерстишиал только если нужно (логика проверки внутри ProBloc, но здесь для простоты UI)
-    // В идеале можно проверять isPro перед показом, но так как переменная внутри build,
-    // мы оставим показ рекламы при старте, либо можно передать isPro в этот метод.
     if (_interstitialAd != null) {
       try { _interstitialAd!.show(); _interstitialAd = null; } catch (e) {}
     } else {
@@ -133,17 +130,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               builder: (context, weightState) {
                 return BlocBuilder<WaterBloc, WaterState>(
                     builder: (context, waterState) {
-                      // ДОБАВИЛИ ProBloc
                       return BlocBuilder<ProBloc, ProState>(
                           builder: (context, proState) {
 
                             final isPro = proState.isPro;
-
-                            // ЛОГИКА ОТОБРАЖЕНИЯ:
-                            // 1. Реклама: На Android всегда. На iOS только если не Pro.
                             final showAds = isAndroid || !isPro;
-
-                            // 2. Баннер Pro: На Android никогда. На iOS только если не Pro.
                             final showProBanner = !isAndroid && !isPro;
 
                             final bmiStr = weightState.bmi.toStringAsFixed(1);
@@ -239,7 +230,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                                     const SizedBox(height: 16),
 
-                                    // PRO BANNER (Только iOS и если не PRO)
                                     if (showProBanner)
                                       GlassCard(
                                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
@@ -248,7 +238,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                                     const SizedBox(height: 20),
 
-                                    // ADS (На Android всегда, на iOS если не PRO)
                                     if (showAds)
                                       _buildBannerAd(),
                                   ],
@@ -277,7 +266,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final double percent = (state.phase == FastingPhase.stopped) ? 0.0 : state.progress;
     final timeLeft = (state.phase == FastingPhase.stopped) ? Duration.zero : state.remaining;
-    final timeString = (state.phase == FastingPhase.stopped) ? "16:00:00" : _formatDuration(timeLeft);
+
+    // ИСПРАВЛЕНИЕ: Берем целевое время из текущего плана, если таймер остановлен
+    final String timeString = (state.phase == FastingPhase.stopped)
+        ? _formatDuration(_plans[state.planIndex].fastingDuration) // Берем длительность плана (напр. 18:00:00)
+        : _formatDuration(timeLeft);
 
     final stageInfo = _getCurrentStageDetail(l10n, state);
     final String detailText = isFasting ? stageInfo['title']! : "";
@@ -297,6 +290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       btnLabel = l10n.endCycle;
     }
 
+    // Текущий план (16:8, 18:6 и т.д.)
     final currentPlan = _plans[state.planIndex];
     final planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
 
@@ -393,11 +387,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // --- WIDGET HELPERS ---
+
   Widget _buildInfoItem({required IconData icon, required Color color, required String label, required String value, required VoidCallback onTap}) {
     return Expanded(child: GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: Column(children: [Icon(icon, color: color, size: 24), const SizedBox(height: 4), Text(value, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)), Text(label, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10))])));
   }
 
-  // --- MODALS ---
+  // ... (Остальные методы _showWaterMenu, _showWeightPicker и т.д. остаются без изменений)
+  // Я их скрыл для краткости, так как они не менялись.
+  // Если нужно, я могу прислать их полный код, но они такие же, как в предыдущем файле.
 
   void _showWaterMenu(WaterState state) {
     _hapticService.mediumImpact();

@@ -1,11 +1,19 @@
-import 'package:fastable/models/article.dart';
-import 'package:fastable/services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:injectable/injectable.dart';
+import 'package:fastable/models/content_models.dart';
 
+@lazySingleton
 class ArticleRepository {
-  final FirestoreService _firestoreService = FirestoreService();
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Future<List<Article>> fetchArticles(String languageCode) {
-    // Просто делегируем запрос сервису Firestore
-    return _firestoreService.getArticles(languageCode);
+  Future<List<ArticleModel>> getArticles(String locale) async {
+    try {
+      // Сортируем, например, по дате добавления или приоритету, если такие поля есть
+      final snapshot = await _db.collection('articles').get();
+      return snapshot.docs.map((doc) => ArticleModel.fromSnapshot(doc, locale)).toList();
+    } catch (e) {
+      print("Error fetching articles: $e");
+      throw e;
+    }
   }
 }

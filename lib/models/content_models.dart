@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 String _getTranslated(Map<String, dynamic>? data, String field, String locale) {
   if (data == null) return "";
   final map = data[field];
-  if (map is! Map) return ""; // Защита если поле не Map
+  if (map is! Map) return "";
 
   // Пытаемся взять нужный язык, если нет - берем английский, если нет - пустую строку
   return map[locale]?.toString() ?? map['en']?.toString() ?? "";
@@ -23,6 +23,7 @@ class RecipeModel {
   final int timeMinutes;
   final List<String> tags;
   final Color color;
+  final bool isPro; // <--- НОВОЕ ПОЛЕ
 
   RecipeModel({
     required this.id,
@@ -36,6 +37,7 @@ class RecipeModel {
     required this.timeMinutes,
     required this.tags,
     required this.color,
+    this.isPro = true, // По умолчанию рецепты платные
   });
 
   factory RecipeModel.fromSnapshot(DocumentSnapshot doc, String locale) {
@@ -52,11 +54,10 @@ class RecipeModel {
     }
 
     if (data == null) {
-      // Возвращаем пустую модель-заглушку, чтобы список не падал
       return RecipeModel(
           id: doc.id, title: "Error", description: "", imageUrl: "",
           calories: 0, protein: 0, fat: 0, carbs: 0, timeMinutes: 0,
-          tags: [], color: Colors.grey);
+          tags: [], color: Colors.grey, isPro: false);
     }
 
     return RecipeModel(
@@ -64,7 +65,6 @@ class RecipeModel {
       title: _getTranslated(data, 'title', locale),
       description: _getTranslated(data, 'description', locale),
       imageUrl: data['imageUrl']?.toString() ?? '',
-      // Безопасное приведение типов (Firestore может вернуть double или int)
       calories: (data['calories'] as num?)?.toInt() ?? 0,
       protein: (data['protein'] as num?)?.toInt() ?? 0,
       fat: (data['fat'] as num?)?.toInt() ?? 0,
@@ -72,6 +72,7 @@ class RecipeModel {
       timeMinutes: (data['timeMinutes'] as num?)?.toInt() ?? 0,
       tags: List<String>.from(data['tags'] ?? []),
       color: parseColor(data['color']?.toString()),
+      isPro: data['isPro'] ?? true, // Читаем из базы, если нет - считаем платным
     );
   }
 }
@@ -81,12 +82,14 @@ class ArticleModel {
   final String title;
   final String subtitle;
   final String contentUrl;
+  final bool isPro; // Тоже полезно добавить
 
   ArticleModel({
     required this.id,
     required this.title,
     required this.subtitle,
     required this.contentUrl,
+    this.isPro = false,
   });
 
   factory ArticleModel.fromSnapshot(DocumentSnapshot doc, String locale) {
@@ -100,6 +103,7 @@ class ArticleModel {
       title: _getTranslated(data, 'title', locale),
       subtitle: _getTranslated(data, 'subtitle', locale),
       contentUrl: data['contentUrl']?.toString() ?? '',
+      isPro: data['isPro'] ?? false,
     );
   }
 }
