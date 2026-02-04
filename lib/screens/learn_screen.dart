@@ -8,11 +8,18 @@ import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/injection.dart';
 
+// Импорты Блоков
 import 'package:fastable/bloc/article/article_bloc.dart';
 import 'package:fastable/bloc/article/article_event.dart';
 import 'package:fastable/bloc/article/article_state.dart';
+import 'package:fastable/bloc/recipe/recipe_bloc.dart';
+import 'package:fastable/bloc/recipe/recipe_event.dart';
+import 'package:fastable/bloc/recipe/recipe_state.dart';
 import 'package:fastable/bloc/settings/settings_bloc.dart';
-import 'package:fastable/l10n/app_localizations.dart'; // ВАЖНО
+
+// Модели и Локализация
+import 'package:fastable/models/content_models.dart';
+import 'package:fastable/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LearnScreen extends StatefulWidget {
@@ -29,10 +36,17 @@ class _LearnScreenState extends State<LearnScreen> {
   @override
   Widget build(BuildContext context) {
     final locale = context.read<SettingsBloc>().state.locale.languageCode;
-    final l10n = AppLocalizations.of(context)!; // Получаем локализацию
+    final l10n = AppLocalizations.of(context)!;
 
-    return BlocProvider(
-      create: (context) => getIt<ArticleBloc>()..add(LoadArticles(locale)),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => getIt<ArticleBloc>()..add(LoadArticles(locale)),
+        ),
+        BlocProvider(
+          create: (context) => getIt<RecipeBloc>()..add(LoadRecipes(locale)),
+        ),
+      ],
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
@@ -49,8 +63,11 @@ class _LearnScreenState extends State<LearnScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                       child: Text(
-                        l10n.learnTitle, // "Learn & Eat"
-                        style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                        l10n.learnTitle,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -93,7 +110,7 @@ class _LearnScreenState extends State<LearnScreen> {
       ),
       child: Stack(
         children: [
-          // Анимированный фон активной вкладки
+          // Анимированный фон
           AnimatedAlign(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOut,
@@ -107,7 +124,10 @@ class _LearnScreenState extends State<LearnScreen> {
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2))
                   ],
                 ),
               ),
@@ -180,7 +200,10 @@ class _LearnScreenState extends State<LearnScreen> {
       SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         sliver: SliverToBoxAdapter(
-          child: Text(l10n.headerLatestArticles, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Text(
+            l10n.headerLatestArticles,
+            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
 
@@ -211,14 +234,6 @@ class _LearnScreenState extends State<LearnScreen> {
   // --- TAB: RECIPES ---
 
   List<Widget> _buildRecipesTab(BuildContext context, bool isPro, AppLocalizations l10n) {
-    // Mock Data (В будущем из API). Названия пока на английском, так как это данные.
-    final mockRecipes = [
-      {'title': 'Avocado Salad', 'cal': 320, 'time': 10, 'isPro': false, 'color': Colors.greenAccent},
-      {'title': 'Keto Steak', 'cal': 540, 'time': 25, 'isPro': true, 'color': Colors.redAccent},
-      {'title': 'Berry Smoothie', 'cal': 180, 'time': 5, 'isPro': false, 'color': Colors.purpleAccent},
-      {'title': 'Salmon Delight', 'cal': 450, 'time': 30, 'isPro': true, 'color': Colors.orangeAccent},
-    ];
-
     return [
       if (!isPro)
         SliverToBoxAdapter(child: _buildProBanner(context, l10n)),
@@ -226,34 +241,68 @@ class _LearnScreenState extends State<LearnScreen> {
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         sliver: SliverToBoxAdapter(
-          child: Text(l10n.headerHealthyChoices, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Text(
+            l10n.headerHealthyChoices,
+            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
 
-      SliverList(
-        delegate: SliverChildBuilderDelegate(
-              (context, index) {
-            final recipe = mockRecipes[index];
-            return _buildRecipeItem(
-              context,
-              title: recipe['title'] as String,
-              cal: recipe['cal'] as int,
-              time: recipe['time'] as int,
-              isProRequired: recipe['isPro'] as bool,
-              color: recipe['color'] as Color,
-              userIsPro: isPro,
-              l10n: l10n,
+      // BLOC ДЛЯ ЗАГРУЗКИ РЕЦЕПТОВ
+      BlocBuilder<RecipeBloc, RecipeState>(
+        builder: (context, state) {
+          if (state.status == RecipeStatus.loading) {
+            return const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Center(child: CircularProgressIndicator(color: Colors.white)),
+              ),
             );
-          },
-          childCount: mockRecipes.length,
-        ),
+          }
+
+          if (state.status == RecipeStatus.failure) {
+            return const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Center(child: Text("Error loading recipes", style: TextStyle(color: Colors.white54))),
+              ),
+            );
+          }
+
+          if (state.recipes.isEmpty) {
+            return const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Center(child: Text("No recipes yet", style: TextStyle(color: Colors.white54))),
+              ),
+            );
+          }
+
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                final recipe = state.recipes[index];
+                return _buildRecipeItem(
+                  context,
+                  recipe: recipe,
+                  userIsPro: isPro,
+                  l10n: l10n,
+                );
+              },
+              childCount: state.recipes.length,
+            ),
+          );
+        },
       ),
     ];
   }
 
   // --- ITEMS ---
 
-  Widget _buildArticleItem(BuildContext context, {required dynamic article, required bool isPro, required AppLocalizations l10n}) {
+  Widget _buildArticleItem(BuildContext context,
+      {required ArticleModel article,
+        required bool isPro,
+        required AppLocalizations l10n}) {
     final bool isLocked = article.isPro && !isPro;
     final Color imageColor = isLocked ? Colors.purpleAccent : Colors.blueAccent;
 
@@ -302,16 +351,14 @@ class _LearnScreenState extends State<LearnScreen> {
     );
   }
 
-  Widget _buildRecipeItem(BuildContext context, {
-    required String title,
-    required int cal,
-    required int time,
-    required bool isProRequired,
-    required Color color,
-    required bool userIsPro,
-    required AppLocalizations l10n,
-  }) {
-    final isLocked = isProRequired && !userIsPro;
+  Widget _buildRecipeItem(BuildContext context,
+      {required RecipeModel recipe,
+        required bool userIsPro,
+        required AppLocalizations l10n}) {
+    final isLocked = recipe.isPro && !userIsPro;
+
+    // --- ИСПРАВЛЕНИЕ: Берем цвет напрямую из модели ---
+    final Color color = recipe.color;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
@@ -321,7 +368,7 @@ class _LearnScreenState extends State<LearnScreen> {
             getIt<HapticService>().mediumImpact();
             Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
           } else {
-            // Тут навигация к деталям рецепта
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Selected: ${recipe.title}")));
           }
         },
         child: GlassCard(
@@ -338,18 +385,17 @@ class _LearnScreenState extends State<LearnScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(recipe.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(Icons.local_fire_department, size: 14, color: Colors.white.withOpacity(0.6)),
                         const SizedBox(width: 4),
-                        // Используем переводы для единиц измерения
-                        Text("$cal ${l10n.unitKcal}", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                        Text("${recipe.calories} ${l10n.unitKcal}", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
                         const SizedBox(width: 12),
                         Icon(Icons.schedule, size: 14, color: Colors.white.withOpacity(0.6)),
                         const SizedBox(width: 4),
-                        Text("$time ${l10n.unitMin}", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                        Text("${recipe.timeMinutes} ${l10n.unitMin}", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
                       ],
                     )
                   ],
@@ -369,7 +415,11 @@ class _LearnScreenState extends State<LearnScreen> {
   Widget _buildCategoryCard(String title, IconData icon, Color color) {
     return GlassCard(
       width: 100, padding: const EdgeInsets.all(12),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: color, size: 24)), const SizedBox(height: 12), Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))]),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: color, size: 24)),
+        const SizedBox(height: 12),
+        Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))
+      ]),
     );
   }
 

@@ -8,7 +8,7 @@ import 'package:fastable/bloc/recipe/recipe_event.dart';
 import 'package:fastable/bloc/recipe/recipe_state.dart';
 import 'package:fastable/bloc/pro/pro_bloc.dart';
 import 'package:fastable/bloc/pro/pro_state.dart';
-import 'package:fastable/bloc/settings/settings_bloc.dart'; // Чтобы узнать язык
+import 'package:fastable/bloc/settings/settings_bloc.dart';
 
 // СЕРВИСЫ И ВИДЖЕТЫ
 import 'package:fastable/services/haptic_service.dart';
@@ -24,7 +24,6 @@ class RecipesScreen extends StatelessWidget {
     final locale = context.read<SettingsBloc>().state.locale.languageCode;
 
     return BlocProvider(
-      // Создаем Блок и сразу загружаем рецепты
       create: (context) => getIt<RecipeBloc>()..add(LoadRecipes(locale)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -41,7 +40,7 @@ class RecipesScreen extends StatelessWidget {
                 ),
               ),
 
-              // КОНТЕНТ (Слушаем Pro и Рецепты)
+              // КОНТЕНТ
               BlocBuilder<ProBloc, ProState>(
                 builder: (context, proState) {
                   final userIsPro = proState.isPro;
@@ -67,9 +66,10 @@ class RecipesScreen extends StatelessWidget {
                         delegate: SliverChildBuilderDelegate(
                               (context, index) {
                             final recipe = state.recipes[index];
-                            // Рецепт закрыт, если он PRO, а у юзера нет подписки
                             final isLocked = !userIsPro && recipe.isPro;
 
+                            // ИСПРАВЛЕНИЕ: Преобразуем int в Color
+                            final Color color = recipe.color;
                             return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               child: GestureDetector(
@@ -78,7 +78,6 @@ class RecipesScreen extends StatelessWidget {
                                     getIt<HapticService>().mediumImpact();
                                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
                                   } else {
-                                    // Здесь будет переход на экран деталей рецепта
                                     getIt<HapticService>().selectionClick();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text("Selected: ${recipe.title}")),
@@ -93,6 +92,7 @@ class RecipesScreen extends StatelessWidget {
                                       Container(
                                         width: 80, height: 100,
                                         decoration: BoxDecoration(
+                                          // Используем recipeColor вместо recipe.color
                                           color: recipe.color.withOpacity(0.2),
                                           borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
                                           image: recipe.imageUrl.isNotEmpty
@@ -100,7 +100,7 @@ class RecipesScreen extends StatelessWidget {
                                               : null,
                                         ),
                                         child: recipe.imageUrl.isEmpty
-                                            ? Icon(Icons.restaurant, color: recipe.color)
+                                            ? Icon(Icons.restaurant, color: recipe.color) // И тут тоже
                                             : (isLocked ? Container(color: Colors.black54, child: const Icon(Icons.lock, color: Colors.white)) : null),
                                       ),
                                       const SizedBox(width: 16),
@@ -138,7 +138,7 @@ class RecipesScreen extends StatelessWidget {
                                         ),
                                       ),
 
-                                      // СТРЕЛКА ИЛИ ЗАМОК
+                                      // СТРЕЛКА
                                       Padding(
                                         padding: const EdgeInsets.only(right: 16),
                                         child: Icon(

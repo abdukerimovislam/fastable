@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 String _getTranslated(Map<String, dynamic>? data, String field, String locale) {
   if (data == null) return "";
   final map = data[field];
+
+  // Если поле пришло не как Map (например, старый формат), вернем пустую строку
   if (map is! Map) return "";
 
   // Пытаемся взять нужный язык, если нет - берем английский, если нет - пустую строку
@@ -22,8 +24,8 @@ class RecipeModel {
   final int carbs;
   final int timeMinutes;
   final List<String> tags;
-  final Color color;
-  final bool isPro; // <--- НОВОЕ ПОЛЕ
+  final Color color; // Теперь храним сразу Color
+  final bool isPro;
 
   RecipeModel({
     required this.id,
@@ -37,7 +39,7 @@ class RecipeModel {
     required this.timeMinutes,
     required this.tags,
     required this.color,
-    this.isPro = true, // По умолчанию рецепты платные
+    this.isPro = true,
   });
 
   factory RecipeModel.fromSnapshot(DocumentSnapshot doc, String locale) {
@@ -62,17 +64,17 @@ class RecipeModel {
 
     return RecipeModel(
       id: doc.id,
-      title: _getTranslated(data, 'title', locale),
+      title: _getTranslated(data, 'title', locale), // Используем логику Map
       description: _getTranslated(data, 'description', locale),
       imageUrl: data['imageUrl']?.toString() ?? '',
       calories: (data['calories'] as num?)?.toInt() ?? 0,
       protein: (data['protein'] as num?)?.toInt() ?? 0,
       fat: (data['fat'] as num?)?.toInt() ?? 0,
       carbs: (data['carbs'] as num?)?.toInt() ?? 0,
-      timeMinutes: (data['timeMinutes'] as num?)?.toInt() ?? 0,
+      timeMinutes: (data['time'] as num?)?.toInt() ?? 0,
       tags: List<String>.from(data['tags'] ?? []),
       color: parseColor(data['color']?.toString()),
-      isPro: data['isPro'] ?? true, // Читаем из базы, если нет - считаем платным
+      isPro: data['isPro'] ?? true,
     );
   }
 }
@@ -82,20 +84,22 @@ class ArticleModel {
   final String title;
   final String subtitle;
   final String contentUrl;
-  final bool isPro; // Тоже полезно добавить
+  final String imageUrl; // Добавлено, так как используется в UI
+  final bool isPro;
 
   ArticleModel({
     required this.id,
     required this.title,
     required this.subtitle,
     required this.contentUrl,
+    required this.imageUrl,
     this.isPro = false,
   });
 
   factory ArticleModel.fromSnapshot(DocumentSnapshot doc, String locale) {
     final data = doc.data() as Map<String, dynamic>?;
     if (data == null) {
-      return ArticleModel(id: doc.id, title: "Error", subtitle: "", contentUrl: "");
+      return ArticleModel(id: doc.id, title: "Error", subtitle: "", contentUrl: "", imageUrl: "");
     }
 
     return ArticleModel(
@@ -103,6 +107,7 @@ class ArticleModel {
       title: _getTranslated(data, 'title', locale),
       subtitle: _getTranslated(data, 'subtitle', locale),
       contentUrl: data['contentUrl']?.toString() ?? '',
+      imageUrl: data['imageUrl']?.toString() ?? '', // Читаем картинку
       isPro: data['isPro'] ?? false,
     );
   }
