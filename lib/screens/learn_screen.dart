@@ -16,6 +16,8 @@ import 'package:fastable/bloc/recipe/recipe_bloc.dart';
 import 'package:fastable/bloc/recipe/recipe_event.dart';
 import 'package:fastable/bloc/recipe/recipe_state.dart';
 import 'package:fastable/bloc/settings/settings_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 // Модели и Локализация
 import 'package:fastable/models/content_models.dart';
@@ -356,57 +358,95 @@ class _LearnScreenState extends State<LearnScreen> {
         required bool userIsPro,
         required AppLocalizations l10n}) {
     final isLocked = recipe.isPro && !userIsPro;
-
-    // --- ИСПРАВЛЕНИЕ: Берем цвет напрямую из модели ---
     final Color color = recipe.color;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
-      child: GestureDetector(
+      child: GlassCard( // GlassCard теперь сам обрабатывает нажатие (см. Шаг 3)
         onTap: () {
           if (isLocked) {
             getIt<HapticService>().mediumImpact();
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const ProScreen()));
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Selected: ${recipe.title}")));
+            getIt<HapticService>().selectionClick();
+            // TODO: Перейти на экран деталей рецепта
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Selected: ${recipe.title}")));
           }
         },
-        child: GlassCard(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 60, height: 60,
-                decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                child: Icon(Icons.restaurant_menu, color: color),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(recipe.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.local_fire_department, size: 14, color: Colors.white.withOpacity(0.6)),
-                        const SizedBox(width: 4),
-                        Text("${recipe.calories} ${l10n.unitKcal}", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
-                        const SizedBox(width: 12),
-                        Icon(Icons.schedule, size: 14, color: Colors.white.withOpacity(0.6)),
-                        const SizedBox(width: 4),
-                        Text("${recipe.timeMinutes} ${l10n.unitMin}", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
-                      ],
-                    )
-                  ],
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // --- УМНАЯ КАРТИНКА ---
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 60,
+                height: 60,
+                child: recipe.imageUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                  imageUrl: recipe.imageUrl,
+                  fit: BoxFit.cover,
+                  // Пока грузится - показываем красивый серый перелив
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Colors.white.withOpacity(0.1),
+                    highlightColor: Colors.white.withOpacity(0.3),
+                    child: Container(color: Colors.white),
+                  ),
+                  // Если ошибка загрузки - показываем иконку
+                  errorWidget: (context, url, error) => Container(
+                    color: color.withOpacity(0.2),
+                    child: Icon(Icons.restaurant_menu, color: color),
+                  ),
+                )
+                    : Container(
+                  // Если картинки нет в базе - показываем иконку
+                  color: color.withOpacity(0.2),
+                  child: Icon(Icons.restaurant_menu, color: color),
                 ),
               ),
-              if (isLocked)
-                const Icon(Icons.lock_outline, color: Colors.amber)
-              else
-                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white.withOpacity(0.3)),
-            ],
-          ),
+            ),
+            // -----------------------
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(recipe.title,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.local_fire_department,
+                          size: 14, color: Colors.white.withOpacity(0.6)),
+                      const SizedBox(width: 4),
+                      Text("${recipe.calories} ${l10n.unitKcal}",
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 12)),
+                      const SizedBox(width: 12),
+                      Icon(Icons.schedule,
+                          size: 14, color: Colors.white.withOpacity(0.6)),
+                      const SizedBox(width: 4),
+                      Text("${recipe.timeMinutes} ${l10n.unitMin}",
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 12)),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            if (isLocked)
+              const Icon(Icons.lock_outline, color: Colors.amber)
+            else
+              Icon(Icons.arrow_forward_ios_rounded,
+                  size: 16, color: Colors.white.withOpacity(0.3)),
+          ],
         ),
       ),
     );

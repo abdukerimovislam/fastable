@@ -988,7 +988,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get selectHeight => 'Рост';
 
   @override
-  String get selectActivity => 'Уровень активности';
+  String get selectActivity => 'Активность';
 
   @override
   String get genderMale => 'Мужской';
@@ -997,13 +997,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get genderFemale => 'Женский';
 
   @override
-  String get activitySedentary => 'Низкая активность';
+  String get activitySedentary => 'Низкая';
 
   @override
-  String get activityModerate => 'Умеренная активность';
+  String get activityModerate => 'Умеренная';
 
   @override
-  String get activityActive => 'Высокая активность';
+  String get activityActive => 'Высокая';
 
   @override
   String get contactSupport => 'Связаться с поддержкой';
@@ -1177,4 +1177,91 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get unitMin => 'мин';
+
+  @override
+  String get lblAchievements => 'Достижения';
+
+  @override
+  String get lblPersonalData => 'Личные данные';
+
+  @override
+  String get lblSettings => 'Настройки';
+
+  @override
+  String get lblAbout => 'О приложении';
+
+  @override
+  String get lblHeight => 'Рост';
+
+  @override
+  String get lblWeight => 'Вес';
+
+  @override
+  String get lblAge => 'Возраст';
+
+  @override
+  String get lblGender => 'Пол';
+
+  @override
+  String get lblActivity => 'Уровень активности';
+
+  @override
+  String get lblLanguage => 'Язык';
+
+  @override
+  String get msgHealthSyncEnabled => 'Синхронизация здоровья включена!';
+
+  @override
+  String get msgHealthSyncFailed => 'Доступ запрещён';
+
+  @override
+  String get aiGreeting => 'Привет! Я Fasty 🥑. Чем могу помочь вам достичь ваших целей сегодня?';
+
+  @override
+  String get aiConnectionError => 'Упс! Соединение потеряно. Проверьте интернет или попробуйте позже. 🥑';
+
+  @override
+  String get aiSystemError => 'Сервис ИИ настроен некорректно (отсутствует API-ключ).';
+
+  @override
+  String get aiCoachTitle => 'ИИ-коуч по голоданию';
+
+  @override
+  String get aiCoachDesc => 'Получайте мгновенные ответы о кето, интервальном голодании и здоровых привычках от нашего умного ИИ-ассистента.';
+
+  @override
+  String get aiChatHint => 'Спросите про кето или голодание...';
+
+  @override
+  String get btnUnlockPro => 'Открыть с PRO';
+
+  @override
+  String get aiInsightFallback => 'Постоянство — ключ к успеху! Пейте воду и оставайтесь в движении. 💧';
+
+  @override
+  String get aiErrorConnection => 'Проблема с соединением. Пожалуйста, попробуйте позже.';
+
+  @override
+  String get aiInsightTitle => 'ИНСАЙТ ДНЯ';
+
+  @override
+  String get aiInsightTeaser => 'На основе ваших последних 7 дней голодания мы обнаружили важную закономерность, влияющую на ваш прогресс...';
+
+  @override
+  String get tapToUnlock => 'Нажмите, чтобы открыть';
+
+  @override
+  String get notifyAiInsightTitle => 'Ваш ежедневный ИИ-инсайт готов! 🥑';
+
+  @override
+  String get notifyAiInsightBody => 'Посмотрите, что Fasty проанализировал для вас сегодня. Нажмите, чтобы открыть.';
+
+  @override
+  String get notifyWeightTitle => 'Отслеживайте вес ⚖️';
+
+  @override
+  String get notifyWeightBody => 'Постоянство — ключ к успеху! Запишите свой вес сегодня.';
+
+  @override
+  String get aiInsightNotEnoughData => 'Продолжайте трекинг! Нам нужно хотя бы 3 записи, чтобы найти ваши скрытые паттерны. 📊';
 }

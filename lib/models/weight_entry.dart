@@ -13,6 +13,22 @@ class WeightEntry extends Equatable {
     this.note,
   });
 
+  /// Метод для создания копии объекта с измененными полями
+  /// (Полезно для редактирования веса или заметок)
+  WeightEntry copyWith({
+    String? id,
+    DateTime? date,
+    double? weight,
+    String? note,
+  }) {
+    return WeightEntry(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      weight: weight ?? this.weight,
+      note: note ?? this.note,
+    );
+  }
+
   // --- SERIALIZATION ---
 
   /// Преобразование в Map (для сохранения в SharedPreferences/DB)
@@ -56,7 +72,6 @@ class WeightEntry extends Equatable {
   factory WeightEntry.fromJson(Map<String, dynamic> json) => WeightEntry.fromMap(json);
 
   // --- EQUATABLE ---
-  // Это критически важно для BLoC: если props одинаковые, стейт не перерисовывается лишний раз
   @override
   List<Object?> get props => [id, date, weight, note];
 }

@@ -1177,4 +1177,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unitMin => 'min';
+
+  @override
+  String get lblAchievements => 'Achievements';
+
+  @override
+  String get lblPersonalData => 'Personal Data';
+
+  @override
+  String get lblSettings => 'Settings';
+
+  @override
+  String get lblAbout => 'About';
+
+  @override
+  String get lblHeight => 'Height';
+
+  @override
+  String get lblWeight => 'Weight';
+
+  @override
+  String get lblAge => 'Age';
+
+  @override
+  String get lblGender => 'Gender';
+
+  @override
+  String get lblActivity => 'Activity Level';
+
+  @override
+  String get lblLanguage => 'Language';
+
+  @override
+  String get msgHealthSyncEnabled => 'Health Sync Enabled!';
+
+  @override
+  String get msgHealthSyncFailed => 'Permission denied';
+
+  @override
+  String get aiGreeting => 'Hello! I\'m Fasty 🥑. How can I help you achieve your goals today?';
+
+  @override
+  String get aiConnectionError => 'Oops! I lost connection. Please check your internet or try again later. 🥑';
+
+  @override
+  String get aiSystemError => 'AI Service is not configured properly (Missing API Key).';
+
+  @override
+  String get aiCoachTitle => 'AI Fasting Coach';
+
+  @override
+  String get aiCoachDesc => 'Get instant answers about Keto, Intermittent Fasting, and healthy habits from our smart AI assistant.';
+
+  @override
+  String get aiChatHint => 'Ask about keto or fasting...';
+
+  @override
+  String get btnUnlockPro => 'Unlock with PRO';
+
+  @override
+  String get aiInsightFallback => 'Consistency is key! Drink water and keep moving. 💧';
+
+  @override
+  String get aiErrorConnection => 'Connection issue. Please try again later.';
+
+  @override
+  String get aiInsightTitle => 'DAILY INSIGHT';
+
+  @override
+  String get aiInsightTeaser => 'Based on your last 7 days of fasting, we found a significant pattern that affects your progress...';
+
+  @override
+  String get tapToUnlock => 'Tap to Unlock';
+
+  @override
+  String get notifyAiInsightTitle => 'Your Daily AI Insight is Ready! 🥑';
+
+  @override
+  String get notifyAiInsightBody => 'Check what Fasty has analyzed for you today. Tap to unlock.';
+
+  @override
+  String get notifyWeightTitle => 'Track your weight ⚖️';
+
+  @override
+  String get notifyWeightBody => 'Consistency is key! Log your weight today.';
+
+  @override
+  String get aiInsightNotEnoughData => 'Keep tracking! We need at least 3 fasts to analyze your unique patterns. 📊';
 }

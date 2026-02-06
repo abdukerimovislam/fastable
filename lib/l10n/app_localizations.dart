@@ -2402,6 +2402,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'min'**
   String get unitMin;
+
+  /// No description provided for @lblAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get lblAchievements;
+
+  /// No description provided for @lblPersonalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Data'**
+  String get lblPersonalData;
+
+  /// No description provided for @lblSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get lblSettings;
+
+  /// No description provided for @lblAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get lblAbout;
+
+  /// No description provided for @lblHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get lblHeight;
+
+  /// No description provided for @lblWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get lblWeight;
+
+  /// No description provided for @lblAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get lblAge;
+
+  /// No description provided for @lblGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get lblGender;
+
+  /// No description provided for @lblActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Level'**
+  String get lblActivity;
+
+  /// No description provided for @lblLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get lblLanguage;
+
+  /// No description provided for @msgHealthSyncEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Sync Enabled!'**
+  String get msgHealthSyncEnabled;
+
+  /// No description provided for @msgHealthSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
+  String get msgHealthSyncFailed;
+
+  /// No description provided for @aiGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello! I\'m Fasty 🥑. How can I help you achieve your goals today?'**
+  String get aiGreeting;
+
+  /// No description provided for @aiConnectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Oops! I lost connection. Please check your internet or try again later. 🥑'**
+  String get aiConnectionError;
+
+  /// No description provided for @aiSystemError.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Service is not configured properly (Missing API Key).'**
+  String get aiSystemError;
+
+  /// No description provided for @aiCoachTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Fasting Coach'**
+  String get aiCoachTitle;
+
+  /// No description provided for @aiCoachDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get instant answers about Keto, Intermittent Fasting, and healthy habits from our smart AI assistant.'**
+  String get aiCoachDesc;
+
+  /// No description provided for @aiChatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about keto or fasting...'**
+  String get aiChatHint;
+
+  /// No description provided for @btnUnlockPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with PRO'**
+  String get btnUnlockPro;
+
+  /// No description provided for @aiInsightFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency is key! Drink water and keep moving. 💧'**
+  String get aiInsightFallback;
+
+  /// No description provided for @aiErrorConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection issue. Please try again later.'**
+  String get aiErrorConnection;
+
+  /// No description provided for @aiInsightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY INSIGHT'**
+  String get aiInsightTitle;
+
+  /// No description provided for @aiInsightTeaser.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your last 7 days of fasting, we found a significant pattern that affects your progress...'**
+  String get aiInsightTeaser;
+
+  /// No description provided for @tapToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to Unlock'**
+  String get tapToUnlock;
+
+  /// No description provided for @notifyAiInsightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Daily AI Insight is Ready! 🥑'**
+  String get notifyAiInsightTitle;
+
+  /// No description provided for @notifyAiInsightBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check what Fasty has analyzed for you today. Tap to unlock.'**
+  String get notifyAiInsightBody;
+
+  /// No description provided for @notifyWeightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your weight ⚖️'**
+  String get notifyWeightTitle;
+
+  /// No description provided for @notifyWeightBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency is key! Log your weight today.'**
+  String get notifyWeightBody;
+
+  /// No description provided for @aiInsightNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep tracking! We need at least 3 fasts to analyze your unique patterns. 📊'**
+  String get aiInsightNotEnoughData;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

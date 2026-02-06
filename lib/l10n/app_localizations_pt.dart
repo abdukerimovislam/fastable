@@ -1177,4 +1177,91 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get unitMin => 'min';
+
+  @override
+  String get lblAchievements => 'Conquistas';
+
+  @override
+  String get lblPersonalData => 'Dados pessoais';
+
+  @override
+  String get lblSettings => 'Configurações';
+
+  @override
+  String get lblAbout => 'Sobre';
+
+  @override
+  String get lblHeight => 'Altura';
+
+  @override
+  String get lblWeight => 'Peso';
+
+  @override
+  String get lblAge => 'Idade';
+
+  @override
+  String get lblGender => 'Gênero';
+
+  @override
+  String get lblActivity => 'Nível de atividade';
+
+  @override
+  String get lblLanguage => 'Idioma';
+
+  @override
+  String get msgHealthSyncEnabled => 'Sincronização de saúde ativada!';
+
+  @override
+  String get msgHealthSyncFailed => 'Permissão negada';
+
+  @override
+  String get aiGreeting => 'Olá! Eu sou o Fasty 🥑. Como posso ajudar você a alcançar seus objetivos hoje?';
+
+  @override
+  String get aiConnectionError => 'Ops! A conexão foi perdida. Verifique sua internet ou tente novamente mais tarde. 🥑';
+
+  @override
+  String get aiSystemError => 'O serviço de IA não está configurado corretamente (chave de API ausente).';
+
+  @override
+  String get aiCoachTitle => 'Coach de jejum com IA';
+
+  @override
+  String get aiCoachDesc => 'Receba respostas instantâneas sobre keto, jejum intermitente e hábitos saudáveis com nosso assistente inteligente de IA.';
+
+  @override
+  String get aiChatHint => 'Pergunte sobre keto ou jejum...';
+
+  @override
+  String get btnUnlockPro => 'Desbloquear com PRO';
+
+  @override
+  String get aiInsightFallback => 'A consistência é a chave! Beba água e continue em movimento. 💧';
+
+  @override
+  String get aiErrorConnection => 'Problema de conexão. Tente novamente mais tarde.';
+
+  @override
+  String get aiInsightTitle => 'INSIGHT DIÁRIO';
+
+  @override
+  String get aiInsightTeaser => 'Com base nos seus últimos 7 dias de jejum, encontramos um padrão importante que afeta seu progresso...';
+
+  @override
+  String get tapToUnlock => 'Toque para desbloquear';
+
+  @override
+  String get notifyAiInsightTitle => 'Seu insight diário de IA está pronto! 🥑';
+
+  @override
+  String get notifyAiInsightBody => 'Veja o que o Fasty analisou para você hoje. Toque para desbloquear.';
+
+  @override
+  String get notifyWeightTitle => 'Acompanhe seu peso ⚖️';
+
+  @override
+  String get notifyWeightBody => 'A consistência é a chave! Registre seu peso hoje.';
+
+  @override
+  String get aiInsightNotEnoughData => 'Continue registrando! Precisamos de pelo menos 3 jejuns para analisar seus padrões únicos. 📊';
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 // --- DI & BLOCS ---
-import 'package:fastable/bloc/stats/stats_bloc.dart';
-import 'package:fastable/bloc/stats/stats_state.dart';
+// Мы переключились на HistoryBloc для статистики, так как там лежит "правда"
+import 'package:fastable/bloc/history/history_bloc.dart';
+import 'package:fastable/bloc/history/history_state.dart';
 import 'package:fastable/bloc/weight/weight_bloc.dart';
 import 'package:fastable/bloc/weight/weight_state.dart';
 
@@ -36,21 +36,21 @@ class StatsScreen extends StatelessWidget {
                 ),
               ),
 
-              // 1. БЛОК МЕТАБОЛИЗМА (ОБНОВЛЕННЫЙ)
+              // 1. БЛОК МЕТАБОЛИЗМА (WeightBloc)
               _buildMetabolicCard(context, l10n),
 
               const SizedBox(height: 24),
-              _sectionHeader(l10n.fastingPhase), // Используем заголовок как "Fasting Stats"
+              _sectionHeader(l10n.fastingPhase), // Заголовок "Fasting Stats"
 
-              // 2. ОБЩАЯ СТАТИСТИКА ГОЛОДАНИЯ
-              BlocBuilder<StatsBloc, StatsState>(
+              // 2. ОБЩАЯ СТАТИСТИКА (Теперь берем из HistoryBloc)
+              BlocBuilder<HistoryBloc, HistoryState>(
                 builder: (context, state) {
                   return Row(
                     children: [
                       Expanded(
                         child: _buildStatItem(
                           title: l10n.statsTotalFasts,
-                          value: "${state.totalFasts}",
+                          value: "${state.records.length}", // Кол-во записей
                           icon: Icons.check_circle_outline,
                           color: Colors.greenAccent,
                         ),
@@ -59,7 +59,7 @@ class StatsScreen extends StatelessWidget {
                       Expanded(
                         child: _buildStatItem(
                           title: l10n.statsTotalHours,
-                          value: "${state.totalHours.toStringAsFixed(1)} h",
+                          value: "${state.totalFastingTime.inHours} h", // Общее время
                           icon: Icons.access_time,
                           color: Colors.blueAccent,
                         ),
@@ -71,8 +71,8 @@ class StatsScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // 3. ДОЛГАЯ СЕРИЯ (STREAK)
-              BlocBuilder<StatsBloc, StatsState>(
+              // 3. ДОЛГАЯ СЕРИЯ / STREAK (Берем из HistoryBloc)
+              BlocBuilder<HistoryBloc, HistoryState>(
                 builder: (context, state) {
                   return GlassCard(
                     padding: const EdgeInsets.all(20),
@@ -91,8 +91,11 @@ class StatsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(l10n.fastingStatsCurrentStreak, style: const TextStyle(color: Colors.white, fontSize: 16)),
-                            Text("${state.currentStreak} ${l10n.valStreakDays(state.currentStreak).replaceAll(RegExp(r'[0-9]'), '').trim()}",
-                                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                            Text(
+                              // Формируем строку "5 Days" или "0 Days"
+                                "${state.currentStreak} ${l10n.valStreakDays(state.currentStreak).replaceAll(RegExp(r'[0-9]'), '').trim()}",
+                                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)
+                            ),
                           ],
                         )
                       ],
@@ -220,7 +223,6 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  // Обновленный виджет мини-метрики с поддержкой цвета для лейбла
   Widget _buildMiniMetric(String title, String value, String unit, String subtitle, Color subtitleColor) {
     return Expanded(
       child: Column(
@@ -230,7 +232,6 @@ class StatsScreen extends StatelessWidget {
             children: [
               Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               const SizedBox(width: 6),
-              // Бейджик "Basal" / "Maintenance"
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -295,8 +296,6 @@ class StatsScreen extends StatelessWidget {
       ],
     );
   }
-
-  
 
   Widget _buildStatItem({required String title, required String value, required IconData icon, required Color color}) {
     return GlassCard(

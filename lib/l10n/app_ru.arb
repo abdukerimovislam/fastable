@@ -418,14 +418,14 @@
                         "selectAge": "Возраст",
                         "selectWeight": "Вес",
                         "selectHeight": "Рост",
-                        "selectActivity": "Уровень активности",
+                        "selectActivity": "Активность",
 
                         "genderMale": "Мужской",
                         "genderFemale": "Женский",
 
-                        "activitySedentary": "Низкая активность",
-                        "activityModerate": "Умеренная активность",
-                        "activityActive": "Высокая активность",
+                        "activitySedentary": "Низкая",
+                        "activityModerate": "Умеренная",
+                        "activityActive": "Высокая",
 
                         "achFirstFast": "Первый шаг",
                         "achFirstFastDesc": "Завершите своё первое голодание.",
@@ -531,7 +531,42 @@
                                  "bannerRecipeSubtitle": "Кето, низкоуглеводные и другие",
 
                                  "unitKcal": "ккал",
-                                 "unitMin": "мин"
+                                 "unitMin": "мин",
+                                 "lblAchievements": "Достижения",
+                                   "lblPersonalData": "Личные данные",
+                                   "lblSettings": "Настройки",
+                                   "lblAbout": "О приложении",
+                                   "lblHeight": "Рост",
+                                   "lblWeight": "Вес",
+                                   "lblAge": "Возраст",
+                                   "lblGender": "Пол",
+                                   "lblActivity": "Уровень активности",
+                                   "lblLanguage": "Язык",
+                                   "msgHealthSyncEnabled": "Синхронизация здоровья включена!",
+                                   "msgHealthSyncFailed": "Доступ запрещён",
+                                   "aiGreeting": "Привет! Я готов помочь вам достичь ваших целей.",
+                                     "aiConnectionError": "Упс! Соединение потеряно. Проверьте интернет или попробуйте позже. 🥑",
+                                     "aiSystemError": "Сервис ИИ настроен некорректно (отсутствует API-ключ).",
+                                      "aiCoachTitle": "ИИ-коуч по голоданию",
+                                       "aiCoachDesc": "Получайте мгновенные ответы о кето, интервальном голодании и здоровых привычках от нашего умного ИИ-ассистента.",
+                                       "aiChatHint": "Спросите про кето или голодание...",
+                                       "aiGreeting": "Привет! Я Fasty 🥑. Чем могу помочь вам достичь ваших целей сегодня?",
+                                       "btnUnlockPro": "Открыть с PRO",
+                                       "aiInsightFallback": "Постоянство — ключ к успеху! Пейте воду и оставайтесь в движении. 💧",
+                                         "aiErrorConnection": "Проблема с соединением. Пожалуйста, попробуйте позже.",
+                                         "aiInsightTitle": "ИНСАЙТ ДНЯ",
+                                          "aiInsightTeaser": "На основе ваших последних 7 дней голодания мы обнаружили важную закономерность, влияющую на ваш прогресс...",
+                                           "tapToUnlock": "Нажмите, чтобы открыть",
+                                           "notifyAiInsightTitle": "Ваш ежедневный ИИ-инсайт готов! 🥑",
+                                             "notifyAiInsightBody": "Посмотрите, что Fasty проанализировал для вас сегодня. Нажмите, чтобы открыть.",
+                                             "notifyWeightTitle": "Отслеживайте вес ⚖️",
+                                             "notifyWeightBody": "Постоянство — ключ к успеху! Запишите свой вес сегодня.",
+                                             "aiInsightNotEnoughData": "Продолжайте трекинг! Нам нужно хотя бы 3 записи, чтобы найти ваши скрытые паттерны. 📊"
+
+
+
+
+
 
 
 

@@ -543,7 +543,41 @@
                                 "bannerRecipeSubtitle": "Keto, bajas en carbohidratos y más",
 
                                 "unitKcal": "kcal",
-                                "unitMin": "min"
+                                "unitMin": "min",
+                                "lblAchievements": "Logros",
+                                  "lblPersonalData": "Datos personales",
+                                  "lblSettings": "Configuración",
+                                  "lblAbout": "Acerca de",
+                                  "lblHeight": "Altura",
+                                  "lblWeight": "Peso",
+                                  "lblAge": "Edad",
+                                  "lblGender": "Género",
+                                  "lblActivity": "Nivel de actividad",
+                                  "lblLanguage": "Idioma",
+                                  "msgHealthSyncEnabled": "¡Sincronización de salud activada!",
+                                  "msgHealthSyncFailed": "Permiso denegado",
+                                   "aiGreeting": "¡Hola! Estoy listo para ayudarte a alcanzar tus objetivos.",
+                                    "aiConnectionError": "¡Ups! Se perdió la conexión. Revisa tu internet o inténtalo más tarde. 🥑",
+                                    "aiSystemError": "El servicio de IA no está configurado correctamente (falta la clave API).",
+                                    "aiCoachTitle": "Entrenador de ayuno con IA",
+                                      "aiCoachDesc": "Obtén respuestas instantáneas sobre keto, ayuno intermitente y hábitos saludables de nuestro asistente inteligente con IA.",
+                                      "aiChatHint": "Pregunta sobre keto o ayuno...",
+                                      "aiGreeting": "¡Hola! Soy Fasty 🥑. ¿Cómo puedo ayudarte a alcanzar tus objetivos hoy?",
+                                      "btnUnlockPro": "Desbloquear con PRO",
+                                      "aiInsightFallback": "¡La constancia es la clave! Bebe agua y sigue en movimiento. 💧",
+                                        "aiErrorConnection": "Problema de conexión. Por favor, inténtalo de nuevo más tarde.",
+                                        "aiInsightTitle": "INSIGHT DIARIO",
+                                        "aiInsightTeaser": "Según tus últimos 7 días de ayuno, hemos detectado un patrón importante que afecta a tu progreso...",
+                                          "tapToUnlock": "Toca para desbloquear",
+                                          "notifyAiInsightTitle": "¡Tu insight diario de IA está listo! 🥑",
+                                            "notifyAiInsightBody": "Descubre lo que Fasty ha analizado para ti hoy. Toca para desbloquear.",
+                                            "notifyWeightTitle": "Registra tu peso ⚖️",
+                                            "notifyWeightBody": "¡La constancia es la clave! Registra tu peso hoy.",
+                                             "aiInsightNotEnoughData": "¡Sigue registrando! Necesitamos al menos 3 ayunos para analizar tus patrones únicos. 📊"
+
+
+
+
 
 
 

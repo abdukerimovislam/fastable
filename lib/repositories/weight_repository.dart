@@ -1,7 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart'; // Для debugPrint
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:injectable/injectable.dart';
-import 'package:fastable/models/weight_entry.dart'; // <--- Импортируем единую модель
+import 'package:fastable/models/weight_entry.dart';
 
 @lazySingleton
 class WeightRepository {
@@ -10,62 +11,88 @@ class WeightRepository {
 
   /// Получить всю историю взвешиваний
   Future<List<WeightEntry>> getWeightHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? jsonString = prefs.getString(_key);
-
-    if (jsonString == null) return [];
-
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonString = prefs.getString(_key);
+
+      if (jsonString == null) return [];
+
       final List<dynamic> jsonList = jsonDecode(jsonString);
-      // Используем fromMap из нашей модели WeightEntry
       return jsonList.map((e) => WeightEntry.fromMap(e)).toList();
     } catch (e) {
-      return [];
+      debugPrint("❌ Error loading weight history: $e");
+      // Пробрасываем ошибку, чтобы Блок знал, что данные не загрузились
+      throw Exception("Failed to load weight history");
     }
   }
 
-  /// Добавить вес (Метод, который вызывает BLoC)
-  /// Логика: Если запись за эту дату уже есть, обновляем её. Иначе добавляем новую.
+  /// Добавить вес
   Future<void> addWeightEntry(WeightEntry entry) async {
-    final prefs = await SharedPreferences.getInstance();
-    List<WeightEntry> history = await getWeightHistory();
+    try {
+      final prefs = await SharedPreferences.getInstance();
 
-    // Получаем строку даты "YYYY-MM-DD" для сравнения
-    final entryDateString = entry.date.toIso8601String().substring(0, 10);
+      // Пытаемся получить текущую историю.
+      // Если не вышло (ошибка парсинга), начинаем с пустого листа,
+      // НО в реальном продакшене тут стоило бы спросить пользователя,
+      // чтобы не перезатереть поврежденные данные.
+      List<WeightEntry> history;
+      try {
+        history = await getWeightHistory();
+      } catch (e) {
+        history = [];
+      }
 
-    // Ищем индекс записи с такой же датой
-    int existingIndex = history.indexWhere((e) =>
-    e.date.toIso8601String().substring(0, 10) == entryDateString);
+      // Получаем строку даты "YYYY-MM-DD" для сравнения
+      final entryDateString = entry.date.toIso8601String().substring(0, 10);
 
-    if (existingIndex != -1) {
-      // Обновляем существующую запись (сохраняя ID если он был, или заменяя данные)
-      history[existingIndex] = entry;
-    } else {
-      // Добавляем новую
-      history.add(entry);
+      // Ищем индекс записи с такой же датой
+      int existingIndex = history.indexWhere((e) =>
+      e.date.toIso8601String().substring(0, 10) == entryDateString);
+
+      if (existingIndex != -1) {
+        // Обновляем существующую запись
+        history[existingIndex] = entry;
+      } else {
+        // Добавляем новую
+        history.add(entry);
+      }
+
+      // Сортируем: от старых к новым
+      history.sort((a, b) => a.date.compareTo(b.date));
+
+      // Сохраняем обновленный список
+      final String jsonString = jsonEncode(history.map((e) => e.toMap()).toList());
+      await prefs.setString(_key, jsonString);
+
+      // Обновляем "текущий вес"
+      await prefs.setDouble(_currentWeightKey, entry.weight);
+
+      debugPrint("✅ Weight saved: ${entry.weight} kg");
+    } catch (e) {
+      debugPrint("❌ Error saving weight: $e");
+      throw Exception("Failed to save weight");
     }
-
-    // Сортируем: от старых к новым (для корректного отображения на графиках)
-    history.sort((a, b) => a.date.compareTo(b.date));
-
-    // Сохраняем обновленный список
-    final String jsonString = jsonEncode(history.map((e) => e.toMap()).toList());
-    await prefs.setString(_key, jsonString);
-
-    // Обновляем "текущий вес" (для быстрого доступа в UI без парсинга всей истории)
-    await prefs.setDouble(_currentWeightKey, entry.weight);
   }
 
-  /// Получить последний сохраненный вес (быстрый доступ)
+  /// Получить последний сохраненный вес
   Future<double?> getCurrentWeight() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_currentWeightKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getDouble(_currentWeightKey);
+    } catch (e) {
+      return null;
+    }
   }
 
-  /// Очистка истории (для дебага или сброса аккаунта)
+  /// Очистка истории
   Future<void> clearHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_key);
-    await prefs.remove(_currentWeightKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_key);
+      await prefs.remove(_currentWeightKey);
+      debugPrint("✅ Weight history cleared");
+    } catch (e) {
+      debugPrint("❌ Error clearing history: $e");
+    }
   }
 }

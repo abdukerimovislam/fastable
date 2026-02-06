@@ -22,7 +22,7 @@ class StartFasting extends FastingEvent {
   List<Object?> get props => [startTime];
 }
 
-/// Пользователь нажал "End Fasting" (раньше времени или вовремя)
+/// Пользователь нажал "End Fasting" (завершил голодание)
 class EndFasting extends FastingEvent {
   final bool isManual; // true если прервал руками
   final FastingMood? mood;
@@ -39,9 +39,16 @@ class EndFasting extends FastingEvent {
   List<Object?> get props => [isManual, endTime, mood];
 }
 
-/// Пользователь нажал "End Eating" (начать новый цикл)
-/// Обычно это синоним StartFasting, но для окна еды
-class EndEatingWindow extends FastingEvent {}
+/// Пользователь нажал "End Eating" (завершил окно еды -> начать новый цикл голодания)
+class EndEatingWindow extends FastingEvent {
+  // Добавили возможность передать время, если пользователь забыл нажать кнопку вовремя
+  final DateTime? endTime;
+
+  const EndEatingWindow({this.endTime});
+
+  @override
+  List<Object?> get props => [endTime];
+}
 
 /// Сработал тик таймера (каждую секунду)
 class TickTimer extends FastingEvent {

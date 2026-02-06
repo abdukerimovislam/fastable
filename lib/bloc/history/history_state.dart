@@ -8,36 +8,45 @@ class HistoryState extends Equatable {
   final List<FastingRecord> records;
   final String? errorMessage;
 
+  // Статистика (теперь это поля, которые заполняет Bloc)
+  final Duration totalFastingTime;
+  final Duration averageDuration;
+  final int currentStreak;
+
   const HistoryState({
     this.status = HistoryStatus.initial,
     this.records = const [],
     this.errorMessage,
+    this.totalFastingTime = Duration.zero,
+    this.averageDuration = Duration.zero,
+    this.currentStreak = 0,
   });
 
   HistoryState copyWith({
     HistoryStatus? status,
     List<FastingRecord>? records,
     String? errorMessage,
+    Duration? totalFastingTime,
+    Duration? averageDuration,
+    int? currentStreak,
   }) {
     return HistoryState(
       status: status ?? this.status,
       records: records ?? this.records,
       errorMessage: errorMessage ?? this.errorMessage,
+      totalFastingTime: totalFastingTime ?? this.totalFastingTime,
+      averageDuration: averageDuration ?? this.averageDuration,
+      currentStreak: currentStreak ?? this.currentStreak,
     );
   }
 
-  /// Общее время голодания (для статистики в шапке)
-  Duration get totalFastingTime {
-    return records.fold(Duration.zero, (prev, element) => prev + element.duration);
-  }
-
-  /// Среднее время
-  Duration get averageDuration {
-    if (records.isEmpty) return Duration.zero;
-    final total = totalFastingTime;
-    return Duration(minutes: total.inMinutes ~/ records.length);
-  }
-
   @override
-  List<Object?> get props => [status, records, errorMessage];
+  List<Object?> get props => [
+    status,
+    records,
+    errorMessage,
+    totalFastingTime,
+    averageDuration,
+    currentStreak,
+  ];
 }

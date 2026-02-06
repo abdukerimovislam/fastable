@@ -527,7 +527,37 @@
                                  "bannerRecipeSubtitle": "Keto, Low-Carb & More",
 
                                  "unitKcal": "kcal",
-                                 "unitMin": "min"
+                                 "unitMin": "min",
+                                 "lblAchievements": "Achievements",
+                                 "lblPersonalData": "Personal Data",
+                                 "lblSettings": "Settings",
+                                 "lblAbout": "About",
+                                 "lblHeight": "Height",
+                                 "lblWeight": "Weight",
+                                 "lblAge": "Age",
+                                 "lblGender": "Gender",
+                                 "lblActivity": "Activity Level",
+                                 "lblLanguage": "Language",
+                                 "msgHealthSyncEnabled": "Health Sync Enabled!",
+                                 "msgHealthSyncFailed": "Permission denied",
+                                 "aiGreeting": "Hello! I am ready to help you achieve your goals.",
+                                   "aiConnectionError": "Oops! I lost connection. Please check your internet or try again later. 🥑",
+                                   "aiSystemError": "AI Service is not configured properly (Missing API Key).",
+                                   "aiCoachTitle": "AI Fasting Coach",
+                                     "aiCoachDesc": "Get instant answers about Keto, Intermittent Fasting, and healthy habits from our smart AI assistant.",
+                                     "aiChatHint": "Ask about keto or fasting...",
+                                     "aiGreeting": "Hello! I'm Fasty 🥑. How can I help you achieve your goals today?",
+                                     "btnUnlockPro": "Unlock with PRO",
+                                     "aiInsightFallback": "Consistency is key! Drink water and keep moving. 💧",
+                                     "aiErrorConnection": "Connection issue. Please try again later.",
+                                     "aiInsightTitle": "DAILY INSIGHT",
+                                     "aiInsightTeaser": "Based on your last 7 days of fasting, we found a significant pattern that affects your progress...",
+                                       "tapToUnlock": "Tap to Unlock",
+                                       "notifyAiInsightTitle": "Your Daily AI Insight is Ready! 🥑",
+                                         "notifyAiInsightBody": "Check what Fasty has analyzed for you today. Tap to unlock.",
+                                         "notifyWeightTitle": "Track your weight ⚖️",
+                                         "notifyWeightBody": "Consistency is key! Log your weight today.",
+                                         "aiInsightNotEnoughData": "Keep tracking! We need at least 3 fasts to analyze your unique patterns. 📊"
 
 
                            }

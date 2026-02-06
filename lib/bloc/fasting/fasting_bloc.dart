@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:ui'; // 1. Added for PlatformDispatcher
+import 'dart:ui';
+import 'package:flutter/foundation.dart'; // Для debugPrint
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../l10n/app_localizations.dart'; // 2. Added for lookupAppLocalizations
+import '../../l10n/app_localizations.dart';
 
 import 'package:fastable/bloc/fasting/fasting_event.dart';
 import 'package:fastable/bloc/fasting/fasting_state.dart';
@@ -22,7 +23,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
   Timer? _ticker;
   final List<FastingPlan> _plans = FastingPlan.defaultPlans;
 
-  FastingBloc(this._notificationService, this._hapticService, this._historyRepository)
+  FastingBloc(
+      this._notificationService, this._hapticService, this._historyRepository)
       : super(const FastingState()) {
     on<CheckFastingState>(_onCheckState);
     on<StartFasting>(_onStartFasting);
@@ -33,143 +35,192 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
     on<ResetFasting>(_onReset);
   }
 
-  Future<void> _onCheckState(CheckFastingState event, Emitter<FastingState> emit) async {
-    final prefs = await SharedPreferences.getInstance();
-    int planIdx = (prefs.getInt('fast_plan_index') ?? 0).clamp(0, _plans.length - 1);
+  Future<void> _onCheckState(
+      CheckFastingState event, Emitter<FastingState> emit) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int planIdx =
+      (prefs.getInt('fast_plan_index') ?? 0).clamp(0, _plans.length - 1);
 
-    String stateStr = prefs.getString('app_state') ?? 'stopped';
-    FastingPhase phase = FastingPhase.values.firstWhere((e) => e.name == stateStr, orElse: () => FastingPhase.stopped);
+      String stateStr = prefs.getString('app_state') ?? 'stopped';
+      FastingPhase phase = FastingPhase.values.firstWhere(
+              (e) => e.name == stateStr,
+          orElse: () => FastingPhase.stopped);
 
-    String? startStr = prefs.getString('cycle_start_time');
-    DateTime? startTime = startStr != null ? DateTime.tryParse(startStr) : null;
+      String? startStr = prefs.getString('cycle_start_time');
+      DateTime? startTime =
+      startStr != null ? DateTime.tryParse(startStr) : null;
 
-    if (phase != FastingPhase.stopped && startTime != null) {
+      if (phase != FastingPhase.stopped && startTime != null) {
+        final now = DateTime.now();
+        // Защита от отрицательного времени при старте
+        final diff = now.difference(startTime);
+        final elapsed = diff.isNegative ? Duration.zero : diff;
+
+        emit(state.copyWith(
+          phase: phase,
+          startTime: startTime,
+          elapsed: elapsed,
+          planIndex: planIdx,
+          goalDuration: _getGoalForPhase(phase, planIdx),
+        ));
+        _startTicker();
+      } else {
+        emit(state.copyWith(
+          phase: FastingPhase.stopped,
+          planIndex: planIdx,
+          goalDuration: _plans[planIdx].fastingDuration,
+        ));
+      }
+    } catch (e) {
+      debugPrint("FastingBloc Error in _onCheckState: $e");
+      // Fallback state
+      emit(const FastingState());
+    }
+  }
+
+  Future<void> _onStartFasting(
+      StartFasting event, Emitter<FastingState> emit) async {
+    try {
+      _hapticService.mediumImpact();
+
+      // Use passed time or current time
+      final startDate = event.startTime ?? DateTime.now();
+      final goal = _plans[state.planIndex].fastingDuration;
+
+      // Save state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('app_state', FastingPhase.fasting.name);
+      await prefs.setString('cycle_start_time', startDate.toIso8601String());
+
+      // Notification Logic
+      try {
+        final locale = PlatformDispatcher.instance.locale;
+        final l10n = await lookupAppLocalizations(locale);
+
+        await _notificationService.scheduleFastingNotifications(
+          startTime: startDate,
+          duration: goal,
+          l10n: l10n,
+        );
+      } catch (e) {
+        debugPrint("Notification Error: $e");
+      }
+
+      // Calculate initial elapsed (prevent negative)
       final now = DateTime.now();
+      final diff = now.difference(startDate);
+      final elapsed = diff.isNegative ? Duration.zero : diff;
+
       emit(state.copyWith(
-        phase: phase,
-        startTime: startTime,
-        elapsed: now.difference(startTime),
-        planIndex: planIdx,
-        goalDuration: _getGoalForPhase(phase, planIdx),
+        phase: FastingPhase.fasting,
+        startTime: startDate,
+        elapsed: elapsed,
+        goalDuration: goal,
+        isGoalReached: false,
       ));
       _startTicker();
-    } else {
+    } catch (e) {
+      debugPrint("FastingBloc Error in _onStartFasting: $e");
+    }
+  }
+
+  Future<void> _onEndFasting(
+      EndFasting event, Emitter<FastingState> emit) async {
+    try {
+      _ticker?.cancel();
+      _hapticService.success();
+
+      final endDate = event.endTime ?? DateTime.now();
+
+      // 1. Save record to history WITH MOOD
+      if (state.startTime != null && state.phase == FastingPhase.fasting) {
+        try {
+          final record = FastingRecord(
+            startTime: state.startTime!,
+            endTime: endDate,
+            duration: endDate.difference(state.startTime!),
+            mood: event.mood,
+          );
+          await _historyRepository.addRecord(record);
+        } catch (e) {
+          debugPrint("History Save Error: $e");
+        }
+      }
+
+      // 2. Transition to Eating Window
+      final eatGoal = _plans[state.planIndex].eatingDuration;
+
+      // Save state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('app_state', FastingPhase.eating.name);
+      await prefs.setString('cycle_start_time', endDate.toIso8601String());
+
+      // Eating Notifications
+      try {
+        final locale = PlatformDispatcher.instance.locale;
+        final l10n = await lookupAppLocalizations(locale);
+
+        await _notificationService.scheduleEatingNotifications(
+          startTime: endDate,
+          duration: eatGoal,
+          l10n: l10n,
+        );
+      } catch (e) {
+        debugPrint("Notification Error: $e");
+      }
+
+      final now = DateTime.now();
+      final diff = now.difference(endDate);
+      final elapsed = diff.isNegative ? Duration.zero : diff;
+
       emit(state.copyWith(
-        phase: FastingPhase.stopped,
-        planIndex: planIdx,
-        goalDuration: _plans[planIdx].fastingDuration,
+        phase: FastingPhase.eating,
+        startTime: endDate,
+        elapsed: elapsed,
+        goalDuration: eatGoal,
+        isGoalReached: false,
       ));
+      _startTicker();
+    } catch (e) {
+      debugPrint("FastingBloc Error in _onEndFasting: $e");
     }
   }
 
-  Future<void> _onStartFasting(StartFasting event, Emitter<FastingState> emit) async {
-    _hapticService.mediumImpact();
-
-    // Use passed time or current time
-    final startDate = event.startTime ?? DateTime.now();
-    final goal = _plans[state.planIndex].fastingDuration;
-
-    // Save state
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_state', FastingPhase.fasting.name);
-    await prefs.setString('cycle_start_time', startDate.toIso8601String());
-
-    // --- UPDATED NOTIFICATION LOGIC ---
-    // Get current locale to ensure notifications are in the correct language
-    final locale = PlatformDispatcher.instance.locale;
-    final l10n = await lookupAppLocalizations(locale);
-
-    // Schedule all smart notifications (Stages, 50%, 1h left, Finish)
-    await _notificationService.scheduleFastingNotifications(
-      startTime: startDate,
-      duration: goal,
-      l10n: l10n,
-    );
-    // ----------------------------------
-
-    emit(state.copyWith(
-      phase: FastingPhase.fasting,
-      startTime: startDate,
-      elapsed: DateTime.now().difference(startDate),
-      goalDuration: goal,
-      isGoalReached: false,
-    ));
-    _startTicker();
-  }
-
-  Future<void> _onEndFasting(EndFasting event, Emitter<FastingState> emit) async {
-    _ticker?.cancel();
-    _hapticService.success();
-
-    // Use passed time or current time
-    final endDate = event.endTime ?? DateTime.now();
-
-    // 1. Save record to history WITH MOOD
-    if (state.startTime != null && state.phase == FastingPhase.fasting) {
-      final record = FastingRecord(
-        startTime: state.startTime!,
-        endTime: endDate,
-        duration: endDate.difference(state.startTime!),
-        mood: event.mood,
-      );
-      await _historyRepository.addRecord(record);
-    }
-
-    // 2. Transition to Eating Window
-    final eatGoal = _plans[state.planIndex].eatingDuration;
-
-    // Save state
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_state', FastingPhase.eating.name);
-    await prefs.setString('cycle_start_time', endDate.toIso8601String());
-
-    // --- UPDATED NOTIFICATION LOGIC ---
-    // Get locale and schedule eating window notifications
-    final locale = PlatformDispatcher.instance.locale;
-    final l10n = await lookupAppLocalizations(locale);
-
-    await _notificationService.scheduleEatingNotifications(
-      startTime: endDate,
-      duration: eatGoal,
-      l10n: l10n,
-    );
-    // ----------------------------------
-
-    emit(state.copyWith(
-      phase: FastingPhase.eating,
-      startTime: endDate,
-      elapsed: DateTime.now().difference(endDate),
-      goalDuration: eatGoal,
-      isGoalReached: false,
-    ));
-    _startTicker();
-  }
-
-  Future<void> _onEndEatingWindow(EndEatingWindow event, Emitter<FastingState> emit) async {
+  // --- ИСПРАВЛЕНО: Теперь просто сбрасываем таймер в стоп ---
+  Future<void> _onEndEatingWindow(
+      EndEatingWindow event, Emitter<FastingState> emit) async {
+    // Пользователь нажал "End Cycle" -> останавливаем всё.
+    // Переходим в состояние "Ready to Fast".
     add(ResetFasting());
   }
+  // -----------------------------------------------------------
 
   Future<void> _onReset(ResetFasting event, Emitter<FastingState> emit) async {
-    _ticker?.cancel();
-    _hapticService.mediumImpact();
+    try {
+      _ticker?.cancel();
+      _hapticService.mediumImpact();
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('app_state');
-    await prefs.remove('cycle_start_time');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('app_state');
+      await prefs.remove('cycle_start_time');
 
-    // Cancel all fasting related notifications
-    await _notificationService.cancelFastingNotifications();
+      await _notificationService.cancelFastingNotifications();
 
-    emit(state.copyWith(
-      phase: FastingPhase.stopped,
-      startTime: null,
-      elapsed: Duration.zero,
-      isGoalReached: false,
-      goalDuration: _plans[state.planIndex].fastingDuration,
-    ));
+      emit(state.copyWith(
+        phase: FastingPhase.stopped,
+        startTime: null,
+        elapsed: Duration.zero,
+        isGoalReached: false,
+        goalDuration: _plans[state.planIndex].fastingDuration,
+      ));
+    } catch (e) {
+      debugPrint("FastingBloc Error in _onReset: $e");
+    }
   }
 
-  Future<void> _onChangePlan(ChangePlan event, Emitter<FastingState> emit) async {
+  Future<void> _onChangePlan(
+      ChangePlan event, Emitter<FastingState> emit) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('fast_plan_index', event.planIndex);
 
@@ -184,11 +235,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
   }
 
   void _onTick(TickTimer event, Emitter<FastingState> emit) {
+    // Просто обновляем UI, не сбрасываем состояние
     bool reached = event.elapsed >= state.goalDuration;
-    if (state.phase == FastingPhase.eating && reached) {
-      add(ResetFasting());
-      return;
-    }
     emit(state.copyWith(elapsed: event.elapsed, isGoalReached: reached));
   }
 
@@ -196,7 +244,11 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.startTime != null) {
-        add(TickTimer(DateTime.now().difference(state.startTime!)));
+        final now = DateTime.now();
+        final diff = now.difference(state.startTime!);
+        // Если время старта в будущем, elapsed = 0
+        final elapsed = diff.isNegative ? Duration.zero : diff;
+        add(TickTimer(elapsed));
       }
     });
   }
@@ -208,6 +260,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
   }
 
   Duration _getGoalForPhase(FastingPhase phase, int planIdx) {
-    return phase == FastingPhase.eating ? _plans[planIdx].eatingDuration : _plans[planIdx].fastingDuration;
+    return phase == FastingPhase.eating
+        ? _plans[planIdx].eatingDuration
+        : _plans[planIdx].fastingDuration;
   }
 }

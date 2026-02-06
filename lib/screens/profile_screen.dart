@@ -19,9 +19,11 @@ import 'package:fastable/models/achievement.dart';
 // --- СЕРВИСЫ ---
 import 'package:fastable/services/auth_service.dart';
 import 'package:fastable/services/haptic_service.dart';
+import 'package:fastable/services/health_service.dart'; // <--- Добавили HealthService
 
 // --- ВИДЖЕТЫ ---
 import 'package:fastable/widgets/glass_card.dart';
+import 'package:fastable/utils/roulette_sheet.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/login_screen.dart';
 
@@ -66,73 +68,77 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  // --- PICKERS ---
+  // --- РУЛЕТКИ (ROULETTE) ---
 
-  void _showHeightPicker(BuildContext context, double currentHeight) {
+  void _showHeightPicker(BuildContext context, double currentHeight, AppLocalizations l10n) {
     getIt<HapticService>().mediumImpact();
-    showModalBottomSheet(
+    final heights = List.generate(151, (index) => 100 + index); // 100..250
+
+    showRouletteSheet<int>(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.98),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _buildWheelPicker(
-        ctx,
-        title: "Height",
-        initialItem: (currentHeight - 100).toInt().clamp(0, 149),
-        count: 150,
-        builder: (i) => "${100 + i} cm",
-        onChanged: (i) => context.read<WeightBloc>().add(UpdateHeight(100.0 + i)),
-      ),
+      title: l10n.lblHeight, // Локализованный заголовок
+      items: heights,
+      initialItem: currentHeight.toInt().clamp(100, 250),
+      textMapper: (val) => "$val cm",
+      onSave: (val) {
+        context.read<WeightBloc>().add(UpdateHeight(val.toDouble()));
+      },
     );
   }
 
-  // НОВЫЙ ПИКЕР ВЕСА
-  void _showWeightPicker(BuildContext context, double currentWeight) {
+  void _showWeightPicker(BuildContext context, double currentWeight, AppLocalizations l10n) {
     getIt<HapticService>().mediumImpact();
-    showModalBottomSheet(
+    final weights = List.generate(2700, (index) => 30.0 + (index * 0.1));
+
+    double current = currentWeight;
+    current = (current * 10).round() / 10.0;
+    if (current < 30.0) current = 70.0;
+
+    showRouletteSheet<double>(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.98),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _buildWheelPicker(
-        ctx,
-        title: "Weight",
-        initialItem: (currentWeight - 30).toInt().clamp(0, 199),
-        count: 200, // от 30 до 230 кг
-        builder: (i) => "${30 + i} kg",
-        onChanged: (i) => context.read<WeightBloc>().add(AddWeightEntry(30.0 + i)),
-      ),
+      title: l10n.lblWeight, // Локализованный заголовок
+      items: weights,
+      initialItem: current,
+      textMapper: (val) => "${val.toStringAsFixed(1)} ${l10n.unitKg}",
+      onSave: (val) {
+        context.read<WeightBloc>().add(AddWeightEntry(val));
+      },
     );
   }
 
-  void _showAgePicker(BuildContext context, int currentAge) {
+  void _showAgePicker(BuildContext context, int currentAge, AppLocalizations l10n) {
     getIt<HapticService>().mediumImpact();
-    showModalBottomSheet(
+    final ages = List.generate(91, (index) => 10 + index);
+
+    showRouletteSheet<int>(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.98),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _buildWheelPicker(
-        ctx,
-        title: "Age",
-        initialItem: (currentAge - 10).clamp(0, 89),
-        count: 90,
-        builder: (i) => "${10 + i}",
-        onChanged: (i) => context.read<WeightBloc>().add(UpdateAge(10 + i)),
-      ),
+      title: l10n.lblAge, // Локализованный заголовок
+      items: ages,
+      initialItem: currentAge.clamp(10, 100),
+      textMapper: (val) => "$val",
+      onSave: (val) {
+        context.read<WeightBloc>().add(UpdateAge(val));
+      },
     );
   }
 
   void _showGenderPicker(BuildContext context, AppLocalizations l10n) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.95),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 16),
-          _buildOptionItem(ctx, l10n.genderMale, () => context.read<WeightBloc>().add(const UpdateGender(Gender.male))),
-          _buildOptionItem(ctx, l10n.genderFemale, () => context.read<WeightBloc>().add(const UpdateGender(Gender.female))),
-          const SizedBox(height: 30),
-        ],
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.lblGender, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            _buildOptionItem(ctx, l10n.genderMale, () => context.read<WeightBloc>().add(const UpdateGender(Gender.male))),
+            _buildOptionItem(ctx, l10n.genderFemale, () => context.read<WeightBloc>().add(const UpdateGender(Gender.female))),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
@@ -140,36 +146,44 @@ class ProfileScreen extends StatelessWidget {
   void _showActivityPicker(BuildContext context, AppLocalizations l10n) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.95),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 16),
-          _buildOptionItem(ctx, l10n.activitySedentary, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.sedentary))),
-          _buildOptionItem(ctx, l10n.activityModerate, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.moderate))),
-          _buildOptionItem(ctx, l10n.activityActive, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.active))),
-          const SizedBox(height: 30),
-        ],
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.lblActivity, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            _buildOptionItem(ctx, l10n.activitySedentary, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.sedentary))),
+            _buildOptionItem(ctx, l10n.activityModerate, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.moderate))),
+            _buildOptionItem(ctx, l10n.activityActive, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.active))),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
 
-  void _showLanguageSheet(BuildContext context) {
+  void _showLanguageSheet(BuildContext context, AppLocalizations l10n) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: const Color(0xFF1E1E1E).withOpacity(0.95),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 20),
-          _buildLangItem(context, "English", "en"),
-          _buildLangItem(context, "Русский", "ru"),
-          _buildLangItem(context, "Español", "es"),
-          _buildLangItem(context, "Português", "pt"),
-          const SizedBox(height: 40),
-        ],
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.lblLanguage, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            _buildLangItem(context, "English", "en"),
+            _buildLangItem(context, "Русский", "ru"),
+            _buildLangItem(context, "Español", "es"),
+            _buildLangItem(context, "Português", "pt"),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
@@ -235,9 +249,9 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // 2. ACHIEVEMENTS
+              // 2. ACHIEVEMENTS (Заголовок локализован)
               const SizedBox(height: 30),
-              _sectionHeader("Achievements"),
+              _sectionHeader(l10n.lblAchievements),
               BlocBuilder<StatsBloc, StatsState>(
                 builder: (context, state) {
                   return SizedBox(
@@ -280,24 +294,20 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
 
-              // 3. PERSONAL DATA (РАСШИРЕННЫЙ С ВЕСОМ)
+              // 3. PERSONAL DATA (Заголовок локализован)
               const SizedBox(height: 30),
-              _sectionHeader("Personal Data"),
+              _sectionHeader(l10n.lblPersonalData),
               BlocBuilder<WeightBloc, WeightState>(
                 builder: (context, weightState) {
                   return GlassCard(
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        _buildSettingsTile(icon: Icons.height, title: l10n.selectHeight, value: "${weightState.heightCm.toInt()} cm", onTap: () => _showHeightPicker(context, weightState.heightCm)),
+                        _buildSettingsTile(icon: Icons.height, title: l10n.selectHeight, value: "${weightState.heightCm.toInt()} cm", onTap: () => _showHeightPicker(context, weightState.heightCm, l10n)),
                         const Divider(height: 1, color: Colors.white10),
-
-                        // --- ДОБАВЛЕН ВЕС ---
-                        _buildSettingsTile(icon: Icons.monitor_weight_outlined, title: l10n.selectWeight, value: "${weightState.currentWeight.toInt()} kg", onTap: () => _showWeightPicker(context, weightState.currentWeight)),
+                        _buildSettingsTile(icon: Icons.monitor_weight_outlined, title: l10n.selectWeight, value: "${weightState.currentWeight.toInt()} ${l10n.unitKg}", onTap: () => _showWeightPicker(context, weightState.currentWeight, l10n)),
                         const Divider(height: 1, color: Colors.white10),
-                        // --------------------
-
-                        _buildSettingsTile(icon: Icons.cake_outlined, title: l10n.selectAge, value: "${weightState.age}", onTap: () => _showAgePicker(context, weightState.age)),
+                        _buildSettingsTile(icon: Icons.cake_outlined, title: l10n.selectAge, value: "${weightState.age}", onTap: () => _showAgePicker(context, weightState.age, l10n)),
                         const Divider(height: 1, color: Colors.white10),
                         _buildSettingsTile(icon: Icons.wc, title: l10n.selectGender, value: weightState.gender == Gender.male ? l10n.genderMale : l10n.genderFemale, onTap: () => _showGenderPicker(context, l10n)),
                         const Divider(height: 1, color: Colors.white10),
@@ -308,31 +318,63 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
 
-              // 4. SETTINGS
+              // 4. SETTINGS (Заголовок локализован, Тема убрана)
               const SizedBox(height: 24),
-              _sectionHeader("Settings"),
+              _sectionHeader(l10n.lblSettings),
               BlocBuilder<SettingsBloc, SettingsState>(
                 builder: (context, settingsState) {
                   return GlassCard(
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        _buildSettingsTile(icon: Icons.language, title: l10n.settingLanguage, value: settingsState.locale.languageCode.toUpperCase(), onTap: () => _showLanguageSheet(context)),
+                        _buildSettingsTile(
+                            icon: Icons.language,
+                            title: l10n.settingLanguage,
+                            value: settingsState.locale.languageCode.toUpperCase(),
+                            onTap: () => _showLanguageSheet(context, l10n)
+                        ),
                         const Divider(height: 1, color: Colors.white10),
-                        _buildSettingsTile(icon: settingsState.themeMode == ThemeMode.light ? Icons.wb_sunny : Icons.nightlight_round, title: l10n.settingTheme, value: settingsState.themeMode == ThemeMode.light ? l10n.themeLight : (settingsState.themeMode == ThemeMode.dark ? l10n.themeDark : l10n.themeSystem), onTap: () => context.read<SettingsBloc>().add(ChangeTheme(settingsState.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark))),
+
+                        // Уведомления
+                        _buildSwitchTile(
+                            icon: Icons.notifications_active_outlined,
+                            title: l10n.settingsNotifications,
+                            value: settingsState.areNotificationsEnabled,
+                            onChanged: (val) => context.read<SettingsBloc>().add(ToggleNotifications(val))
+                        ),
                         const Divider(height: 1, color: Colors.white10),
-                        _buildSwitchTile(icon: Icons.notifications_active_outlined, title: l10n.settingsNotifications, value: settingsState.areNotificationsEnabled, onChanged: (val) => context.read<SettingsBloc>().add(ToggleNotifications(val))),
-                        const Divider(height: 1, color: Colors.white10),
-                        _buildSwitchTile(icon: Icons.favorite, title: l10n.settingsHealthConnect, value: settingsState.isHealthSyncEnabled, onChanged: (val) => context.read<SettingsBloc>().add(ToggleHealthSync(val))),
+
+                        // Health Sync (С интеграцией)
+                        _buildSwitchTile(
+                          icon: Icons.favorite,
+                          title: l10n.settingsHealthConnect,
+                          value: settingsState.isHealthSyncEnabled,
+                          onChanged: (val) async {
+                            if (val) {
+                              // Запрашиваем разрешение
+                              final success = await getIt<HealthService>().requestPermissions();
+                              if (success && context.mounted) {
+                                context.read<SettingsBloc>().add(ToggleHealthSync(true));
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgHealthSyncEnabled)));
+                              } else if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgHealthSyncFailed)));
+                                // Если отказали, выключаем свитч обратно
+                                context.read<SettingsBloc>().add(ToggleHealthSync(false));
+                              }
+                            } else {
+                              context.read<SettingsBloc>().add(ToggleHealthSync(false));
+                            }
+                          },
+                        ),
                       ],
                     ),
                   );
                 },
               ),
 
-              // 5. ABOUT
+              // 5. ABOUT (Заголовок локализован)
               const SizedBox(height: 24),
-              _sectionHeader("About"),
+              _sectionHeader(l10n.lblAbout),
               GlassCard(
                 padding: EdgeInsets.zero,
                 child: Column(
@@ -366,32 +408,26 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildWheelPicker(BuildContext context, {required String title, required int initialItem, required int count, required String Function(int) builder, required Function(int) onChanged}) {
-    return SizedBox(
-      height: 300,
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          Expanded(
-            child: ListWheelScrollView.useDelegate(
-              itemExtent: 40, perspective: 0.005, physics: const FixedExtentScrollPhysics(),
-              controller: FixedExtentScrollController(initialItem: initialItem),
-              onSelectedItemChanged: (index) { getIt<HapticService>().selectionClick(); onChanged(index); },
-              childDelegate: ListWheelChildBuilderDelegate(childCount: count, builder: (ctx, idx) => Center(child: Text(builder(idx), style: const TextStyle(color: Colors.white, fontSize: 20)))),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildOptionItem(BuildContext context, String title, VoidCallback onTap) {
+    return ListTile(
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 18)),
+      onTap: () {
+        getIt<HapticService>().selectionClick();
+        onTap();
+        Navigator.pop(context);
+      },
+      trailing: const Icon(Icons.check_circle_outline, color: Colors.white24),
     );
   }
 
-  Widget _buildOptionItem(BuildContext context, String title, VoidCallback onTap) {
-    return ListTile(title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 18)), onTap: () { getIt<HapticService>().selectionClick(); onTap(); Navigator.pop(context); });
-  }
-
   Widget _buildLangItem(BuildContext context, String name, String code) {
-    return ListTile(title: Text(name, style: const TextStyle(color: Colors.white)), onTap: () { context.read<SettingsBloc>().add(ChangeLocale(Locale(code))); Navigator.pop(context); });
+    return ListTile(
+      title: Text(name, style: const TextStyle(color: Colors.white)),
+      onTap: () {
+        context.read<SettingsBloc>().add(ChangeLocale(Locale(code)));
+        Navigator.pop(context);
+      },
+    );
   }
 
   Future<void> _launchUrl(String urlString) async {
@@ -404,7 +440,22 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildSettingsTile({required IconData icon, required String title, String? value, required VoidCallback onTap, bool showArrow = true}) {
-    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), child: Row(children: [Icon(icon, color: Colors.white70, size: 22), const SizedBox(width: 16), Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))), if (value != null) Text(value, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16)), if (showArrow) ...[const SizedBox(width: 8), Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20)]])));
+    return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+                children: [
+                  Icon(icon, color: Colors.white70, size: 22),
+                  const SizedBox(width: 16),
+                  Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))),
+                  if (value != null) Text(value, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+                  if (showArrow) ...[const SizedBox(width: 8), Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20)]
+                ]
+            )
+        )
+    );
   }
 
   Widget _buildSwitchTile({required IconData icon, required String title, required bool value, required Function(bool) onChanged}) {

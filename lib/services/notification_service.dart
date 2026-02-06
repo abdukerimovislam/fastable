@@ -13,6 +13,7 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   static const int _idWeight = 400;
+  static const int _idDailyInsight = 888;
 
   bool _isInitialized = false;
 
@@ -49,9 +50,41 @@ class NotificationService {
     }
   }
 
+  // --- 🥑 NEW: DAILY AI INSIGHT NOTIFICATIONS ---
+
+  // Теперь принимаем локализацию
+  Future<void> scheduleDailyInsight(AppLocalizations l10n) async {
+    // 1. Отменяем старое
+    await cancelDailyInsight();
+
+    // 2. Планируем на 9:00 утра с локализованным текстом
+    await _notificationsPlugin.zonedSchedule(
+      _idDailyInsight,
+      l10n.notifyAiInsightTitle, // Текст из ARB
+      l10n.notifyAiInsightBody,  // Текст из ARB
+      _nextInstanceOf9AM(),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_insight_channel',
+          'Daily Insights',
+          channelDescription: 'Notifications for daily AI coaching',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  Future<void> cancelDailyInsight() async {
+    await _notificationsPlugin.cancel(_idDailyInsight);
+  }
+
   // --- SMART & CARING NOTIFICATIONS (FASTING) ---
 
-  /// Main method to schedule all fasting related notifications
   Future<void> scheduleFastingNotifications({
     required DateTime startTime,
     required Duration duration,
@@ -60,19 +93,15 @@ class NotificationService {
     final endTime = startTime.add(duration);
     final now = DateTime.now();
 
-    // 1. Cancel old ones to avoid duplicates
     await cancelFastingNotifications();
 
-    // 2. Schedule Stage Notifications (2h, 4h, 8h...)
     final stages = _getLocalizedStages(l10n);
 
     stages.forEach((hour, content) {
       final stageTime = startTime.add(Duration(hours: hour));
-
-      // Schedule only if the stage is in the future AND within the goal (plus small buffer)
       if (stageTime.isAfter(now) && stageTime.isBefore(endTime.add(const Duration(minutes: 15)))) {
         _scheduleOneShot(
-          id: 1000 + hour, // Unique ID: 1002, 1004, 1008...
+          id: 1000 + hour,
           title: content.title,
           body: content.body,
           scheduledTime: stageTime,
@@ -80,7 +109,6 @@ class NotificationService {
       }
     });
 
-    // 3. Halfway Mark (50%)
     final halfTime = startTime.add(duration ~/ 2);
     if (halfTime.isAfter(now) && halfTime.isBefore(endTime)) {
       await _scheduleOneShot(
@@ -91,7 +119,6 @@ class NotificationService {
       );
     }
 
-    // 4. One Hour Left (Home Stretch)
     if (duration.inHours > 2) {
       final oneHourLeft = endTime.subtract(const Duration(hours: 1));
       if (oneHourLeft.isAfter(now)) {
@@ -104,7 +131,6 @@ class NotificationService {
       }
     }
 
-    // 5. Goal Reached (Finish Line)
     if (endTime.isAfter(now)) {
       await _scheduleOneShot(
         id: 999,
@@ -125,7 +151,6 @@ class NotificationService {
     final endTime = startTime.add(duration);
     final now = DateTime.now();
 
-    // 1. Eating Window Closed
     if (endTime.isAfter(now)) {
       await _scheduleOneShot(
         id: 2000,
@@ -135,7 +160,6 @@ class NotificationService {
       );
     }
 
-    // 2. 30 Minutes Warning
     final warningTime = endTime.subtract(const Duration(minutes: 30));
     if (warningTime.isAfter(now)) {
       await _scheduleOneShot(
@@ -158,12 +182,11 @@ class NotificationService {
       return;
     }
 
-    // Assuming you have keys like "notifyWeightTitle" in your arb file,
-    // otherwise use hardcoded strings or add them to arb.
+    // Теперь используем l10n
     await _notificationsPlugin.zonedSchedule(
       _idWeight,
-      "Track your weight ⚖️", // Replace with l10n.notifyWeightTitle if added
-      "Consistency is key! Log your weight today.",
+      l10n.notifyWeightTitle, // Текст из ARB
+      l10n.notifyWeightBody,  // Текст из ARB
       _nextInstanceOf8AM(),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -182,7 +205,6 @@ class NotificationService {
   // --- CANCELLATION ---
 
   Future<void> cancelFastingNotifications() async {
-    // Cancels everything related to fasting cycle
     await _notificationsPlugin.cancelAll();
   }
 
@@ -210,13 +232,13 @@ class NotificationService {
         tz.TZDateTime.from(scheduledTime, tz.local),
         const NotificationDetails(
           android: AndroidNotificationDetails(
-            'fasting_channel_v2', // Updated Channel ID
+            'fasting_channel_v2',
             'Fasting Updates',
             channelDescription: 'Notifications regarding fasting stages',
             importance: Importance.max,
             priority: Priority.high,
             icon: '@mipmap/ic_launcher',
-            styleInformation: BigTextStyleInformation(''), // Allows long text
+            styleInformation: BigTextStyleInformation(''),
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -242,9 +264,17 @@ class NotificationService {
     return scheduledDate;
   }
 
+  tz.TZDateTime _nextInstanceOf9AM() {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 9); // 9:00
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduledDate;
+  }
+
   // --- DATA MAPPING (LOCALIZED) ---
 
-  // Maps hours to localized Title and Body using Dart Records
   Map<int, ({String title, String body})> _getLocalizedStages(AppLocalizations l10n) {
     return {
       2: (title: l10n.stage2Title, body: l10n.stage2Body),
@@ -259,7 +289,6 @@ class NotificationService {
     };
   }
 
-  // --- COMPATIBILITY STUBS (If needed by other parts of app) ---
   Future<void> scheduleFastCompletion(DateTime time, String text) async {}
   Future<void> scheduleEatingCompletion(DateTime time) async {}
 }

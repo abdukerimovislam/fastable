@@ -498,7 +498,41 @@
         "bannerRecipeSubtitle": "Keto, baixo carboidrato e mais",
 
         "unitKcal": "kcal",
-        "unitMin": "min"
+        "unitMin": "min",
+        "lblAchievements": "Conquistas",
+          "lblPersonalData": "Dados pessoais",
+          "lblSettings": "Configurações",
+          "lblAbout": "Sobre",
+          "lblHeight": "Altura",
+          "lblWeight": "Peso",
+          "lblAge": "Idade",
+          "lblGender": "Gênero",
+          "lblActivity": "Nível de atividade",
+          "lblLanguage": "Idioma",
+          "msgHealthSyncEnabled": "Sincronização de saúde ativada!",
+          "msgHealthSyncFailed": "Permissão negada",
+           "aiGreeting": "Olá! Estou pronto para ajudar você a alcançar seus objetivos.",
+            "aiConnectionError": "Ops! A conexão foi perdida. Verifique sua internet ou tente novamente mais tarde. 🥑",
+            "aiSystemError": "O serviço de IA não está configurado corretamente (chave de API ausente).",
+             "aiCoachTitle": "Coach de jejum com IA",
+              "aiCoachDesc": "Receba respostas instantâneas sobre keto, jejum intermitente e hábitos saudáveis com nosso assistente inteligente de IA.",
+              "aiChatHint": "Pergunte sobre keto ou jejum...",
+              "aiGreeting": "Olá! Eu sou o Fasty 🥑. Como posso ajudar você a alcançar seus objetivos hoje?",
+              "btnUnlockPro": "Desbloquear com PRO",
+               "aiInsightFallback": "A consistência é a chave! Beba água e continue em movimento. 💧",
+                "aiErrorConnection": "Problema de conexão. Tente novamente mais tarde.",
+                "aiInsightTitle": "INSIGHT DIÁRIO",
+                "aiInsightTeaser": "Com base nos seus últimos 7 dias de jejum, encontramos um padrão importante que afeta seu progresso...",
+                  "tapToUnlock": "Toque para desbloquear",
+                   "notifyAiInsightTitle": "Seu insight diário de IA está pronto! 🥑",
+                    "notifyAiInsightBody": "Veja o que o Fasty analisou para você hoje. Toque para desbloquear.",
+                    "notifyWeightTitle": "Acompanhe seu peso ⚖️",
+                    "notifyWeightBody": "A consistência é a chave! Registre seu peso hoje.",
+                    "aiInsightNotEnoughData": "Continue registrando! Precisamos de pelo menos 3 jejuns para analisar seus padrões únicos. 📊"
+
+
+
+
 
 
 
