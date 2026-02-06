@@ -528,7 +528,63 @@
                     "notifyAiInsightBody": "Veja o que o Fasty analisou para você hoje. Toque para desbloquear.",
                     "notifyWeightTitle": "Acompanhe seu peso ⚖️",
                     "notifyWeightBody": "A consistência é a chave! Registre seu peso hoje.",
-                    "aiInsightNotEnoughData": "Continue registrando! Precisamos de pelo menos 3 jejuns para analisar seus padrões únicos. 📊"
+                    "aiInsightNotEnoughData": "Continue registrando! Precisamos de pelo menos 3 jejuns para analisar seus padrões únicos. 📊",
+                    "msgLoginFailed": "Falha no login: {error}",
+                      "@msgLoginFailed": { "placeholders": { "error": {} } },
+
+                      "msgAppleLoginFailed": "Falha no login com Apple: {error}",
+                      "@msgAppleLoginFailed": { "placeholders": { "error": {} } },
+
+                      "msgSyncCompleted": "Sincronização concluída!",
+                      "msgErrorRelogin": "Erro: faça login novamente e tente outra vez.",
+
+                      "signInApple": "Entrar com Apple",
+
+                      "lblDangerZone": "ZONA DE PERIGO",
+                      "btnDeleteAccount": "Excluir conta",
+
+                      "dialogDeleteAccountTitle": "Excluir conta?",
+                      "dialogDeleteAccountContent": "Esta ação é permanente. Todo o histórico de peso, registros de jejum e conquistas serão excluídos da nuvem.",
+                      "btnDelete": "EXCLUIR",
+                      "btnCancel": "Cancelar",
+
+                      "dialogSyncConflictTitle": "Conflito de sincronização",
+                      "dialogSyncConflictContent": "Esta conta já possui dados na nuvem.\n\nO que você gostaria de fazer com seus dados atuais de convidado?",
+                      "btnUseCloud": "Usar a nuvem\n(descartar convidado)",
+                      "btnMergeData": "Mesclar dados",
+
+                      "lblVersion": "Versão {version}",
+                      "@lblVersion": { "placeholders": { "version": {} } },
+                      "lblCurrentWeight": "Peso atual",
+                        "lblBasalBmr": "Basal (BMR)",
+                        "lblActiveTdee": "Ativo (TDEE)",
+                        "lblTotalHours": "Horas totais",
+                        "unitKcal": "kcal",
+                        "unitHoursShort": "h",
+                        "unitKg": "kg",
+                         "lblConsistency": "Consistência",
+                          "lblLast7Days": "Últimos 7 dias",
+                          "lblFasts": "Jejuns",
+                          "lblHours": "Horas",
+                          "lblDayStreak": "Dias seguidos",
+                          "msgStartJourney": "Comece sua jornada hoje",
+                          "lblToday": "Hoje",
+                          "lblYesterday": "Ontem",
+                          "lblFastingTypeCircadian": "Circadiano",
+                          "lblFastingTypeWarrior": "Guerreiro",
+                          "lblFastingTypeOmad": "OMAD",
+                           "lblHistoryFor": "Histórico de {date}",
+                            "lblNoRecordsForDay": "Nenhum registro para este dia",
+                            "lblCustomPlan": "Plano personalizado",
+                              "lblAdjustDuration": "Ajustar duração",
+                              "lblFasting": "Jejum",
+                              "lblEating": "Alimentação",
+                              "lblSlideToAdjust": "Deslize para ajustar as horas",
+                              "btnStartCustomPlan": "Iniciar plano personalizado",
+                              "btnUnlockFeature": "Desbloquear plano personalizado",
+                              "proFeatureTitle": "Recurso PRO",
+                              "proFeatureDesc": "Agendamentos de jejum personalizados estão disponíveis para usuários PRO."
+
 
 
 

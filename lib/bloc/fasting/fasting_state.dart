@@ -7,8 +7,11 @@ class FastingState extends Equatable {
   final DateTime? startTime;
   final Duration elapsed;
   final Duration goalDuration; // Длительность текущей фазы (16ч или 8ч)
-  final int planIndex;
+  final int planIndex; // Индекс пресета. Если -1, значит выбран кастомный план.
   final bool isGoalReached; // Достигли ли цели (для галочки или уведомления)
+
+  // 🔥 Константа для обозначения кастомного плана в коде
+  static const int customPlanIndex = -1;
 
   const FastingState({
     this.phase = FastingPhase.stopped,
@@ -31,6 +34,9 @@ class FastingState extends Equatable {
     return left.isNegative ? Duration.zero : left;
   }
 
+  /// Проверка: является ли текущий план кастомным
+  bool get isCustomPlan => planIndex == customPlanIndex;
+
   FastingState copyWith({
     FastingPhase? phase,
     DateTime? startTime,
@@ -41,7 +47,7 @@ class FastingState extends Equatable {
   }) {
     return FastingState(
       phase: phase ?? this.phase,
-      startTime: startTime ?? this.startTime, // null передается явно если нужен сброс
+      startTime: startTime ?? this.startTime,
       elapsed: elapsed ?? this.elapsed,
       goalDuration: goalDuration ?? this.goalDuration,
       planIndex: planIndex ?? this.planIndex,

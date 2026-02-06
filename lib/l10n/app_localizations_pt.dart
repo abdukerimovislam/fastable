@@ -1264,4 +1264,138 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aiInsightNotEnoughData => 'Continue registrando! Precisamos de pelo menos 3 jejuns para analisar seus padrões únicos. 📊';
+
+  @override
+  String msgLoginFailed(Object error) {
+    return 'Falha no login: $error';
+  }
+
+  @override
+  String msgAppleLoginFailed(Object error) {
+    return 'Falha no login com Apple: $error';
+  }
+
+  @override
+  String get msgSyncCompleted => 'Sincronização concluída!';
+
+  @override
+  String get msgErrorRelogin => 'Erro: faça login novamente e tente outra vez.';
+
+  @override
+  String get signInApple => 'Entrar com Apple';
+
+  @override
+  String get lblDangerZone => 'ZONA DE PERIGO';
+
+  @override
+  String get btnDeleteAccount => 'Excluir conta';
+
+  @override
+  String get dialogDeleteAccountTitle => 'Excluir conta?';
+
+  @override
+  String get dialogDeleteAccountContent => 'Esta ação é permanente. Todo o histórico de peso, registros de jejum e conquistas serão excluídos da nuvem.';
+
+  @override
+  String get btnDelete => 'EXCLUIR';
+
+  @override
+  String get dialogSyncConflictTitle => 'Conflito de sincronização';
+
+  @override
+  String get dialogSyncConflictContent => 'Esta conta já possui dados na nuvem.\n\nO que você gostaria de fazer com seus dados atuais de convidado?';
+
+  @override
+  String get btnUseCloud => 'Usar a nuvem\n(descartar convidado)';
+
+  @override
+  String get btnMergeData => 'Mesclar dados';
+
+  @override
+  String lblVersion(Object version) {
+    return 'Versão $version';
+  }
+
+  @override
+  String get lblCurrentWeight => 'Peso atual';
+
+  @override
+  String get lblBasalBmr => 'Basal (BMR)';
+
+  @override
+  String get lblActiveTdee => 'Ativo (TDEE)';
+
+  @override
+  String get lblTotalHours => 'Horas totais';
+
+  @override
+  String get unitHoursShort => 'h';
+
+  @override
+  String get lblConsistency => 'Consistência';
+
+  @override
+  String get lblLast7Days => 'Últimos 7 dias';
+
+  @override
+  String get lblFasts => 'Jejuns';
+
+  @override
+  String get lblHours => 'Horas';
+
+  @override
+  String get lblDayStreak => 'Dias seguidos';
+
+  @override
+  String get msgStartJourney => 'Comece sua jornada hoje';
+
+  @override
+  String get lblToday => 'Hoje';
+
+  @override
+  String get lblYesterday => 'Ontem';
+
+  @override
+  String get lblFastingTypeCircadian => 'Circadiano';
+
+  @override
+  String get lblFastingTypeWarrior => 'Guerreiro';
+
+  @override
+  String get lblFastingTypeOmad => 'OMAD';
+
+  @override
+  String lblHistoryFor(Object date) {
+    return 'Histórico de $date';
+  }
+
+  @override
+  String get lblNoRecordsForDay => 'Nenhum registro para este dia';
+
+  @override
+  String get lblCustomPlan => 'Plano personalizado';
+
+  @override
+  String get lblAdjustDuration => 'Ajustar duração';
+
+  @override
+  String get lblFasting => 'Jejum';
+
+  @override
+  String get lblEating => 'Alimentação';
+
+  @override
+  String get lblSlideToAdjust => 'Deslize para ajustar as horas';
+
+  @override
+  String get btnStartCustomPlan => 'Iniciar plano personalizado';
+
+  @override
+  String get btnUnlockFeature => 'Desbloquear plano personalizado';
+
+  @override
+  String get proFeatureTitle => 'Recurso PRO';
+
+  @override
+  String get proFeatureDesc => 'Agendamentos de jejum personalizados estão disponíveis para usuários PRO.';
 }

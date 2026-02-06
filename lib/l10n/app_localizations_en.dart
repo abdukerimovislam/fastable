@@ -1264,4 +1264,138 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiInsightNotEnoughData => 'Keep tracking! We need at least 3 fasts to analyze your unique patterns. 📊';
+
+  @override
+  String msgLoginFailed(Object error) {
+    return 'Login Failed: $error';
+  }
+
+  @override
+  String msgAppleLoginFailed(Object error) {
+    return 'Apple Login Failed: $error';
+  }
+
+  @override
+  String get msgSyncCompleted => 'Sync completed!';
+
+  @override
+  String get msgErrorRelogin => 'Error: Please re-login and try again.';
+
+  @override
+  String get signInApple => 'Sign in with Apple';
+
+  @override
+  String get lblDangerZone => 'DANGER ZONE';
+
+  @override
+  String get btnDeleteAccount => 'Delete Account';
+
+  @override
+  String get dialogDeleteAccountTitle => 'Delete Account?';
+
+  @override
+  String get dialogDeleteAccountContent => 'This action is permanent. All your weight history, fasting records, and achievements will be deleted from the cloud.';
+
+  @override
+  String get btnDelete => 'DELETE';
+
+  @override
+  String get dialogSyncConflictTitle => 'Sync Conflict';
+
+  @override
+  String get dialogSyncConflictContent => 'This account already has data in the cloud.\n\nWhat would you like to do with your current guest data?';
+
+  @override
+  String get btnUseCloud => 'Use Cloud\n(Discard Guest)';
+
+  @override
+  String get btnMergeData => 'Merge Data';
+
+  @override
+  String lblVersion(Object version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get lblCurrentWeight => 'Current Weight';
+
+  @override
+  String get lblBasalBmr => 'Basal (BMR)';
+
+  @override
+  String get lblActiveTdee => 'Active (TDEE)';
+
+  @override
+  String get lblTotalHours => 'Total Hours';
+
+  @override
+  String get unitHoursShort => 'h';
+
+  @override
+  String get lblConsistency => 'Consistency';
+
+  @override
+  String get lblLast7Days => 'Last 7 Days';
+
+  @override
+  String get lblFasts => 'Fasts';
+
+  @override
+  String get lblHours => 'Hours';
+
+  @override
+  String get lblDayStreak => 'Day Streak';
+
+  @override
+  String get msgStartJourney => 'Start your journey today';
+
+  @override
+  String get lblToday => 'Today';
+
+  @override
+  String get lblYesterday => 'Yesterday';
+
+  @override
+  String get lblFastingTypeCircadian => 'Circadian';
+
+  @override
+  String get lblFastingTypeWarrior => 'Warrior';
+
+  @override
+  String get lblFastingTypeOmad => 'OMAD';
+
+  @override
+  String lblHistoryFor(Object date) {
+    return 'History for $date';
+  }
+
+  @override
+  String get lblNoRecordsForDay => 'No records for this day';
+
+  @override
+  String get lblCustomPlan => 'Custom Plan';
+
+  @override
+  String get lblAdjustDuration => 'Adjust Duration';
+
+  @override
+  String get lblFasting => 'Fasting';
+
+  @override
+  String get lblEating => 'Eating';
+
+  @override
+  String get lblSlideToAdjust => 'Slide to adjust hours';
+
+  @override
+  String get btnStartCustomPlan => 'Start Custom Plan';
+
+  @override
+  String get btnUnlockFeature => 'Unlock Custom Plan';
+
+  @override
+  String get proFeatureTitle => 'Pro Feature';
+
+  @override
+  String get proFeatureDesc => 'Custom fasting schedules are available for Pro users.';
 }

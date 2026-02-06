@@ -1264,4 +1264,138 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get aiInsightNotEnoughData => 'Продолжайте трекинг! Нам нужно хотя бы 3 записи, чтобы найти ваши скрытые паттерны. 📊';
+
+  @override
+  String msgLoginFailed(Object error) {
+    return 'Ошибка входа: $error';
+  }
+
+  @override
+  String msgAppleLoginFailed(Object error) {
+    return 'Ошибка входа Apple: $error';
+  }
+
+  @override
+  String get msgSyncCompleted => 'Синхронизация завершена!';
+
+  @override
+  String get msgErrorRelogin => 'Ошибка: Пожалуйста, войдите снова и повторите попытку.';
+
+  @override
+  String get signInApple => 'Войти через Apple';
+
+  @override
+  String get lblDangerZone => 'ОПАСНАЯ ЗОНА';
+
+  @override
+  String get btnDeleteAccount => 'Удалить аккаунт';
+
+  @override
+  String get dialogDeleteAccountTitle => 'Удалить аккаунт?';
+
+  @override
+  String get dialogDeleteAccountContent => 'Это действие необратимо. Вся история веса, голоданий и достижения будут удалены из облака.';
+
+  @override
+  String get btnDelete => 'УДАЛИТЬ';
+
+  @override
+  String get dialogSyncConflictTitle => 'Конфликт данных';
+
+  @override
+  String get dialogSyncConflictContent => 'В этом аккаунте уже есть данные в облаке.\n\nЧто сделать с текущими данными гостя?';
+
+  @override
+  String get btnUseCloud => 'Взять из облака\n(Удалить текущие)';
+
+  @override
+  String get btnMergeData => 'Объединить';
+
+  @override
+  String lblVersion(Object version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get lblCurrentWeight => 'Текущий вес';
+
+  @override
+  String get lblBasalBmr => 'Базовый (BMR)';
+
+  @override
+  String get lblActiveTdee => 'Активный (TDEE)';
+
+  @override
+  String get lblTotalHours => 'Всего часов';
+
+  @override
+  String get unitHoursShort => 'ч';
+
+  @override
+  String get lblConsistency => 'Стабильность';
+
+  @override
+  String get lblLast7Days => 'За 7 дней';
+
+  @override
+  String get lblFasts => 'Голоданий';
+
+  @override
+  String get lblHours => 'Часов';
+
+  @override
+  String get lblDayStreak => 'Дней подряд';
+
+  @override
+  String get msgStartJourney => 'Начните свой путь сегодня';
+
+  @override
+  String get lblToday => 'Сегодня';
+
+  @override
+  String get lblYesterday => 'Вчера';
+
+  @override
+  String get lblFastingTypeCircadian => 'Циркадный';
+
+  @override
+  String get lblFastingTypeWarrior => 'Воин';
+
+  @override
+  String get lblFastingTypeOmad => 'OMAD';
+
+  @override
+  String lblHistoryFor(Object date) {
+    return 'История за $date';
+  }
+
+  @override
+  String get lblNoRecordsForDay => 'Нет записей за этот день';
+
+  @override
+  String get lblCustomPlan => 'Свой план';
+
+  @override
+  String get lblAdjustDuration => 'Настройка длительности';
+
+  @override
+  String get lblFasting => 'Голод';
+
+  @override
+  String get lblEating => 'Еда';
+
+  @override
+  String get lblSlideToAdjust => 'Сдвиньте для настройки';
+
+  @override
+  String get btnStartCustomPlan => 'Запустить план';
+
+  @override
+  String get btnUnlockFeature => 'Разблокировать';
+
+  @override
+  String get proFeatureTitle => 'Pro Функция';
+
+  @override
+  String get proFeatureDesc => 'Кастомные планы доступны только Pro пользователям.';
 }

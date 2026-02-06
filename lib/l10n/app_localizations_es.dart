@@ -1264,4 +1264,138 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiInsightNotEnoughData => '¡Sigue registrando! Necesitamos al menos 3 ayunos para analizar tus patrones únicos. 📊';
+
+  @override
+  String msgLoginFailed(Object error) {
+    return 'Error de inicio de sesión: $error';
+  }
+
+  @override
+  String msgAppleLoginFailed(Object error) {
+    return 'Error al iniciar sesión con Apple: $error';
+  }
+
+  @override
+  String get msgSyncCompleted => '¡Sincronización completada!';
+
+  @override
+  String get msgErrorRelogin => 'Error: por favor, vuelve a iniciar sesión e inténtalo de nuevo.';
+
+  @override
+  String get signInApple => 'Iniciar sesión con Apple';
+
+  @override
+  String get lblDangerZone => 'ZONA DE PELIGRO';
+
+  @override
+  String get btnDeleteAccount => 'Eliminar cuenta';
+
+  @override
+  String get dialogDeleteAccountTitle => '¿Eliminar cuenta?';
+
+  @override
+  String get dialogDeleteAccountContent => 'Esta acción es permanente. Todo tu historial de peso, registros de ayuno y logros se eliminarán de la nube.';
+
+  @override
+  String get btnDelete => 'ELIMINAR';
+
+  @override
+  String get dialogSyncConflictTitle => 'Conflicto de sincronización';
+
+  @override
+  String get dialogSyncConflictContent => 'Esta cuenta ya tiene datos en la nube.\n\n¿Qué deseas hacer con tus datos actuales de invitado?';
+
+  @override
+  String get btnUseCloud => 'Usar la nube\n(descartar invitado)';
+
+  @override
+  String get btnMergeData => 'Combinar datos';
+
+  @override
+  String lblVersion(Object version) {
+    return 'Versión $version';
+  }
+
+  @override
+  String get lblCurrentWeight => 'Peso actual';
+
+  @override
+  String get lblBasalBmr => 'Basal (BMR)';
+
+  @override
+  String get lblActiveTdee => 'Activo (TDEE)';
+
+  @override
+  String get lblTotalHours => 'Horas totales';
+
+  @override
+  String get unitHoursShort => 'h';
+
+  @override
+  String get lblConsistency => 'Constancia';
+
+  @override
+  String get lblLast7Days => 'Últimos 7 días';
+
+  @override
+  String get lblFasts => 'Ayunos';
+
+  @override
+  String get lblHours => 'Horas';
+
+  @override
+  String get lblDayStreak => 'Días seguidos';
+
+  @override
+  String get msgStartJourney => 'Comienza tu camino hoy';
+
+  @override
+  String get lblToday => 'Hoy';
+
+  @override
+  String get lblYesterday => 'Ayer';
+
+  @override
+  String get lblFastingTypeCircadian => 'Circadiano';
+
+  @override
+  String get lblFastingTypeWarrior => 'Guerrero';
+
+  @override
+  String get lblFastingTypeOmad => 'OMAD';
+
+  @override
+  String lblHistoryFor(Object date) {
+    return 'Historial del $date';
+  }
+
+  @override
+  String get lblNoRecordsForDay => 'No hay registros para este día';
+
+  @override
+  String get lblCustomPlan => 'Plan personalizado';
+
+  @override
+  String get lblAdjustDuration => 'Ajustar duración';
+
+  @override
+  String get lblFasting => 'Ayuno';
+
+  @override
+  String get lblEating => 'Comida';
+
+  @override
+  String get lblSlideToAdjust => 'Desliza para ajustar las horas';
+
+  @override
+  String get btnStartCustomPlan => 'Iniciar plan personalizado';
+
+  @override
+  String get btnUnlockFeature => 'Desbloquear plan personalizado';
+
+  @override
+  String get proFeatureTitle => 'Función PRO';
+
+  @override
+  String get proFeatureDesc => 'Los horarios de ayuno personalizados están disponibles para usuarios PRO.';
 }

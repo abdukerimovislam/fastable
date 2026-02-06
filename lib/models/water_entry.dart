@@ -1,24 +1,40 @@
-class WaterEntry {
-  final DateTime date;
-  int cupCount; // 'int', а не 'double', так как мы считаем чашки
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:equatable/equatable.dart';
 
-  WaterEntry({
+class WaterEntry extends Equatable {
+  final DateTime date;
+  final int cupCount;
+
+  const WaterEntry({
     required this.date,
     required this.cupCount,
   });
 
-  // Методы для конвертации в/из JSON (для SharedPreferences)
-  Map<String, dynamic> toJson() {
+  /// Универсальный конструктор (JSON + Firestore)
+  factory WaterEntry.fromMap(Map<String, dynamic> map) {
+    DateTime parseDate(dynamic val) {
+      if (val is Timestamp) return val.toDate();
+      if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+      return DateTime.now();
+    }
+
+    return WaterEntry(
+      date: parseDate(map['date']),
+      cupCount: (map['cupCount'] as num).toInt(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
     return {
-      'date': date.toIso8601String(),
+      'date': date.toIso8601String(), // Сохраняем как строку для JSON
       'cupCount': cupCount,
     };
   }
 
-  factory WaterEntry.fromJson(Map<String, dynamic> json) {
-    return WaterEntry(
-      date: DateTime.parse(json['date']),
-      cupCount: json['cupCount'] as int,
-    );
-  }
+  // Алиасы для старого кода
+  factory WaterEntry.fromJson(Map<String, dynamic> json) => WaterEntry.fromMap(json);
+  Map<String, dynamic> toJson() => toMap();
+
+  @override
+  List<Object?> get props => [date, cupCount];
 }

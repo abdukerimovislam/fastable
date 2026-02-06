@@ -59,13 +59,22 @@ class TickTimer extends FastingEvent {
   List<Object?> get props => [elapsed];
 }
 
-/// Пользователь сменил план (16:8 -> 18:6)
+/// Пользователь сменил план из пресетов (16:8 -> 18:6)
 class ChangePlan extends FastingEvent {
   final int planIndex;
   const ChangePlan(this.planIndex);
 
   @override
   List<Object?> get props => [planIndex];
+}
+
+/// 🔥 НОВОЕ: Пользователь задал кастомную цель вручную (например, 23 часа)
+class SetCustomPlan extends FastingEvent {
+  final int targetHours;
+  const SetCustomPlan(this.targetHours);
+
+  @override
+  List<Object?> get props => [targetHours];
 }
 
 /// Сброс всего (Reset)

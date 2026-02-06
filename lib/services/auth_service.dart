@@ -1,85 +1,247 @@
+import 'dart:io'; // Для Platform
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:injectable/injectable.dart';
+import 'package:flutter/foundation.dart';
+import 'package:fastable/injection.dart'; // Для getIt
 
+// Репозитории (для миграции данных)
+import 'package:fastable/repositories/weight_repository.dart';
+import 'package:fastable/repositories/history_repository.dart';
+import 'package:fastable/repositories/water_repository.dart';
+
+/// 🚨 Исключение для конфликта данных (показываем диалог пользователю)
+class DataConflictException implements Exception {
+  final String message;
+  DataConflictException(this.message);
+}
+
+@lazySingleton
 class AuthService {
-  // Singleton
-  static final AuthService _instance = AuthService._internal();
-  factory AuthService() => _instance;
-  AuthService._internal();
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // Текущий пользователь
-  User? get currentUser => _auth.currentUser;
-
-  // Поток изменений состояния (для main.dart и ProfileScreen)
+  // Стрим состояния (слушаем в main.dart для роутинга)
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // --- 1. АНОНИМНЫЙ ВХОД (ГОСТЬ) ---
+  // Текущий юзер
+  User? get currentUser => _auth.currentUser;
+
+  // ===========================================================================
+  // 1. АНОНИМНЫЙ ВХОД (Android & iOS)
+  // ===========================================================================
   Future<User?> signInAnonymously() async {
     try {
-      final UserCredential userCredential = await _auth.signInAnonymously();
-      print("Вход выполнен анонимно: ${userCredential.user?.uid}");
-      return userCredential.user;
+      final result = await _auth.signInAnonymously();
+      debugPrint("👻 Signed in anonymously: ${result.user?.uid}");
+      return result.user;
     } catch (e) {
-      print("Ошибка анонимного входа: $e");
+      debugPrint("❌ Anonymous sign in error: $e");
       return null;
     }
   }
 
-  // --- 2. ВХОД ЧЕРЕЗ GOOGLE ---
+  // ===========================================================================
+  // 2. GOOGLE SIGN IN (Android & iOS)
+  // ===========================================================================
   Future<User?> signInWithGoogle() async {
     try {
-      // Запускаем процесс входа Google
+      // Запускаем нативный флоу Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // Пользователь отменил вход
+
+      if (googleUser == null) {
+        // Пользователь нажал "Отмена" в окне Google
+        return null;
+      }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // ВАЖНЫЙ МОМЕНТ:
-      // Если пользователь уже аноним, мы пытаемся "Привязать" (Link) Google к анониму.
-      // Если нет — просто входим.
-      if (_auth.currentUser != null && _auth.currentUser!.isAnonymous) {
-        try {
-          final userCredential = await _auth.currentUser!.linkWithCredential(credential);
-          print("Анонимный аккаунт успешно обновлен до Google!");
-          return userCredential.user;
-        } on FirebaseAuthException catch (e) {
-          // Если аккаунт Google уже существует, link выдаст ошибку.
-          // В этом случае мы просто переключаемся на этот Google аккаунт.
-          if (e.code == 'credential-already-in-use') {
-            print("Этот Google аккаунт уже существует. Переключаемся...");
-            // Просто входим (данные анонима останутся в старом UID, это нормально для MVP)
-            final userCredential = await _auth.signInWithCredential(credential);
-            return userCredential.user;
-          }
-        }
-      }
-
-      // Обычный вход (если не были анонимом)
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      return userCredential.user;
-
+      return await _signInOrLink(credential);
     } catch (e) {
-      print("Ошибка входа через Google: $e");
-      return null;
+      // Если это наш DataConflictException, пробрасываем выше (в UI)
+      if (e is DataConflictException) rethrow;
+
+      debugPrint("❌ Google Sign In Error: $e");
+      // Можно вернуть null или выбросить понятную ошибку
+      throw Exception("Google Sign In Failed");
     }
   }
 
-  // --- 3. ВЫХОД ---
+  // ===========================================================================
+  // 3. APPLE SIGN IN (Только iOS)
+  // ===========================================================================
+  Future<User?> signInWithApple() async {
+    if (!Platform.isIOS) {
+      throw Exception("Apple Sign In is only available on iOS");
+    }
+
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+      );
+
+      final AuthCredential credential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      return await _signInOrLink(credential);
+    } catch (e) {
+      if (e is DataConflictException) rethrow;
+
+      debugPrint("❌ Apple Sign In Error: $e");
+
+      // SignInWithAppleAuthorizationException (код 1001) - это отмена пользователем
+      if (e.toString().contains('AuthorizationErrorCode.canceled')) {
+        return null;
+      }
+
+      throw Exception("Apple Sign In Failed");
+    }
+  }
+
+  // ===========================================================================
+  // 🧠 ГЛАВНАЯ ЛОГИКА (ВХОД / LINK / МИГРАЦИЯ)
+  // ===========================================================================
+  Future<User?> _signInOrLink(AuthCredential credential) async {
+    User? user = _auth.currentUser;
+    // Запоминаем, были ли мы анонимом (до попытки входа)
+    bool wasAnonymous = user?.isAnonymous ?? false;
+
+    try {
+      if (wasAnonymous) {
+        // СЦЕНАРИЙ А: Мы Аноним -> Пытаемся ПРИВЯЗАТЬ (Link) Google/Apple
+        // Это лучший сценарий: UID остается тем же, данные никуда не деваются.
+        final result = await user!.linkWithCredential(credential);
+        user = result.user;
+
+        // На всякий случай запускаем миграцию, чтобы убедиться, что локальные данные в облаке
+        if (user != null) {
+          await _migrateAllData(user.uid);
+        }
+      } else {
+        // СЦЕНАРИЙ Б: Мы не в системе -> Просто входим
+        final result = await _auth.signInWithCredential(credential);
+        user = result.user;
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'credential-already-in-use') {
+        // СЦЕНАРИЙ В: Такой Google/Apple уже привязан к ДРУГОМУ аккаунту.
+        // Firebase не дает сделать Link. Приходится перелогиниваться.
+        debugPrint("⚠️ Account exists. Switching users...");
+
+        // 1. Входим в старый аккаунт (Анонимный UID при этом сбрасывается!)
+        final result = await _auth.signInWithCredential(credential);
+        user = result.user;
+
+        // 2. 🛑 ПРОВЕРКА НА КОНФЛИКТ
+        // Если мы были анонимом и успели накопить данные...
+        if (user != null && wasAnonymous) {
+          final weightRepo = getIt<WeightRepository>();
+          // ...а в старом аккаунте ТОЖЕ есть данные.
+          final hasLocal = await weightRepo.hasLocalData();
+          final hasCloud = await weightRepo.hasCloudData(user.uid);
+
+          if (hasLocal && hasCloud) {
+            // 💣 КОНФЛИКТ! Бросаем исключение, UI покажет диалог "Merge vs Discard"
+            throw DataConflictException("Conflict Detected");
+          } else if (hasLocal) {
+            // В облаке пусто -> Просто заливаем наши локальные данные туда
+            await _migrateAllData(user.uid);
+          }
+          // Если hasLocal == false (аноним ничего не делал), просто загрузятся данные из облака
+        }
+      } else {
+        // Другие ошибки Firebase (сеть, бан и т.д.)
+        rethrow;
+      }
+    }
+    return user;
+  }
+
+  // ===========================================================================
+  // 🛠 РАЗРЕШЕНИЕ КОНФЛИКТА (Вызывается из UI диалога)
+  // ===========================================================================
+  Future<void> resolveDataConflict({required bool mergeData}) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    if (mergeData) {
+      // Вариант А: Объединить (Локальные + Облачные)
+      await _migrateAllData(user.uid);
+    } else {
+      // Вариант Б: Использовать облако (Удалить локальные данные гостя)
+      // Мы принудительно обновляем кэш из облака
+      await getIt<WeightRepository>().discardLocalAndUseCloud(user.uid);
+      // Для остальных репо просто вызов get подтянет облако
+      await getIt<HistoryRepository>().getAllRecords();
+      await getIt<WaterRepository>().getHistory();
+    }
+  }
+
+  // --- ХЕЛПЕР: Массовая миграция всех репозиториев ---
+  Future<void> _migrateAllData(String uid) async {
+    debugPrint("🚀 Migrating ALL data to cloud for user $uid...");
+
+    await Future.wait([
+      getIt<WeightRepository>().migrateLocalToCloud(uid),
+      getIt<HistoryRepository>().migrateLocalToCloud(uid),
+      getIt<WaterRepository>().migrateLocalToCloud(uid),
+    ]);
+
+    debugPrint("✅ Full migration complete");
+  }
+
+  // ===========================================================================
+  // 4. ВЫХОД
+  // ===========================================================================
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
       await _auth.signOut();
-      print("Выход выполнен");
+      debugPrint("👋 Signed out");
     } catch (e) {
-      print("Ошибка при выходе: $e");
+      debugPrint("❌ Sign out error: $e");
+    }
+  }
+
+  // ===========================================================================
+  // 5. УДАЛЕНИЕ АККАУНТА (GDPR / Apple Requirement)
+  // ===========================================================================
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      debugPrint("🗑 Deleting account and all data...");
+
+      // 1. Чистим данные во всех репозиториях (Локально + Firestore)
+      await Future.wait([
+        getIt<WeightRepository>().clearAllData(),
+        getIt<HistoryRepository>().clearAllData(),
+        getIt<WaterRepository>().clearAllData(),
+      ]);
+
+      // 2. Удаляем самого пользователя из Auth
+      await user.delete();
+
+      debugPrint("✅ Account deleted successfully");
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        // Мера безопасности Firebase: если сессия старая, нужно перелогиниться
+        debugPrint("⚠️ Re-login required for account deletion");
+        throw Exception('requires-recent-login');
+      }
+      rethrow;
+    } catch (e) {
+      debugPrint("❌ Delete account error: $e");
+      throw Exception("Failed to delete account");
     }
   }
 }

@@ -56,7 +56,6 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
   void _onStartFastingPressed(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
 
-    // Реклама
     if (_interstitialAd != null) {
       _interstitialAd!.show();
       _interstitialAd = null;
@@ -150,11 +149,8 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    // Мы слушаем ТОЛЬКО FastingBloc здесь
     return BlocBuilder<FastingBloc, FastingState>(
       builder: (context, state) {
-        // Нам нужен WeightBloc только для визуализации тела, но мы можем использовать BlocSelector
-        // Или просто получить текущий вес один раз, так как он меняется редко
         final weight = context.select((WeightBloc b) => b.state.currentWeight);
         final height = context.select((WeightBloc b) => b.state.heightCm);
 
@@ -187,8 +183,14 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
           btnLabel = l10n.endCycle;
         }
 
-        final currentPlan = FastingPlan.defaultPlans[state.planIndex];
-        final planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
+        // 🔥 ЛОГИКА ОТОБРАЖЕНИЯ ПЛАНА (CUSTOM или PRESET)
+        String planName;
+        if (state.planIndex == FastingState.customPlanIndex) {
+          planName = "Custom (${state.goalDuration.inHours}h)";
+        } else {
+          final currentPlan = FastingPlan.defaultPlans[state.planIndex];
+          planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
+        }
 
         return GlassCard(
           child: Column(
@@ -227,14 +229,22 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                         ),
                       ),
                       const SizedBox(width: 8),
+                      // КНОПКА ВЫБОРА ПЛАНА
                       GestureDetector(
                         onTap: () async {
                           getIt<HapticService>().lightImpact();
                           final bool? result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanSelectionScreen()));
-                          if (result == true) {
+
+                          if (result == true && mounted) {
+                            // Если выбрали пресет, обновляем через событие
                             final prefs = await SharedPreferences.getInstance();
                             final newIdx = prefs.getInt('fast_plan_index') ?? 0;
-                            if (mounted) context.read<FastingBloc>().add(ChangePlan(newIdx));
+
+                            // Если это НЕ кастомный план, шлем событие смены
+                            if (newIdx != FastingState.customPlanIndex) {
+                              context.read<FastingBloc>().add(ChangePlan(newIdx));
+                            }
+                            // Если кастомный (-1), событие SetCustomPlan уже отправлено из CustomPlanScreen
                           }
                         },
                         child: Container(

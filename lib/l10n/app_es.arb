@@ -573,7 +573,63 @@
                                             "notifyAiInsightBody": "Descubre lo que Fasty ha analizado para ti hoy. Toca para desbloquear.",
                                             "notifyWeightTitle": "Registra tu peso ⚖️",
                                             "notifyWeightBody": "¡La constancia es la clave! Registra tu peso hoy.",
-                                             "aiInsightNotEnoughData": "¡Sigue registrando! Necesitamos al menos 3 ayunos para analizar tus patrones únicos. 📊"
+                                             "aiInsightNotEnoughData": "¡Sigue registrando! Necesitamos al menos 3 ayunos para analizar tus patrones únicos. 📊",
+                                             "msgLoginFailed": "Error de inicio de sesión: {error}",
+                                               "@msgLoginFailed": { "placeholders": { "error": {} } },
+
+                                               "msgAppleLoginFailed": "Error al iniciar sesión con Apple: {error}",
+                                               "@msgAppleLoginFailed": { "placeholders": { "error": {} } },
+
+                                               "msgSyncCompleted": "¡Sincronización completada!",
+                                               "msgErrorRelogin": "Error: por favor, vuelve a iniciar sesión e inténtalo de nuevo.",
+
+                                               "signInApple": "Iniciar sesión con Apple",
+
+                                               "lblDangerZone": "ZONA DE PELIGRO",
+                                               "btnDeleteAccount": "Eliminar cuenta",
+
+                                               "dialogDeleteAccountTitle": "¿Eliminar cuenta?",
+                                               "dialogDeleteAccountContent": "Esta acción es permanente. Todo tu historial de peso, registros de ayuno y logros se eliminarán de la nube.",
+                                               "btnDelete": "ELIMINAR",
+                                               "btnCancel": "Cancelar",
+
+                                               "dialogSyncConflictTitle": "Conflicto de sincronización",
+                                               "dialogSyncConflictContent": "Esta cuenta ya tiene datos en la nube.\n\n¿Qué deseas hacer con tus datos actuales de invitado?",
+                                               "btnUseCloud": "Usar la nube\n(descartar invitado)",
+                                               "btnMergeData": "Combinar datos",
+
+                                               "lblVersion": "Versión {version}",
+                                               "@lblVersion": { "placeholders": { "version": {} } },
+                                               "lblCurrentWeight": "Peso actual",
+                                                 "lblBasalBmr": "Basal (BMR)",
+                                                 "lblActiveTdee": "Activo (TDEE)",
+                                                 "lblTotalHours": "Horas totales",
+                                                 "unitKcal": "kcal",
+                                                 "unitHoursShort": "h",
+                                                 "unitKg": "kg",
+                                                 "lblConsistency": "Constancia",
+                                                   "lblLast7Days": "Últimos 7 días",
+                                                   "lblFasts": "Ayunos",
+                                                   "lblHours": "Horas",
+                                                   "lblDayStreak": "Días seguidos",
+                                                   "msgStartJourney": "Comienza tu camino hoy",
+                                                   "lblToday": "Hoy",
+                                                   "lblYesterday": "Ayer",
+                                                   "lblFastingTypeCircadian": "Circadiano",
+                                                   "lblFastingTypeWarrior": "Guerrero",
+                                                   "lblFastingTypeOmad": "OMAD",
+                                                   "lblHistoryFor": "Historial del {date}",
+                                                     "lblNoRecordsForDay": "No hay registros para este día",
+                                                     "lblCustomPlan": "Plan personalizado",
+                                                       "lblAdjustDuration": "Ajustar duración",
+                                                       "lblFasting": "Ayuno",
+                                                       "lblEating": "Comida",
+                                                       "lblSlideToAdjust": "Desliza para ajustar las horas",
+                                                       "btnStartCustomPlan": "Iniciar plan personalizado",
+                                                       "btnUnlockFeature": "Desbloquear plan personalizado",
+                                                       "proFeatureTitle": "Función PRO",
+                                                       "proFeatureDesc": "Los horarios de ayuno personalizados están disponibles para usuarios PRO."
+
 
 
 

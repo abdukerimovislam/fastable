@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "825924884813",
+    "project_id": "fastable-cde05",
+    "storage_bucket": "fastable-cde05.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825924884813:android:6acae59d2633ab01b7bf04",
+        "android_client_info": {
+          "package_name": "com.midas.fastable"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "825924884813-83u4q0jri7jmu9pcp57miehavn4a4gpt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.midas.fastable",
+            "certificate_hash": "040af4436406f5ca244874b13ee8df783253ffc4"
+          }
+        },
+        {
+          "client_id": "825924884813-d2q7rl4nn5js2l2s0s5khmvbkoo0c9sd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.midas.fastable",
+            "certificate_hash": "dbc2a0cf8e7504646165d69f660c0de6b2628571"
+          }
+        },
+        {
+          "client_id": "825924884813-nnb5qhjhe5u06a5r8tkg1j816el4f7hk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.midas.fastable",
+            "certificate_hash": "66e124d45df5bd54613c47861244d945275e682a"
+          }
+        },
+        {
+          "client_id": "825924884813-vg93uualm9fij12qn5omc8h58uqqbvs2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACockQrxQDuQNIruW0IVhPiV4ydivGZtY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "825924884813-vg93uualm9fij12qn5omc8h58uqqbvs2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "825924884813-i8o68i0i5nujic3pukqbro17sr34e6e6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.midas.modernFastingApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

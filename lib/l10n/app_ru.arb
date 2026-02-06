@@ -561,7 +561,57 @@
                                              "notifyAiInsightBody": "Посмотрите, что Fasty проанализировал для вас сегодня. Нажмите, чтобы открыть.",
                                              "notifyWeightTitle": "Отслеживайте вес ⚖️",
                                              "notifyWeightBody": "Постоянство — ключ к успеху! Запишите свой вес сегодня.",
-                                             "aiInsightNotEnoughData": "Продолжайте трекинг! Нам нужно хотя бы 3 записи, чтобы найти ваши скрытые паттерны. 📊"
+                                             "aiInsightNotEnoughData": "Продолжайте трекинг! Нам нужно хотя бы 3 записи, чтобы найти ваши скрытые паттерны. 📊",
+                                             "msgLoginFailed": "Ошибка входа: {error}",
+                                               "msgAppleLoginFailed": "Ошибка входа Apple: {error}",
+                                               "msgSyncCompleted": "Синхронизация завершена!",
+                                               "msgErrorRelogin": "Ошибка: Пожалуйста, войдите снова и повторите попытку.",
+
+                                               "signInApple": "Войти через Apple",
+
+                                               "lblDangerZone": "ОПАСНАЯ ЗОНА",
+                                               "btnDeleteAccount": "Удалить аккаунт",
+
+                                               "dialogDeleteAccountTitle": "Удалить аккаунт?",
+                                               "dialogDeleteAccountContent": "Это действие необратимо. Вся история веса, голоданий и достижения будут удалены из облака.",
+                                               "btnDelete": "УДАЛИТЬ",
+                                               "btnCancel": "Отмена",
+
+                                               "dialogSyncConflictTitle": "Конфликт данных",
+                                               "dialogSyncConflictContent": "В этом аккаунте уже есть данные в облаке.\n\nЧто сделать с текущими данными гостя?",
+                                               "btnUseCloud": "Взять из облака\n(Удалить текущие)",
+                                               "btnMergeData": "Объединить",
+
+                                               "lblVersion": "Версия {version}",
+                                                "lblCurrentWeight": "Текущий вес",
+                                                 "lblBasalBmr": "Базовый (BMR)",
+                                                 "lblActiveTdee": "Активный (TDEE)",
+                                                 "lblTotalHours": "Всего часов",
+                                                 "unitKcal": "ккал",
+                                                 "unitHoursShort": "ч",
+                                                 "unitKg": "кг",
+                                                 "lblConsistency": "Стабильность",
+                                                   "lblLast7Days": "За 7 дней",
+                                                   "lblFasts": "Голоданий",
+                                                   "lblHours": "Часов",
+                                                   "lblDayStreak": "Дней подряд",
+                                                   "msgStartJourney": "Начните свой путь сегодня",
+                                                   "lblToday": "Сегодня",
+                                                   "lblYesterday": "Вчера",
+                                                   "lblFastingTypeCircadian": "Циркадный",
+                                                   "lblFastingTypeWarrior": "Воин",
+                                                   "lblFastingTypeOmad": "OMAD",
+                                                   "lblHistoryFor": "История за {date}",
+                                                     "lblNoRecordsForDay": "Нет записей за этот день",
+                                                     "lblCustomPlan": "Свой план",
+                                                     "lblAdjustDuration": "Настройка длительности",
+                                                     "lblFasting": "Голод",
+                                                     "lblEating": "Еда",
+                                                     "lblSlideToAdjust": "Сдвиньте для настройки",
+                                                     "btnStartCustomPlan": "Запустить план",
+                                                     "btnUnlockFeature": "Разблокировать",
+                                                     "proFeatureTitle": "Pro Функция",
+                                                     "proFeatureDesc": "Кастомные планы доступны только Pro пользователям."
 
 
 

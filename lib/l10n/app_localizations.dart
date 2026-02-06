@@ -2576,6 +2576,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep tracking! We need at least 3 fasts to analyze your unique patterns. 📊'**
   String get aiInsightNotEnoughData;
+
+  /// No description provided for @msgLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Login Failed: {error}'**
+  String msgLoginFailed(Object error);
+
+  /// No description provided for @msgAppleLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Login Failed: {error}'**
+  String msgAppleLoginFailed(Object error);
+
+  /// No description provided for @msgSyncCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync completed!'**
+  String get msgSyncCompleted;
+
+  /// No description provided for @msgErrorRelogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: Please re-login and try again.'**
+  String get msgErrorRelogin;
+
+  /// No description provided for @signInApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple'**
+  String get signInApple;
+
+  /// No description provided for @lblDangerZone.
+  ///
+  /// In en, this message translates to:
+  /// **'DANGER ZONE'**
+  String get lblDangerZone;
+
+  /// No description provided for @btnDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get btnDeleteAccount;
+
+  /// No description provided for @dialogDeleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account?'**
+  String get dialogDeleteAccountTitle;
+
+  /// No description provided for @dialogDeleteAccountContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is permanent. All your weight history, fasting records, and achievements will be deleted from the cloud.'**
+  String get dialogDeleteAccountContent;
+
+  /// No description provided for @btnDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get btnDelete;
+
+  /// No description provided for @dialogSyncConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Conflict'**
+  String get dialogSyncConflictTitle;
+
+  /// No description provided for @dialogSyncConflictContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This account already has data in the cloud.\n\nWhat would you like to do with your current guest data?'**
+  String get dialogSyncConflictContent;
+
+  /// No description provided for @btnUseCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Cloud\n(Discard Guest)'**
+  String get btnUseCloud;
+
+  /// No description provided for @btnMergeData.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Data'**
+  String get btnMergeData;
+
+  /// No description provided for @lblVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String lblVersion(Object version);
+
+  /// No description provided for @lblCurrentWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Weight'**
+  String get lblCurrentWeight;
+
+  /// No description provided for @lblBasalBmr.
+  ///
+  /// In en, this message translates to:
+  /// **'Basal (BMR)'**
+  String get lblBasalBmr;
+
+  /// No description provided for @lblActiveTdee.
+  ///
+  /// In en, this message translates to:
+  /// **'Active (TDEE)'**
+  String get lblActiveTdee;
+
+  /// No description provided for @lblTotalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Hours'**
+  String get lblTotalHours;
+
+  /// No description provided for @unitHoursShort.
+  ///
+  /// In en, this message translates to:
+  /// **'h'**
+  String get unitHoursShort;
+
+  /// No description provided for @lblConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get lblConsistency;
+
+  /// No description provided for @lblLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 Days'**
+  String get lblLast7Days;
+
+  /// No description provided for @lblFasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasts'**
+  String get lblFasts;
+
+  /// No description provided for @lblHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get lblHours;
+
+  /// No description provided for @lblDayStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Streak'**
+  String get lblDayStreak;
+
+  /// No description provided for @msgStartJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your journey today'**
+  String get msgStartJourney;
+
+  /// No description provided for @lblToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get lblToday;
+
+  /// No description provided for @lblYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get lblYesterday;
+
+  /// No description provided for @lblFastingTypeCircadian.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian'**
+  String get lblFastingTypeCircadian;
+
+  /// No description provided for @lblFastingTypeWarrior.
+  ///
+  /// In en, this message translates to:
+  /// **'Warrior'**
+  String get lblFastingTypeWarrior;
+
+  /// No description provided for @lblFastingTypeOmad.
+  ///
+  /// In en, this message translates to:
+  /// **'OMAD'**
+  String get lblFastingTypeOmad;
+
+  /// No description provided for @lblHistoryFor.
+  ///
+  /// In en, this message translates to:
+  /// **'History for {date}'**
+  String lblHistoryFor(Object date);
+
+  /// No description provided for @lblNoRecordsForDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No records for this day'**
+  String get lblNoRecordsForDay;
+
+  /// No description provided for @lblCustomPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Plan'**
+  String get lblCustomPlan;
+
+  /// No description provided for @lblAdjustDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust Duration'**
+  String get lblAdjustDuration;
+
+  /// No description provided for @lblFasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting'**
+  String get lblFasting;
+
+  /// No description provided for @lblEating.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating'**
+  String get lblEating;
+
+  /// No description provided for @lblSlideToAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to adjust hours'**
+  String get lblSlideToAdjust;
+
+  /// No description provided for @btnStartCustomPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Custom Plan'**
+  String get btnStartCustomPlan;
+
+  /// No description provided for @btnUnlockFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Custom Plan'**
+  String get btnUnlockFeature;
+
+  /// No description provided for @proFeatureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro Feature'**
+  String get proFeatureTitle;
+
+  /// No description provided for @proFeatureDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom fasting schedules are available for Pro users.'**
+  String get proFeatureDesc;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
