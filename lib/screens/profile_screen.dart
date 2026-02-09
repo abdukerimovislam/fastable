@@ -13,7 +13,6 @@ import 'package:fastable/bloc/weight/weight_event.dart';
 import 'package:fastable/bloc/weight/weight_state.dart';
 import 'package:fastable/bloc/stats/stats_bloc.dart';
 import 'package:fastable/bloc/stats/stats_state.dart';
-// 🔥 Импорт ProBloc нужен для iOS
 import 'package:fastable/bloc/pro/pro_bloc.dart';
 import 'package:fastable/bloc/pro/pro_event.dart';
 
@@ -30,7 +29,6 @@ import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/utils/roulette_sheet.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/login_screen.dart';
-// 🔥 Экран Pro для iOS
 import 'package:fastable/screens/pro_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -59,7 +57,7 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  // --- 🔐 AUTH ACTIONS & CONFLICT HANDLING ---
+  // --- 🔐 AUTH ACTIONS ---
 
   Future<void> _handleGoogleSignIn(BuildContext context, AppLocalizations l10n) async {
     try {
@@ -68,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
       if (context.mounted) Navigator.pop(context); // Close loading
     } on DataConflictException {
       if (context.mounted) {
-        Navigator.pop(context); // Close loading
+        Navigator.pop(context);
         _showConflictDialog(context, l10n);
       }
     } catch (e) {
@@ -106,21 +104,21 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  // --- 🧨 DELETE ACCOUNT (GDPR) ---
+  // --- 🧨 DELETE ACCOUNT ---
   void _handleDeleteAccount(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
-        title: Text(l10n.dialogDeleteAccountTitle, style: const TextStyle(color: Colors.white)),
+        title: Text(l10n.deleteAccount, style: const TextStyle(color: Colors.white)),
         content: Text(
-          l10n.dialogDeleteAccountContent,
+          l10n.confirmDeleteMsg,
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.btnCancel),
+            child: Text(l10n.cancel, style: const TextStyle(color: Colors.blueAccent)),
           ),
           TextButton(
             onPressed: () async {
@@ -129,7 +127,7 @@ class ProfileScreen extends StatelessWidget {
                 _showLoading(context);
                 await getIt<AuthService>().deleteAccount();
                 if (context.mounted) {
-                  Navigator.pop(context); // Close loading
+                  Navigator.pop(context);
                   Navigator.of(context, rootNavigator: true).pushReplacement(
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
                   );
@@ -137,11 +135,11 @@ class ProfileScreen extends StatelessWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgErrorRelogin)));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgDeleteError)));
                 }
               }
             },
-            child: Text(l10n.btnDelete, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -166,7 +164,7 @@ class ProfileScreen extends StatelessWidget {
               Navigator.pop(ctx);
               await _resolve(context, merge: false, l10n: l10n);
             },
-            child: Text(l10n.btnUseCloud, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            child: Text(l10n.btnOverwriteLocal, style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
@@ -186,7 +184,7 @@ class ProfileScreen extends StatelessWidget {
       _showLoading(context);
       await getIt<AuthService>().resolveDataConflict(mergeData: merge);
       if (context.mounted) {
-        Navigator.pop(context); // Close loading
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgSyncCompleted)));
       }
     } catch (e) {
@@ -207,7 +205,7 @@ class ProfileScreen extends StatelessWidget {
     getIt<HapticService>().mediumImpact();
     showRouletteSheet<int>(
       context: context,
-      title: l10n.lblHeight,
+      title: l10n.selectHeight,
       items: List.generate(151, (index) => 100 + index),
       initialItem: currentHeight.toInt().clamp(100, 250),
       textMapper: (val) => "$val cm",
@@ -221,7 +219,7 @@ class ProfileScreen extends StatelessWidget {
     if (current < 30.0) current = 70.0;
     showRouletteSheet<double>(
       context: context,
-      title: l10n.lblWeight,
+      title: l10n.selectWeight,
       items: List.generate(2700, (index) => 30.0 + (index * 0.1)),
       initialItem: current,
       textMapper: (val) => "${val.toStringAsFixed(1)} ${l10n.unitKg}",
@@ -233,7 +231,7 @@ class ProfileScreen extends StatelessWidget {
     getIt<HapticService>().mediumImpact();
     showRouletteSheet<int>(
       context: context,
-      title: l10n.lblAge,
+      title: l10n.selectAge,
       items: List.generate(91, (index) => 10 + index),
       initialItem: currentAge.clamp(10, 100),
       textMapper: (val) => "$val",
@@ -241,7 +239,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --- PICKERS (Gender, Activity, Language) ---
+  // --- PICKERS ---
   void _showGenderPicker(BuildContext context, AppLocalizations l10n) {
     showModalBottomSheet(
       context: context,
@@ -250,7 +248,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(l10n.lblGender, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(l10n.selectGender, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
           _buildOptionItem(ctx, l10n.genderMale, () => context.read<WeightBloc>().add(const UpdateGender(Gender.male))),
           _buildOptionItem(ctx, l10n.genderFemale, () => context.read<WeightBloc>().add(const UpdateGender(Gender.female))),
@@ -268,7 +266,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(l10n.lblActivity, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(l10n.selectActivity, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
           _buildOptionItem(ctx, l10n.activitySedentary, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.sedentary))),
           _buildOptionItem(ctx, l10n.activityModerate, () => context.read<WeightBloc>().add(const UpdateActivityLevel(ActivityLevel.moderate))),
@@ -287,7 +285,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(l10n.lblLanguage, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(l10n.settingLanguage, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
           _buildLangItem(context, "English", "en"),
           _buildLangItem(context, "Русский", "ru"),
@@ -304,309 +302,240 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isAndroid = Platform.isAndroid; // 🔥 Проверка платформы
+    final isAndroid = Platform.isAndroid;
 
+    // Подписываемся на изменения авторизации
     return StreamBuilder(
-        stream: getIt<AuthService>().authStateChanges,
-        builder: (context, snapshot) {
-          final user = getIt<AuthService>().currentUser;
-          final isGuest = user == null || user.isAnonymous;
+      stream: getIt<AuthService>().authStateChanges,
+      builder: (context, snapshot) {
+        final user = getIt<AuthService>().currentUser;
+        final isGuest = user == null || user.isAnonymous;
 
-          return Scaffold(
-            backgroundColor: Colors.transparent,
-            body: SafeArea(
-              bottom: false,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8, bottom: 20),
-                      child: Text(l10n.navProfile, style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold)),
-                    ),
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, bottom: 20),
+                    child: Text(l10n.navProfile, style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold)),
+                  ),
 
-                    // 1. АККАУНТ
-                    GlassCard(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor: isGuest ? Colors.grey.withOpacity(0.2) : Colors.blueAccent.withOpacity(0.2),
-                            backgroundImage: (!isGuest && user?.photoURL != null) ? NetworkImage(user!.photoURL!) : null,
-                            child: user?.photoURL == null ? const Icon(Icons.person, size: 30, color: Colors.white) : null,
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(isGuest ? l10n.guestUser : (user?.displayName ?? l10n.defaultUser), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                                Text(isGuest ? l10n.authSubtitle : (user?.email ?? ""), style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // --- КНОПКИ ВХОДА ---
-                    if (isGuest) ...[
-                      GestureDetector(
-                        onTap: () => _handleGoogleSignIn(context, l10n),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(l10n.signInGoogle, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
-                            ],
-                          ),
+                  // 1. АККАУНТ
+                  GlassCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: isGuest ? Colors.grey.withOpacity(0.2) : Colors.blueAccent.withOpacity(0.2),
+                          backgroundImage: (!isGuest && user?.photoURL != null) ? NetworkImage(user!.photoURL!) : null,
+                          child: user?.photoURL == null ? const Icon(Icons.person, size: 30, color: Colors.white) : null,
                         ),
-                      ),
-
-                      // 🔥 Кнопка Apple (Скрыта на Android)
-                      if (!isAndroid) ...[
-                        const SizedBox(height: 12),
-                        GestureDetector(
-                          onTap: () => _handleAppleSignIn(context, l10n),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.white24)
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.apple, color: Colors.white),
-                                const SizedBox(width: 8),
-                                Text(l10n.signInApple, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                              ],
-                            ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(isGuest ? l10n.guestUser : (user?.displayName ?? l10n.defaultUser), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                              Text(isGuest ? l10n.authSubtitle : (user?.email ?? ""), style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                            ],
                           ),
                         ),
                       ],
-                    ] else ...[
-                      // Кнопка Выхода
-                      GestureDetector(
-                        onTap: () => _handleSignOut(context),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
-                          ),
-                          child: Center(child: Text(l10n.signOut, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16))),
-                        ),
-                      ),
-                    ],
-
-                    // 2. ACHIEVEMENTS
-                    const SizedBox(height: 30),
-                    _sectionHeader(l10n.lblAchievements),
-                    BlocBuilder<StatsBloc, StatsState>(
-                      builder: (context, state) {
-                        return SizedBox(
-                          height: 125,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: Achievement.all.length,
-                            physics: const BouncingScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              final ach = Achievement.all[index];
-                              final isUnlocked = state.unlockedAchievements.any((a) => a.id == ach.id);
-                              final title = _getAchTitle(l10n, ach.titleKey);
-                              final desc = _getAchDesc(l10n, ach.descKey);
-
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    getIt<HapticService>().selectionClick();
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                      backgroundColor: const Color(0xFF1E1E1E),
-                                      content: Row(children: [Icon(ach.icon, color: isUnlocked ? ach.color : Colors.grey), const SizedBox(width: 12), Expanded(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), Text(isUnlocked ? desc : "Locked", style: const TextStyle(color: Colors.white70, fontSize: 12))]))]),
-                                      duration: const Duration(seconds: 2),
-                                    ));
-                                  },
-                                  child: GlassCard(
-                                    width: 100,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isUnlocked ? ach.color.withOpacity(0.2) : Colors.white.withOpacity(0.05), shape: BoxShape.circle, boxShadow: isUnlocked ? [BoxShadow(color: ach.color.withOpacity(0.3), blurRadius: 10)] : []), child: Icon(ach.icon, color: isUnlocked ? ach.color : Colors.white24, size: 28)),
-                                      const SizedBox(height: 8),
-                                      Text(title.toUpperCase(), textAlign: TextAlign.center, style: TextStyle(color: isUnlocked ? Colors.white : Colors.white24, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                    ]),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
                     ),
+                  ),
+                  const SizedBox(height: 16),
 
-                    // 3. PERSONAL DATA
-                    const SizedBox(height: 30),
-                    _sectionHeader(l10n.lblPersonalData),
-                    BlocBuilder<WeightBloc, WeightState>(
-                      builder: (context, weightState) {
-                        return GlassCard(
-                          padding: EdgeInsets.zero,
-                          child: Column(
-                            children: [
-                              _buildSettingsTile(icon: Icons.height, title: l10n.selectHeight, value: "${weightState.heightCm.toInt()} cm", onTap: () => _showHeightPicker(context, weightState.heightCm, l10n)),
-                              const Divider(height: 1, color: Colors.white10),
-                              _buildSettingsTile(icon: Icons.monitor_weight_outlined, title: l10n.selectWeight, value: "${weightState.currentWeight.toInt()} ${l10n.unitKg}", onTap: () => _showWeightPicker(context, weightState.currentWeight, l10n)),
-                              const Divider(height: 1, color: Colors.white10),
-                              _buildSettingsTile(icon: Icons.cake_outlined, title: l10n.selectAge, value: "${weightState.age}", onTap: () => _showAgePicker(context, weightState.age, l10n)),
-                              const Divider(height: 1, color: Colors.white10),
-                              _buildSettingsTile(icon: Icons.wc, title: l10n.selectGender, value: weightState.gender == Gender.male ? l10n.genderMale : l10n.genderFemale, onTap: () => _showGenderPicker(context, l10n)),
-                              const Divider(height: 1, color: Colors.white10),
-                              _buildSettingsTile(icon: Icons.local_fire_department_outlined, title: l10n.selectActivity, value: _getActivityLabel(l10n, weightState.activityLevel), onTap: () => _showActivityPicker(context, l10n)),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-
-                    // 🔥 4. PRO SETTINGS (Только для iOS)
-                    if (!isAndroid) ...[
-                      const SizedBox(height: 24),
-                      _sectionHeader("PRO"), // "PRO"
-                      GlassCard(
-                        padding: EdgeInsets.zero,
-                        child: Column(
+                  // КНОПКИ ВХОДА / ВЫХОДА
+                  if (isGuest) ...[
+                    GestureDetector(
+                      onTap: () => _handleGoogleSignIn(context, l10n),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildSettingsTile(
-                                icon: Icons.star_border,
-                                title: l10n.proTitle, // "Get PRO"
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()))
-                            ),
-                            const Divider(height: 1, color: Colors.white10),
-                            _buildSettingsTile(
-                                icon: Icons.restore,
-                                title: l10n.restorePurchases,
-                                onTap: () => context.read<ProBloc>().add(RestorePurchasesEvent())
-                            ),
+                            Text(l10n.signInGoogle, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
                           ],
                         ),
                       ),
-                    ],
-
-                    // 5. SETTINGS
-                    const SizedBox(height: 24),
-                    _sectionHeader(l10n.lblSettings),
-                    BlocBuilder<SettingsBloc, SettingsState>(
-                      builder: (context, settingsState) {
-                        return GlassCard(
-                          padding: EdgeInsets.zero,
-                          child: Column(
+                    ),
+                    if (!isAndroid) ...[
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () => _handleAppleSignIn(context, l10n),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white24)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _buildSettingsTile(
-                                  icon: Icons.language,
-                                  title: l10n.settingLanguage,
-                                  value: settingsState.locale.languageCode.toUpperCase(),
-                                  onTap: () => _showLanguageSheet(context, l10n)
-                              ),
-                              const Divider(height: 1, color: Colors.white10),
-                              _buildSwitchTile(
-                                  icon: Icons.notifications_active_outlined,
-                                  title: l10n.settingsNotifications,
-                                  value: settingsState.areNotificationsEnabled,
-                                  onChanged: (val) => context.read<SettingsBloc>().add(ToggleNotifications(val))
-                              ),
-                              const Divider(height: 1, color: Colors.white10),
-                              _buildSwitchTile(
-                                icon: Icons.favorite,
-                                title: l10n.settingsHealthConnect,
-                                value: settingsState.isHealthSyncEnabled,
-                                onChanged: (val) async {
-                                  if (val) {
-                                    final success = await getIt<HealthService>().requestPermissions();
-                                    if (success && context.mounted) {
-                                      context.read<SettingsBloc>().add(ToggleHealthSync(true));
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgHealthSyncEnabled)));
-                                    } else if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgHealthSyncFailed)));
-                                      context.read<SettingsBloc>().add(ToggleHealthSync(false));
-                                    }
-                                  } else {
-                                    context.read<SettingsBloc>().add(ToggleHealthSync(false));
-                                  }
-                                },
-                              ),
+                              const Icon(Icons.apple, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Text(l10n.signInApple, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                             ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
+                    ],
+                  ] else ...[
+                    GestureDetector(
+                      onTap: () => _handleSignOut(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.15), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.redAccent.withOpacity(0.3))),
+                        child: Center(child: Text(l10n.signOut, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16))),
+                      ),
                     ),
+                  ],
 
-                    // 6. ABOUT
+                  // 2. ACHIEVEMENTS
+                  const SizedBox(height: 30),
+                  _sectionHeader(l10n.lblAchievements),
+                  BlocBuilder<StatsBloc, StatsState>(
+                    builder: (context, state) {
+                      return SizedBox(
+                        height: 125,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: Achievement.all.length,
+                          physics: const BouncingScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final ach = Achievement.all[index];
+                            final isUnlocked = state.unlockedAchievements.any((a) => a.id == ach.id);
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: GestureDetector(
+                                onTap: () {
+                                  getIt<HapticService>().selectionClick();
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    backgroundColor: const Color(0xFF1E1E1E),
+                                    content: Row(children: [Icon(ach.icon, color: isUnlocked ? ach.color : Colors.grey), const SizedBox(width: 12), Expanded(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(_getAchTitle(l10n, ach.titleKey), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), Text(isUnlocked ? _getAchDesc(l10n, ach.descKey) : l10n.statusLocked, style: const TextStyle(color: Colors.white70, fontSize: 12))]))]),
+                                  ));
+                                },
+                                child: GlassCard(
+                                  width: 100,
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                    Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isUnlocked ? ach.color.withOpacity(0.2) : Colors.white.withOpacity(0.05), shape: BoxShape.circle, boxShadow: isUnlocked ? [BoxShadow(color: ach.color.withOpacity(0.3), blurRadius: 10)] : []), child: Icon(ach.icon, color: isUnlocked ? ach.color : Colors.white24, size: 28)),
+                                    const SizedBox(height: 8),
+                                    Text(_getAchTitle(l10n, ach.titleKey).toUpperCase(), textAlign: TextAlign.center, style: TextStyle(color: isUnlocked ? Colors.white : Colors.white24, fontSize: 10, fontWeight: FontWeight.bold), maxLines: 2),
+                                  ]),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+
+                  // 3. PERSONAL DATA
+                  const SizedBox(height: 30),
+                  _sectionHeader(l10n.lblPersonalData),
+                  BlocBuilder<WeightBloc, WeightState>(
+                    builder: (context, weightState) {
+                      return GlassCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            _buildSettingsTile(icon: Icons.height, title: l10n.selectHeight, value: "${weightState.heightCm.toInt()} cm", onTap: () => _showHeightPicker(context, weightState.heightCm, l10n)),
+                            const Divider(height: 1, color: Colors.white10),
+                            _buildSettingsTile(icon: Icons.monitor_weight_outlined, title: l10n.selectWeight, value: "${weightState.currentWeight.toInt()} ${l10n.unitKg}", onTap: () => _showWeightPicker(context, weightState.currentWeight, l10n)),
+                            const Divider(height: 1, color: Colors.white10),
+                            _buildSettingsTile(icon: Icons.cake_outlined, title: l10n.selectAge, value: "${weightState.age}", onTap: () => _showAgePicker(context, weightState.age, l10n)),
+                            const Divider(height: 1, color: Colors.white10),
+                            _buildSettingsTile(icon: Icons.wc, title: l10n.selectGender, value: weightState.gender == Gender.male ? l10n.genderMale : l10n.genderFemale, onTap: () => _showGenderPicker(context, l10n)),
+                            const Divider(height: 1, color: Colors.white10),
+                            _buildSettingsTile(icon: Icons.local_fire_department_outlined, title: l10n.selectActivity, value: _getActivityLabel(l10n, weightState.activityLevel), onTap: () => _showActivityPicker(context, l10n)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  // 4. PRO SETTINGS (iOS Only)
+                  if (!isAndroid) ...[
                     const SizedBox(height: 24),
-                    _sectionHeader(l10n.lblAbout),
+                    _sectionHeader("PRO"),
                     GlassCard(
                       padding: EdgeInsets.zero,
                       child: Column(
                         children: [
-                          _buildSettingsTile(icon: Icons.lock_outline, title: l10n.privacyPolicy, onTap: () => _launchUrl("https://your-app-domain.com/privacy")),
+                          _buildSettingsTile(icon: Icons.star_border, title: l10n.proTitle, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()))),
                           const Divider(height: 1, color: Colors.white10),
-                          _buildSettingsTile(icon: Icons.description_outlined, title: l10n.termsOfService, onTap: () => _launchUrl("https://your-app-domain.com/terms")),
-                          const Divider(height: 1, color: Colors.white10),
-                          _buildSettingsTile(icon: Icons.mail_outline, title: l10n.contactSupport, onTap: () => _launchUrl("mailto:support@fastable.app")),
+                          _buildSettingsTile(icon: Icons.restore, title: l10n.restorePurchases, onTap: () => context.read<ProBloc>().add(RestorePurchasesEvent())),
                         ],
                       ),
                     ),
-
-                    // ⚠️ DANGER ZONE
-                    if (!isGuest) ...[
-                      const SizedBox(height: 30),
-                      _sectionHeader(l10n.lblDangerZone),
-                      GestureDetector(
-                        onTap: () => _handleDeleteAccount(context, l10n),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.red.withOpacity(0.3)),
-                          ),
-                          child: Center(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.delete_forever, color: Colors.red, size: 20),
-                                const SizedBox(width: 8),
-                                Text(l10n.btnDeleteAccount, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 40),
-                    Center(child: Text(l10n.lblVersion("1.0.0"), style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12))),
-                    const SizedBox(height: 100),
                   ],
-                ),
+
+                  // 5. SETTINGS
+                  const SizedBox(height: 24),
+                  _sectionHeader(l10n.lblSettings),
+                  BlocBuilder<SettingsBloc, SettingsState>(
+                    builder: (context, settingsState) {
+                      return GlassCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            _buildSettingsTile(icon: Icons.language, title: l10n.settingLanguage, value: settingsState.locale.languageCode.toUpperCase(), onTap: () => _showLanguageSheet(context, l10n)),
+                            const Divider(height: 1, color: Colors.white10),
+                            _buildSwitchTile(icon: Icons.notifications_active_outlined, title: l10n.settingsNotifications, value: settingsState.areNotificationsEnabled, onChanged: (val) => context.read<SettingsBloc>().add(ToggleNotifications(val))),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  // 6. LEGAL & SUPPORT
+                  const SizedBox(height: 24),
+                  _sectionHeader(l10n.sectionLegal),
+                  GlassCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(icon: Icons.privacy_tip_outlined, title: l10n.privacyPolicy, onTap: () => _launchUrl('https://sites.google.com/view/fastable-privacy-policy')),
+                        const Divider(height: 1, color: Colors.white10),
+                        _buildSettingsTile(icon: Icons.description_outlined, title: l10n.termsOfService, onTap: () => _launchUrl('https://sites.google.com/view/fastabletermsofuse')),
+                        const Divider(height: 1, color: Colors.white10),
+                        _buildSettingsTile(icon: Icons.mail_outline, title: l10n.contactSupport, onTap: () => _launchUrl('mailto:freeman60012@gmail.com')),
+                      ],
+                    ),
+                  ),
+
+                  // 7. DANGER ZONE (DELETE ACCOUNT)
+                  const SizedBox(height: 40),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _handleDeleteAccount(context, l10n),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete_forever, color: Colors.redAccent.withOpacity(0.8), size: 20),
+                          const SizedBox(width: 8),
+                          Text(l10n.deleteAccount, style: TextStyle(color: Colors.redAccent.withOpacity(0.8), fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
-          );
-        }
+          ),
+        );
+      },
     );
   }
 

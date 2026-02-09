@@ -153,7 +153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restorePurchases => 'Restore Purchases';
 
   @override
-  String get proTitle => 'Get PRO Access';
+  String get proTitle => 'GET PRO';
 
   @override
   String get proMonthly => 'Monthly Subscription';
@@ -325,7 +325,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicy => 'Privacy Policy';
 
   @override
-  String get termsOfService => 'Terms of Service';
+  String get termsOfService => 'Terms of Use';
 
   @override
   String get errorOpenLink => 'Could not open link';
@@ -1267,16 +1267,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String msgLoginFailed(Object error) {
-    return 'Login Failed: $error';
+    return 'Login failed: $error';
   }
 
   @override
   String msgAppleLoginFailed(Object error) {
-    return 'Apple Login Failed: $error';
+    return 'Apple Login failed: $error';
   }
 
   @override
-  String get msgSyncCompleted => 'Sync completed!';
+  String get msgSyncCompleted => 'Sync completed';
 
   @override
   String get msgErrorRelogin => 'Error: Please re-login and try again.';
@@ -1303,7 +1303,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogSyncConflictTitle => 'Sync Conflict';
 
   @override
-  String get dialogSyncConflictContent => 'This account already has data in the cloud.\n\nWhat would you like to do with your current guest data?';
+  String get dialogSyncConflictContent => 'Cloud data found. Merge with local data or overwrite?';
 
   @override
   String get btnUseCloud => 'Use Cloud\n(Discard Guest)';
@@ -1431,4 +1431,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weightSaved => 'Weight saved';
+
+  @override
+  String get proSubtitle => 'Unlock your full potential';
+
+  @override
+  String get featureCoach => 'Personal AI Coach';
+
+  @override
+  String get featureCoachDesc => 'Ask questions, get advice 24/7';
+
+  @override
+  String get featureRecipes => 'Healthy Recipes';
+
+  @override
+  String get featureRecipesDesc => 'Keto, Low-Carb & more';
+
+  @override
+  String get featureNoAds => 'No Ads, Pure Focus';
+
+  @override
+  String get featureNoAdsDesc => 'Distraction-free experience';
+
+  @override
+  String get bestValue => 'BEST VALUE';
+
+  @override
+  String get loadingOffers => 'Loading offers...';
+
+  @override
+  String get welcomePro => 'Welcome to Pro! 🌟';
+
+  @override
+  String get errorPro => 'Something went wrong';
+
+  @override
+  String get confirmDeleteMsg => 'This action cannot be undone. All your data will be lost.';
+
+  @override
+  String get statusLocked => 'Locked';
+
+  @override
+  String get sectionLegal => 'Legal & Support';
+
+  @override
+  String get btnOverwriteLocal => 'Overwrite Local';
+
+  @override
+  String get msgDeleteError => 'Error deleting account';
+
+  @override
+  String get stepLanguage => 'Select Language';
+
+  @override
+  String get stepBodyMetrics => 'Body Metrics';
+
+  @override
+  String get stepBodyMetricsDesc => 'Help us calculate your BMI & goals';
+
+  @override
+  String get activityHint => 'Used to calculate your daily energy burn.';
+
+  @override
+  String get activitySedentaryDesc => 'Office job, little exercise';
+
+  @override
+  String get activityModerateDesc => 'Active job or exercise 3-4x';
+
+  @override
+  String get activityActiveDesc => 'Physical job or daily training';
+
+  @override
+  String get stepGoal => 'Choose Your Goal';
+
+  @override
+  String get recommendationMsg => 'We recommend the 16-8 plan for you.';
+
+  @override
+  String get planBeginner => 'Beginner';
+
+  @override
+  String get planPopular => 'Popular (16:8)';
+
+  @override
+  String get planAdvanced => 'Advanced (18:6)';
+
+  @override
+  String get planExpert => 'Expert (OMAD)';
+
+  @override
+  String get labelRecommended => 'RECOMMENDED';
+
+  @override
+  String get permHealthConnect => 'Health Connect';
+
+  @override
+  String get permHealthConnectDesc => 'Sync weight & steps with Google Fit';
 }

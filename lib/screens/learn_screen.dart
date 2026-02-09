@@ -305,8 +305,6 @@ class _LearnScreenState extends State<LearnScreen> {
         required bool isPro,
         required AppLocalizations l10n}) {
 
-    // На Android статьи всегда открыты (Pro нет)
-    // На iOS проверяем isPro
     final isAndroid = Platform.isAndroid;
     final bool isLocked = !isAndroid && (article.isPro && !isPro);
 
@@ -315,18 +313,19 @@ class _LearnScreenState extends State<LearnScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
       child: GestureDetector(
-        onTap: () async {
+        onTap: () {
+          // Убрали async/await и launchUrl
           if (isLocked) {
             getIt<HapticService>().mediumImpact();
             Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
           } else {
             getIt<HapticService>().selectionClick();
-            if (article.contentUrl.isNotEmpty) {
-              final uri = Uri.parse(article.contentUrl);
-              if (await canLaunchUrl(uri)) await launchUrl(uri);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.msgComingSoon)));
-            }
+
+            // 🔥 Раньше тут был launchUrl, теперь просто заглушка или навигация
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.msgComingSoon))
+            );
           }
         },
         child: GlassCard(

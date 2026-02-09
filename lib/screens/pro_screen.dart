@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:purchases_flutter/purchases_flutter.dart'; // Для типов Package
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 // BLoC
 import 'package:fastable/bloc/pro/pro_bloc.dart';
@@ -24,15 +24,13 @@ class ProScreen extends StatefulWidget {
 
 class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  Package? _selectedPackage; // Локальное состояние для выбранного тарифа
+  Package? _selectedPackage;
 
   @override
   void initState() {
     super.initState();
-    // Загружаем тарифы при входе
     context.read<ProBloc>().add(LoadOfferings());
 
-    // Анимация парения карты
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -47,7 +45,6 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
 
   void _handlePurchase(BuildContext context) {
     if (_selectedPackage == null) return;
-
     getIt<HapticService>().mediumImpact();
     context.read<ProBloc>().add(PurchasePackageEvent(_selectedPackage!));
   }
@@ -67,25 +64,23 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
         listener: (context, state) {
           if (state.status == ProStatus.proActive) {
             getIt<HapticService>().success();
-            Navigator.pop(context); // Закрываем экран при успехе
+            Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Welcome to Pro! 🌟"), backgroundColor: Colors.green),
+              SnackBar(content: Text(l10n.welcomePro), backgroundColor: Colors.green),
             );
           }
           if (state.status == ProStatus.failure && state.errorMessage != null) {
             getIt<HapticService>().error();
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage!), backgroundColor: Colors.red),
+              SnackBar(content: Text(state.errorMessage ?? l10n.errorPro), backgroundColor: Colors.red),
             );
           }
         },
         builder: (context, state) {
-          // Если пакеты загрузились, но ничего не выбрано - выбираем первый (обычно годовой)
           if (_selectedPackage == null && state.packages.isNotEmpty) {
             _selectedPackage = state.packages.first;
           }
 
-          // Показываем загрузку, если идет инициализация
           if (state.status == ProStatus.loading && state.packages.isEmpty) {
             return const MeshBackground(
               isFasting: true,
@@ -95,17 +90,12 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
 
           return Stack(
             children: [
-              // 1. ФОН
-              const MeshBackground(
-                isFasting: true,
-                child: SizedBox.expand(),
-              ),
+              const MeshBackground(isFasting: true, child: SizedBox.expand()),
 
-              // 2. КОНТЕНТ
               SafeArea(
                 child: Column(
                   children: [
-                    // Кнопка закрыть
+                    // --- CLOSE BUTTON ---
                     Align(
                       alignment: Alignment.topRight,
                       child: IconButton(
@@ -121,7 +111,7 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
                     const SizedBox(height: 10),
 
                     Text(
-                      l10n.proTitle.toUpperCase(), // "GET PRO"
+                      l10n.proTitle.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -132,7 +122,7 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
 
                     const Spacer(),
 
-                    // 3. ПАРЯЩАЯ ЗОЛОТАЯ КАРТА
+                    // --- GOLD CARD ---
                     AnimatedBuilder(
                       animation: _controller,
                       builder: (context, child) {
@@ -142,7 +132,7 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
                         );
                       },
                       child: Container(
-                        height: 220,
+                        height: 200, // Чуть компактнее
                         width: 340,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
@@ -182,7 +172,7 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
                                     children: [
                                       Text(l10n.unlockAll, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 4),
-                                      const Text("Analytics • Insights • No Ads", style: TextStyle(color: Colors.white70)),
+                                      Text(l10n.proSubtitle, style: const TextStyle(color: Colors.white70)),
                                     ],
                                   )
                                 ],
@@ -195,80 +185,45 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
 
                     const Spacer(),
 
-                    // 4. ОПИСАНИЕ ПРЕИМУЩЕСТВ
+                    // --- FEATURES (AI & Recipes) ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Column(
                         children: [
-                          _buildFeatureRow(Icons.check_circle, l10n.premiumContentDesc),
-                          const SizedBox(height: 12),
-                          _buildFeatureRow(Icons.block, "No ads, pure focus"),
-                          const SizedBox(height: 12),
-                          _buildFeatureRow(Icons.insights, "Unlimited stats & history"),
+                          _buildFeatureRow(Icons.smart_toy, l10n.featureCoach, l10n.featureCoachDesc),
+                          const SizedBox(height: 16),
+                          _buildFeatureRow(Icons.restaurant_menu, l10n.featureRecipes, l10n.featureRecipesDesc),
+                          const SizedBox(height: 16),
+                          _buildFeatureRow(Icons.block, l10n.featureNoAds, l10n.featureNoAdsDesc),
                         ],
                       ),
                     ),
 
                     const Spacer(),
 
-                    // 5. ДИНАМИЧЕСКИЕ КНОПКИ ПОКУПКИ
+                    // --- PACKAGES & BUTTON ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                       child: Column(
                         children: [
                           if (state.packages.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 20),
-                              child: Text("Loading offers...", style: TextStyle(color: Colors.white54)),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: Text(l10n.loadingOffers, style: const TextStyle(color: Colors.white54)),
                             )
                           else
                             ...state.packages.map((package) {
                               final isSelected = _selectedPackage == package;
-                              // Если это Годовой план (обычно первый или с type ANNUAL), делаем его "Золотым"
                               final isBestValue = package.packageType == PackageType.annual;
 
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: isBestValue
-                                // Стиль для "Выгодного" предложения (GlassCard)
                                     ? GlassCard(
                                   onTap: () => setState(() => _selectedPackage = package),
                                   padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                                  child: Row(
-                                    children: [
-                                      Radio<Package>(
-                                        value: package,
-                                        groupValue: _selectedPackage,
-                                        onChanged: (val) => setState(() => _selectedPackage = val),
-                                        activeColor: Colors.amber,
-                                        fillColor: MaterialStateProperty.all(Colors.amber),
-                                      ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(package.storeProduct.title.replaceAll(RegExp(r"\(.*\)"), "").trim(), // Убираем (App Name) из названия
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                          Text(package.storeProduct.description,
-                                              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
-                                        ],
-                                      ),
-                                      const Spacer(),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Text(package.storeProduct.priceString, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                          Container(
-                                            margin: const EdgeInsets.only(top: 4),
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(4)),
-                                            child: const Text("BEST", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 10)),
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  ),
+                                  child: _buildPackageContent(package, true, isSelected, l10n),
                                 )
-                                // Стиль для обычного предложения (Border)
                                     : GestureDetector(
                                   onTap: () => setState(() => _selectedPackage = package),
                                   child: AnimatedContainer(
@@ -279,24 +234,7 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
                                       border: Border.all(color: isSelected ? Colors.amber : Colors.white.withOpacity(0.2)),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Radio<Package>(
-                                          value: package,
-                                          groupValue: _selectedPackage,
-                                          onChanged: (val) => setState(() => _selectedPackage = val),
-                                          activeColor: Colors.amber,
-                                          fillColor: MaterialStateProperty.resolveWith((states) => isSelected ? Colors.amber : Colors.white54),
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                              package.storeProduct.title.replaceAll(RegExp(r"\(.*\)"), "").trim(),
-                                              style: const TextStyle(color: Colors.white)
-                                          ),
-                                        ),
-                                        Text(package.storeProduct.priceString, style: const TextStyle(color: Colors.white)),
-                                      ],
-                                    ),
+                                    child: _buildPackageContent(package, false, isSelected, l10n),
                                   ),
                                 ),
                               );
@@ -304,7 +242,6 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
 
                           const SizedBox(height: 10),
 
-                          // Кнопка продолжить
                           GestureDetector(
                             onTap: state.status == ProStatus.loading ? null : () => _handlePurchase(context),
                             child: Container(
@@ -349,12 +286,63 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildFeatureRow(IconData icon, String text) {
+  Widget _buildFeatureRow(IconData icon, String title, String subtitle) {
     return Row(
       children: [
-        Icon(icon, color: Colors.amber, size: 20),
-        const SizedBox(width: 12),
-        Expanded(child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 15))),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle),
+          child: Icon(icon, color: Colors.amber, size: 20),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPackageContent(Package package, bool isBest, bool isSelected, AppLocalizations l10n) {
+    return Row(
+      children: [
+        Radio<Package>(
+          value: package,
+          groupValue: _selectedPackage,
+          onChanged: (val) => setState(() => _selectedPackage = val),
+          activeColor: Colors.amber,
+          fillColor: MaterialStateProperty.resolveWith((states) => isSelected ? Colors.amber : Colors.white54),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              package.storeProduct.title.replaceAll(RegExp(r"\(.*\)"), "").trim(),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            if (isBest)
+              Text(package.storeProduct.description, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+          ],
+        ),
+        const Spacer(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(package.storeProduct.priceString, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            if (isBest)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(4)),
+                child: Text(l10n.bestValue, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 10)),
+              )
+          ],
+        )
       ],
     );
   }

@@ -59,13 +59,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB_N1QSCK_ctk1AwgmF_66aqBk3cqcqRh0',
-    appId: '1:825924884813:ios:872561a49d7c8900b7bf04',
+    appId: '1:825924884813:ios:6d9f1884c0e23ee6b7bf04',
     messagingSenderId: '825924884813',
     projectId: 'fastable-cde05',
     storageBucket: 'fastable-cde05.firebasestorage.app',
     androidClientId: '825924884813-83u4q0jri7jmu9pcp57miehavn4a4gpt.apps.googleusercontent.com',
-    iosClientId: '825924884813-tsakh93lcoaa6otme1l5g7chtu43nq3v.apps.googleusercontent.com',
-    iosBundleId: 'com.example.fastable',
+    iosClientId: '825924884813-jl425q7cn1n6232u04gcthjer29u898b.apps.googleusercontent.com',
+    iosBundleId: 'com.midas.fastable',
   );
 
 }

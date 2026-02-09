@@ -153,7 +153,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restorePurchases => 'Восстановить покупки';
 
   @override
-  String get proTitle => 'Доступ PRO';
+  String get proTitle => 'ПОЛУЧИТЬ PRO';
 
   @override
   String get proMonthly => 'Подписка на месяц';
@@ -346,7 +346,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tabPartner => 'Партнеры';
 
   @override
-  String get guestUser => 'Гостевой пользователь';
+  String get guestUser => 'Гость';
 
   @override
   String get defaultUser => 'Пользователь';
@@ -1276,7 +1276,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get msgSyncCompleted => 'Синхронизация завершена!';
+  String get msgSyncCompleted => 'Синхронизация завершена';
 
   @override
   String get msgErrorRelogin => 'Ошибка: Пожалуйста, войдите снова и повторите попытку.';
@@ -1300,10 +1300,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get btnDelete => 'УДАЛИТЬ';
 
   @override
-  String get dialogSyncConflictTitle => 'Конфликт данных';
+  String get dialogSyncConflictTitle => 'Конфликт синхронизации';
 
   @override
-  String get dialogSyncConflictContent => 'В этом аккаунте уже есть данные в облаке.\n\nЧто сделать с текущими данными гостя?';
+  String get dialogSyncConflictContent => 'Найдены данные в облаке. Объединить с локальными или перезаписать?';
 
   @override
   String get btnUseCloud => 'Взять из облака\n(Удалить текущие)';
@@ -1431,4 +1431,100 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get weightSaved => 'Вес сохранен';
+
+  @override
+  String get proSubtitle => 'Раскрой свой полный потенциал';
+
+  @override
+  String get featureCoach => 'Персональный AI-коуч';
+
+  @override
+  String get featureCoachDesc => 'Задавай вопросы и получай советы 24/7';
+
+  @override
+  String get featureRecipes => 'Полезные рецепты';
+
+  @override
+  String get featureRecipesDesc => 'Кето, низкоуглеводные и другие';
+
+  @override
+  String get featureNoAds => 'Без рекламы — полный фокус';
+
+  @override
+  String get featureNoAdsDesc => 'Ничто не отвлекает';
+
+  @override
+  String get bestValue => 'ЛУЧШЕЕ ПРЕДЛОЖЕНИЕ';
+
+  @override
+  String get loadingOffers => 'Загрузка предложений…';
+
+  @override
+  String get welcomePro => 'Добро пожаловать в Pro! 🌟';
+
+  @override
+  String get errorPro => 'Что-то пошло не так';
+
+  @override
+  String get confirmDeleteMsg => 'Это действие нельзя отменить. Все ваши данные будут потеряны.';
+
+  @override
+  String get statusLocked => 'Закрыто';
+
+  @override
+  String get sectionLegal => 'Правовая информация';
+
+  @override
+  String get btnOverwriteLocal => 'Перезаписать';
+
+  @override
+  String get msgDeleteError => 'Ошибка удаления аккаунта';
+
+  @override
+  String get stepLanguage => 'Выберите язык';
+
+  @override
+  String get stepBodyMetrics => 'Параметры тела';
+
+  @override
+  String get stepBodyMetricsDesc => 'Помогите нам рассчитать ваш ИМТ и цели';
+
+  @override
+  String get activityHint => 'Используется для расчета расхода энергии.';
+
+  @override
+  String get activitySedentaryDesc => 'Офисная работа, мало движения';
+
+  @override
+  String get activityModerateDesc => 'Активная работа или спорт 3-4 раза';
+
+  @override
+  String get activityActiveDesc => 'Физическая работа или ежедневные тренировки';
+
+  @override
+  String get stepGoal => 'Выберите цель';
+
+  @override
+  String get recommendationMsg => 'Мы рекомендуем вам план 16-8.';
+
+  @override
+  String get planBeginner => 'Новичок';
+
+  @override
+  String get planPopular => 'Популярный (16:8)';
+
+  @override
+  String get planAdvanced => 'Продвинутый (18:6)';
+
+  @override
+  String get planExpert => 'Эксперт (OMAD)';
+
+  @override
+  String get labelRecommended => 'РЕКОМЕНДУЕМ';
+
+  @override
+  String get permHealthConnect => 'Health Connect';
+
+  @override
+  String get permHealthConnectDesc => 'Синхронизация веса и шагов с Google Fit';
 }

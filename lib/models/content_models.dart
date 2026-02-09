@@ -83,7 +83,6 @@ class ArticleModel {
   final String id;
   final String title;
   final String subtitle;
-  final String contentUrl;
   final String imageUrl; // Добавлено, так как используется в UI
   final bool isPro;
 
@@ -91,7 +90,6 @@ class ArticleModel {
     required this.id,
     required this.title,
     required this.subtitle,
-    required this.contentUrl,
     required this.imageUrl,
     this.isPro = false,
   });
@@ -99,14 +97,13 @@ class ArticleModel {
   factory ArticleModel.fromSnapshot(DocumentSnapshot doc, String locale) {
     final data = doc.data() as Map<String, dynamic>?;
     if (data == null) {
-      return ArticleModel(id: doc.id, title: "Error", subtitle: "", contentUrl: "", imageUrl: "");
+      return ArticleModel(id: doc.id, title: "Error", subtitle: "", imageUrl: "");
     }
 
     return ArticleModel(
       id: doc.id,
       title: _getTranslated(data, 'title', locale),
       subtitle: _getTranslated(data, 'subtitle', locale),
-      contentUrl: data['contentUrl']?.toString() ?? '',
       imageUrl: data['imageUrl']?.toString() ?? '', // Читаем картинку
       isPro: data['isPro'] ?? false,
     );

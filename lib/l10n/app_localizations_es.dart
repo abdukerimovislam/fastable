@@ -153,7 +153,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restorePurchases => 'Restaurar compras';
 
   @override
-  String get proTitle => 'Obtener acceso PRO';
+  String get proTitle => 'OBTENER PRO';
 
   @override
   String get proMonthly => 'Suscripción mensual';
@@ -325,7 +325,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get privacyPolicy => 'Política de privacidad';
 
   @override
-  String get termsOfService => 'Términos del servicio';
+  String get termsOfService => 'Términos de uso';
 
   @override
   String get errorOpenLink => 'No se pudo abrir el enlace';
@@ -1267,7 +1267,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String msgLoginFailed(Object error) {
-    return 'Error de inicio de sesión: $error';
+    return 'Error al iniciar sesión: $error';
   }
 
   @override
@@ -1276,7 +1276,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get msgSyncCompleted => '¡Sincronización completada!';
+  String get msgSyncCompleted => 'Sincronización completada';
 
   @override
   String get msgErrorRelogin => 'Error: por favor, vuelve a iniciar sesión e inténtalo de nuevo.';
@@ -1303,7 +1303,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dialogSyncConflictTitle => 'Conflicto de sincronización';
 
   @override
-  String get dialogSyncConflictContent => 'Esta cuenta ya tiene datos en la nube.\n\n¿Qué deseas hacer con tus datos actuales de invitado?';
+  String get dialogSyncConflictContent => 'Se encontraron datos en la nube. ¿Deseas combinarlos con los datos locales o sobrescribirlos?';
 
   @override
   String get btnUseCloud => 'Usar la nube\n(descartar invitado)';
@@ -1431,4 +1431,100 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get weightSaved => 'Peso guardado';
+
+  @override
+  String get proSubtitle => 'Desbloquea todo tu potencial';
+
+  @override
+  String get featureCoach => 'Coach personal con IA';
+
+  @override
+  String get featureCoachDesc => 'Haz preguntas y recibe consejos 24/7';
+
+  @override
+  String get featureRecipes => 'Recetas saludables';
+
+  @override
+  String get featureRecipesDesc => 'Keto, bajas en carbohidratos y más';
+
+  @override
+  String get featureNoAds => 'Sin anuncios, enfoque total';
+
+  @override
+  String get featureNoAdsDesc => 'Experiencia sin distracciones';
+
+  @override
+  String get bestValue => 'MEJOR OFERTA';
+
+  @override
+  String get loadingOffers => 'Cargando ofertas...';
+
+  @override
+  String get welcomePro => '¡Bienvenido a Pro! 🌟';
+
+  @override
+  String get errorPro => 'Algo salió mal';
+
+  @override
+  String get confirmDeleteMsg => 'Esta acción no se puede deshacer. Todos tus datos se perderán.';
+
+  @override
+  String get statusLocked => 'Bloqueado';
+
+  @override
+  String get sectionLegal => 'Legal y soporte';
+
+  @override
+  String get btnOverwriteLocal => 'Sobrescribir datos locales';
+
+  @override
+  String get msgDeleteError => 'Error al eliminar la cuenta';
+
+  @override
+  String get stepLanguage => 'Seleccionar idioma';
+
+  @override
+  String get stepBodyMetrics => 'Métricas corporales';
+
+  @override
+  String get stepBodyMetricsDesc => 'Ayúdanos a calcular tu IMC y objetivos';
+
+  @override
+  String get activityHint => 'Usado para calcular tu gasto energético.';
+
+  @override
+  String get activitySedentaryDesc => 'Trabajo de oficina, poco ejercicio';
+
+  @override
+  String get activityModerateDesc => 'Trabajo activo o ejercicio 3-4x';
+
+  @override
+  String get activityActiveDesc => 'Trabajo físico o entrenamiento diario';
+
+  @override
+  String get stepGoal => 'Elige tu objetivo';
+
+  @override
+  String get recommendationMsg => 'Te recomendamos el plan 16-8.';
+
+  @override
+  String get planBeginner => 'Principiante';
+
+  @override
+  String get planPopular => 'Popular (16:8)';
+
+  @override
+  String get planAdvanced => 'Avanzado (18:6)';
+
+  @override
+  String get planExpert => 'Experto (OMAD)';
+
+  @override
+  String get labelRecommended => 'RECOMENDADO';
+
+  @override
+  String get permHealthConnect => 'Health Connect';
+
+  @override
+  String get permHealthConnectDesc => 'Sincroniza peso y pasos con Google Fit';
 }

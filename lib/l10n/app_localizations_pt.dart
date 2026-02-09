@@ -153,7 +153,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get restorePurchases => 'Restaurar compras';
 
   @override
-  String get proTitle => 'Obter acesso PRO';
+  String get proTitle => 'OBTER PRO';
 
   @override
   String get proMonthly => 'Assinatura mensal';
@@ -1276,7 +1276,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get msgSyncCompleted => 'Sincronização concluída!';
+  String get msgSyncCompleted => 'Sincronização concluída';
 
   @override
   String get msgErrorRelogin => 'Erro: faça login novamente e tente outra vez.';
@@ -1303,7 +1303,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dialogSyncConflictTitle => 'Conflito de sincronização';
 
   @override
-  String get dialogSyncConflictContent => 'Esta conta já possui dados na nuvem.\n\nO que você gostaria de fazer com seus dados atuais de convidado?';
+  String get dialogSyncConflictContent => 'Dados na nuvem encontrados. Deseja mesclar com os dados locais ou sobrescrever?';
 
   @override
   String get btnUseCloud => 'Usar a nuvem\n(descartar convidado)';
@@ -1431,4 +1431,100 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get weightSaved => 'Peso salvo';
+
+  @override
+  String get proSubtitle => 'Desbloqueie todo o seu potencial';
+
+  @override
+  String get featureCoach => 'Coach pessoal com IA';
+
+  @override
+  String get featureCoachDesc => 'Faça perguntas e receba conselhos 24/7';
+
+  @override
+  String get featureRecipes => 'Receitas saudáveis';
+
+  @override
+  String get featureRecipesDesc => 'Keto, baixo carboidrato e mais';
+
+  @override
+  String get featureNoAds => 'Sem anúncios, foco total';
+
+  @override
+  String get featureNoAdsDesc => 'Experiência sem distrações';
+
+  @override
+  String get bestValue => 'MELHOR VALOR';
+
+  @override
+  String get loadingOffers => 'Carregando ofertas...';
+
+  @override
+  String get welcomePro => 'Bem-vindo ao Pro! 🌟';
+
+  @override
+  String get errorPro => 'Algo deu errado';
+
+  @override
+  String get confirmDeleteMsg => 'Esta ação não pode ser desfeita. Todos os seus dados serão perdidos.';
+
+  @override
+  String get statusLocked => 'Bloqueado';
+
+  @override
+  String get sectionLegal => 'Legal e suporte';
+
+  @override
+  String get btnOverwriteLocal => 'Sobrescrever dados locais';
+
+  @override
+  String get msgDeleteError => 'Erro ao excluir a conta';
+
+  @override
+  String get stepLanguage => 'Selecionar idioma';
+
+  @override
+  String get stepBodyMetrics => 'Métricas corporais';
+
+  @override
+  String get stepBodyMetricsDesc => 'Ajude-nos a calcular seu IMC e objetivos';
+
+  @override
+  String get activityHint => 'Usado para calcular seu gasto energético.';
+
+  @override
+  String get activitySedentaryDesc => 'Trabalho de escritório, pouco exercício';
+
+  @override
+  String get activityModerateDesc => 'Trabalho ativo ou exercício 3-4x';
+
+  @override
+  String get activityActiveDesc => 'Trabalho físico ou treino diário';
+
+  @override
+  String get stepGoal => 'Escolha seu objetivo';
+
+  @override
+  String get recommendationMsg => 'Recomendamos o plano 16-8 para você.';
+
+  @override
+  String get planBeginner => 'Iniciante';
+
+  @override
+  String get planPopular => 'Popular (16:8)';
+
+  @override
+  String get planAdvanced => 'Avançado (18:6)';
+
+  @override
+  String get planExpert => 'Especialista (OMAD)';
+
+  @override
+  String get labelRecommended => 'RECOMENDADO';
+
+  @override
+  String get permHealthConnect => 'Health Connect';
+
+  @override
+  String get permHealthConnectDesc => 'Sincronize peso e passos com o Google Fit';
 }

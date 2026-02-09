@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 🔥 Для настройки статус-бара и ориентации
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart'; // 🔥 Импорт Remote Config
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -63,21 +64,44 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 5. Внедрение зависимостей (GetIt) - теперь безопасно использовать Firebase внутри
+  // 5. 🔥 Инициализация Remote Config (Безопасная загрузка ключей)
+  // Это нужно сделать ДО configureDependencies, чтобы сервисы могли прочитать конфиг
+  try {
+    final remoteConfig = FirebaseRemoteConfig.instance;
+
+    await remoteConfig.setConfigSettings(RemoteConfigSettings(
+      fetchTimeout: const Duration(minutes: 1), // Таймаут соединения
+      minimumFetchInterval: const Duration(hours: 12), // В РЕЛИЗЕ: 12 часов (чтобы не превысить лимиты)
+      // minimumFetchInterval: const Duration(minutes: 1), // ДЛЯ ТЕСТОВ: 1 минута
+    ));
+
+    // Устанавливаем дефолтное значение (если нет интернета)
+    await remoteConfig.setDefaults(const {
+      "ai_api_key": "default_value_if_offline",
+    });
+
+    // Скачиваем актуальные данные с сервера
+    await remoteConfig.fetchAndActivate();
+    debugPrint("✅ Remote Config fetched successfully");
+  } catch (e) {
+    debugPrint("⚠️ Remote Config fetch failed: $e");
+    // Приложение продолжит работать, просто AI может быть недоступен
+  }
+
+  // 6. Внедрение зависимостей (GetIt)
   await configureDependencies();
 
-  // 6. Инициализация рекламы (фоном, не ждем await если не критично)
+  // 7. Инициализация рекламы (фоном)
   MobileAds.instance.initialize();
 
-  // 7. Инициализация уведомлений
+  // 8. Инициализация уведомлений
   try {
     await getIt<NotificationService>().init();
   } catch (e) {
     debugPrint("Notification Init Error: $e");
   }
 
-  // 8. Авто-вход (Анонимный)
-  // Важно для сохранения данных в Firestore
+  // 9. Авто-вход (Анонимный)
   final auth = getIt<AuthService>();
   if (auth.currentUser == null) {
     try {

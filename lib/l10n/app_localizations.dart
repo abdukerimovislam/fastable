@@ -390,7 +390,7 @@ abstract class AppLocalizations {
   /// No description provided for @proTitle.
   ///
   /// In en, this message translates to:
-  /// **'Get PRO Access'**
+  /// **'GET PRO'**
   String get proTitle;
 
   /// No description provided for @proMonthly.
@@ -726,7 +726,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsOfService.
   ///
   /// In en, this message translates to:
-  /// **'Terms of Service'**
+  /// **'Terms of Use'**
   String get termsOfService;
 
   /// No description provided for @errorOpenLink.
@@ -2580,19 +2580,19 @@ abstract class AppLocalizations {
   /// No description provided for @msgLoginFailed.
   ///
   /// In en, this message translates to:
-  /// **'Login Failed: {error}'**
+  /// **'Login failed: {error}'**
   String msgLoginFailed(Object error);
 
   /// No description provided for @msgAppleLoginFailed.
   ///
   /// In en, this message translates to:
-  /// **'Apple Login Failed: {error}'**
+  /// **'Apple Login failed: {error}'**
   String msgAppleLoginFailed(Object error);
 
   /// No description provided for @msgSyncCompleted.
   ///
   /// In en, this message translates to:
-  /// **'Sync completed!'**
+  /// **'Sync completed'**
   String get msgSyncCompleted;
 
   /// No description provided for @msgErrorRelogin.
@@ -2646,7 +2646,7 @@ abstract class AppLocalizations {
   /// No description provided for @dialogSyncConflictContent.
   ///
   /// In en, this message translates to:
-  /// **'This account already has data in the cloud.\n\nWhat would you like to do with your current guest data?'**
+  /// **'Cloud data found. Merge with local data or overwrite?'**
   String get dialogSyncConflictContent;
 
   /// No description provided for @btnUseCloud.
@@ -2894,6 +2894,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weight saved'**
   String get weightSaved;
+
+  /// No description provided for @proSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock your full potential'**
+  String get proSubtitle;
+
+  /// No description provided for @featureCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal AI Coach'**
+  String get featureCoach;
+
+  /// No description provided for @featureCoachDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask questions, get advice 24/7'**
+  String get featureCoachDesc;
+
+  /// No description provided for @featureRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy Recipes'**
+  String get featureRecipes;
+
+  /// No description provided for @featureRecipesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keto, Low-Carb & more'**
+  String get featureRecipesDesc;
+
+  /// No description provided for @featureNoAds.
+  ///
+  /// In en, this message translates to:
+  /// **'No Ads, Pure Focus'**
+  String get featureNoAds;
+
+  /// No description provided for @featureNoAdsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Distraction-free experience'**
+  String get featureNoAdsDesc;
+
+  /// No description provided for @bestValue.
+  ///
+  /// In en, this message translates to:
+  /// **'BEST VALUE'**
+  String get bestValue;
+
+  /// No description provided for @loadingOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading offers...'**
+  String get loadingOffers;
+
+  /// No description provided for @welcomePro.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Pro! 🌟'**
+  String get welcomePro;
+
+  /// No description provided for @errorPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get errorPro;
+
+  /// No description provided for @confirmDeleteMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. All your data will be lost.'**
+  String get confirmDeleteMsg;
+
+  /// No description provided for @statusLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get statusLocked;
+
+  /// No description provided for @sectionLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal & Support'**
+  String get sectionLegal;
+
+  /// No description provided for @btnOverwriteLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite Local'**
+  String get btnOverwriteLocal;
+
+  /// No description provided for @msgDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting account'**
+  String get msgDeleteError;
+
+  /// No description provided for @stepLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get stepLanguage;
+
+  /// No description provided for @stepBodyMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Metrics'**
+  String get stepBodyMetrics;
+
+  /// No description provided for @stepBodyMetricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Help us calculate your BMI & goals'**
+  String get stepBodyMetricsDesc;
+
+  /// No description provided for @activityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to calculate your daily energy burn.'**
+  String get activityHint;
+
+  /// No description provided for @activitySedentaryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Office job, little exercise'**
+  String get activitySedentaryDesc;
+
+  /// No description provided for @activityModerateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Active job or exercise 3-4x'**
+  String get activityModerateDesc;
+
+  /// No description provided for @activityActiveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical job or daily training'**
+  String get activityActiveDesc;
+
+  /// No description provided for @stepGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Goal'**
+  String get stepGoal;
+
+  /// No description provided for @recommendationMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'We recommend the 16-8 plan for you.'**
+  String get recommendationMsg;
+
+  /// No description provided for @planBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get planBeginner;
+
+  /// No description provided for @planPopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular (16:8)'**
+  String get planPopular;
+
+  /// No description provided for @planAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced (18:6)'**
+  String get planAdvanced;
+
+  /// No description provided for @planExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert (OMAD)'**
+  String get planExpert;
+
+  /// No description provided for @labelRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'RECOMMENDED'**
+  String get labelRecommended;
+
+  /// No description provided for @permHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get permHealthConnect;
+
+  /// No description provided for @permHealthConnectDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync weight & steps with Google Fit'**
+  String get permHealthConnectDesc;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
