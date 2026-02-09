@@ -1,4 +1,4 @@
-import 'dart:io'; // Для проверки Platform.isIOS
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,6 +13,9 @@ import 'package:fastable/bloc/weight/weight_event.dart';
 import 'package:fastable/bloc/weight/weight_state.dart';
 import 'package:fastable/bloc/stats/stats_bloc.dart';
 import 'package:fastable/bloc/stats/stats_state.dart';
+// 🔥 Импорт ProBloc нужен для iOS
+import 'package:fastable/bloc/pro/pro_bloc.dart';
+import 'package:fastable/bloc/pro/pro_event.dart';
 
 // --- MODELS ---
 import 'package:fastable/models/achievement.dart';
@@ -27,6 +30,8 @@ import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/utils/roulette_sheet.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/login_screen.dart';
+// 🔥 Экран Pro для iOS
+import 'package:fastable/screens/pro_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -299,12 +304,12 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isAndroid = Platform.isAndroid; // 🔥 Проверка платформы
 
-    // Используем StreamBuilder для реактивного обновления UI при смене статуса Auth
     return StreamBuilder(
         stream: getIt<AuthService>().authStateChanges,
         builder: (context, snapshot) {
-          final user = getIt<AuthService>().currentUser; // Берем актуального юзера
+          final user = getIt<AuthService>().currentUser;
           final isGuest = user == null || user.isAnonymous;
 
           return Scaffold(
@@ -321,7 +326,7 @@ class ProfileScreen extends StatelessWidget {
                       child: Text(l10n.navProfile, style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold)),
                     ),
 
-                    // 1. АККАУНТ (Карточка)
+                    // 1. АККАУНТ
                     GlassCard(
                       padding: const EdgeInsets.all(20),
                       child: Row(
@@ -347,9 +352,8 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // --- КНОПКИ ВХОДА / ВЫХОДА ---
+                    // --- КНОПКИ ВХОДА ---
                     if (isGuest) ...[
-                      // Кнопка Google
                       GestureDetector(
                         onTap: () => _handleGoogleSignIn(context, l10n),
                         child: Container(
@@ -368,8 +372,8 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
 
-                      // 🔥 ПРОВЕРКА: Кнопка Apple только для iOS
-                      if (Platform.isIOS) ...[
+                      // 🔥 Кнопка Apple (Скрыта на Android)
+                      if (!isAndroid) ...[
                         const SizedBox(height: 12),
                         GestureDetector(
                           onTap: () => _handleAppleSignIn(context, l10n),
@@ -408,7 +412,6 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                     ],
-
 
                     // 2. ACHIEVEMENTS
                     const SizedBox(height: 30),
@@ -479,7 +482,31 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
 
-                    // 4. SETTINGS
+                    // 🔥 4. PRO SETTINGS (Только для iOS)
+                    if (!isAndroid) ...[
+                      const SizedBox(height: 24),
+                      _sectionHeader("PRO"), // "PRO"
+                      GlassCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            _buildSettingsTile(
+                                icon: Icons.star_border,
+                                title: l10n.proTitle, // "Get PRO"
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()))
+                            ),
+                            const Divider(height: 1, color: Colors.white10),
+                            _buildSettingsTile(
+                                icon: Icons.restore,
+                                title: l10n.restorePurchases,
+                                onTap: () => context.read<ProBloc>().add(RestorePurchasesEvent())
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // 5. SETTINGS
                     const SizedBox(height: 24),
                     _sectionHeader(l10n.lblSettings),
                     BlocBuilder<SettingsBloc, SettingsState>(
@@ -527,7 +554,7 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
 
-                    // 5. ABOUT
+                    // 6. ABOUT
                     const SizedBox(height: 24),
                     _sectionHeader(l10n.lblAbout),
                     GlassCard(
@@ -543,7 +570,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // ⚠️ DANGER ZONE (DELETE ACCOUNT) ⚠️
+                    // ⚠️ DANGER ZONE
                     if (!isGuest) ...[
                       const SizedBox(height: 30),
                       _sectionHeader(l10n.lblDangerZone),

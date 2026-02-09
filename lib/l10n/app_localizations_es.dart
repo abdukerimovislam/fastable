@@ -1398,4 +1398,37 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get proFeatureDesc => 'Los horarios de ayuno personalizados están disponibles para usuarios PRO.';
+
+  @override
+  String get setFastingGoal => 'Establecer objetivo de ayuno';
+
+  @override
+  String get fastingSaved => '¡Ayuno guardado! 🏆';
+
+  @override
+  String get whenStopEating => '¿Cuándo dejaste de comer?';
+
+  @override
+  String get editTime => 'Editar hora';
+
+  @override
+  String get customPlan => 'Personalizado';
+
+  @override
+  String get tapToEdit => 'Toca para establecer el objetivo';
+
+  @override
+  String get timeLeft => 'RESTANTE';
+
+  @override
+  String get maxBenefits => 'Beneficios máximos alcanzados';
+
+  @override
+  String get appNameUpper => 'FASTABLE';
+
+  @override
+  String get splashSlogan => 'Libera el potencial de tu cuerpo';
+
+  @override
+  String get weightSaved => 'Peso guardado';
 }

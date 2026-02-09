@@ -56,7 +56,6 @@ dependencies:
   # --- NEW TOP TIER FEATURES ---
   health: ^13.1.4               # Apple Health & Google Health Connect
   purchases_flutter: ^9.10.8    # RevenueCat (Subscriptions)
-  vibration: ^1.9.0             # Advanced Haptics
   google_generative_ai: ^0.4.7
   flutter_markdown: ^0.7.7+1
   sign_in_with_apple: ^7.0.1
@@ -83,18 +82,18 @@ flutter:
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
-  image_path: "assets/icon/icon1.png"
+  image_path: "assets/icon/icon.png"
   min_sdk_android: 21
   adaptive_icon_background: "#121212"
-  adaptive_icon_foreground: "assets/icon/icon1.png"
+  adaptive_icon_foreground: "assets/icon/icon.png"
 
 flutter_native_splash:
   color: "#121212"
-  image: "assets/icon/icon1.png"
-  branding: "assets/icon/icon1.png"
+  image: "assets/icon/icon.png"
+  branding: "assets/icon/icon.png"
   color_dark: "#121212"
-  image_dark: "assets/icon/icon1.png"
+  image_dark: "assets/icon/icon.png"
   android_12:
-    image: "assets/icon/icon1.png"
+    image: "assets/icon/icon.png"
     color: "#121212"
   fullscreen: true

@@ -583,7 +583,18 @@
                               "btnStartCustomPlan": "Iniciar plano personalizado",
                               "btnUnlockFeature": "Desbloquear plano personalizado",
                               "proFeatureTitle": "Recurso PRO",
-                              "proFeatureDesc": "Agendamentos de jejum personalizados estão disponíveis para usuários PRO."
+                              "proFeatureDesc": "Agendamentos de jejum personalizados estão disponíveis para usuários PRO.",
+                              "setFastingGoal": "Definir meta de jejum",
+                                "fastingSaved": "Jejum salvo! 🏆",
+                                "whenStopEating": "Quando você parou de comer?",
+                                "editTime": "Editar horário",
+                                "customPlan": "Personalizado",
+                                "tapToEdit": "Toque para definir a meta",
+                                "timeLeft": "RESTAM",
+                                "maxBenefits": "Benefícios máximos alcançados",
+                                "appNameUpper": "FASTABLE",
+                                  "splashSlogan": "Liberte o potencial do seu corpo",
+                                  "weightSaved": "Peso salvo"
 
 
 

@@ -39,15 +39,18 @@ class _LearnScreenState extends State<LearnScreen> {
   Widget build(BuildContext context) {
     final locale = context.read<SettingsBloc>().state.locale.languageCode;
     final l10n = AppLocalizations.of(context)!;
+    final isAndroid = Platform.isAndroid; // 🔥 Проверка платформы
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (context) => getIt<ArticleBloc>()..add(LoadArticles(locale)),
         ),
-        BlocProvider(
-          create: (context) => getIt<RecipeBloc>()..add(LoadRecipes(locale)),
-        ),
+        // 🔥 На Android не грузим рецепты, чтобы не тратить ресурсы
+        if (!isAndroid)
+          BlocProvider(
+            create: (context) => getIt<RecipeBloc>()..add(LoadRecipes(locale)),
+          ),
       ],
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -74,18 +77,20 @@ class _LearnScreenState extends State<LearnScreen> {
                     ),
                   ),
 
-                  // ПЕРЕКЛЮЧАТЕЛЬ (TOGGLE)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: _buildSegmentedControl(l10n),
+                  // 🔥 ПЕРЕКЛЮЧАТЕЛЬ (ТОЛЬКО НА iOS)
+                  if (!isAndroid)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: _buildSegmentedControl(l10n),
+                      ),
                     ),
-                  ),
 
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-                  // КОНТЕНТ (В ЗАВИСИМОСТИ ОТ ВКЛАДКИ)
-                  if (_selectedIndex == 0)
+                  // КОНТЕНТ
+                  // На Android всегда показываем статьи. На iOS зависит от переключателя.
+                  if (isAndroid || _selectedIndex == 0)
                     ..._buildArticlesTab(context, isPro, l10n)
                   else
                     ..._buildRecipesTab(context, isPro, l10n),
@@ -233,7 +238,7 @@ class _LearnScreenState extends State<LearnScreen> {
     ];
   }
 
-  // --- TAB: RECIPES ---
+  // --- TAB: RECIPES (Только iOS) ---
 
   List<Widget> _buildRecipesTab(BuildContext context, bool isPro, AppLocalizations l10n) {
     return [
@@ -250,51 +255,45 @@ class _LearnScreenState extends State<LearnScreen> {
         ),
       ),
 
-      // BLOC ДЛЯ ЗАГРУЗКИ РЕЦЕПТОВ
-      BlocBuilder<RecipeBloc, RecipeState>(
-        builder: (context, state) {
-          if (state.status == RecipeStatus.loading) {
-            return const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 40),
-                child: Center(child: CircularProgressIndicator(color: Colors.white)),
-              ),
-            );
-          }
-
-          if (state.status == RecipeStatus.failure) {
-            return const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 40),
-                child: Center(child: Text("Error loading recipes", style: TextStyle(color: Colors.white54))),
-              ),
-            );
-          }
-
-          if (state.recipes.isEmpty) {
-            return const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 40),
-                child: Center(child: Text("No recipes yet", style: TextStyle(color: Colors.white54))),
-              ),
-            );
-          }
-
-          return SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                final recipe = state.recipes[index];
-                return _buildRecipeItem(
-                  context,
-                  recipe: recipe,
-                  userIsPro: isPro,
-                  l10n: l10n,
+      // Используем Builder для безопасности, если RecipeBloc не найден (теоретически не должно случаться)
+      SliverToBoxAdapter(
+        child: Builder(builder: (context) {
+          return BlocBuilder<RecipeBloc, RecipeState>(
+            builder: (context, state) {
+              if (state.status == RecipeStatus.loading) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
                 );
-              },
-              childCount: state.recipes.length,
-            ),
+              }
+
+              if (state.status == RecipeStatus.failure) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: Center(child: Text("Error loading recipes", style: TextStyle(color: Colors.white54))),
+                );
+              }
+
+              if (state.recipes.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: Center(child: Text("No recipes yet", style: TextStyle(color: Colors.white54))),
+                );
+              }
+
+              return Column(
+                children: state.recipes.map((recipe) {
+                  return _buildRecipeItem(
+                    context,
+                    recipe: recipe,
+                    userIsPro: isPro,
+                    l10n: l10n,
+                  );
+                }).toList(),
+              );
+            },
           );
-        },
+        }),
       ),
     ];
   }
@@ -305,7 +304,12 @@ class _LearnScreenState extends State<LearnScreen> {
       {required ArticleModel article,
         required bool isPro,
         required AppLocalizations l10n}) {
-    final bool isLocked = article.isPro && !isPro;
+
+    // На Android статьи всегда открыты (Pro нет)
+    // На iOS проверяем isPro
+    final isAndroid = Platform.isAndroid;
+    final bool isLocked = !isAndroid && (article.isPro && !isPro);
+
     final Color imageColor = isLocked ? Colors.purpleAccent : Colors.blueAccent;
 
     return Padding(
@@ -362,7 +366,7 @@ class _LearnScreenState extends State<LearnScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
-      child: GlassCard( // GlassCard теперь сам обрабатывает нажатие (см. Шаг 3)
+      child: GlassCard(
         onTap: () {
           if (isLocked) {
             getIt<HapticService>().mediumImpact();
@@ -370,7 +374,6 @@ class _LearnScreenState extends State<LearnScreen> {
                 context, MaterialPageRoute(builder: (_) => const ProScreen()));
           } else {
             getIt<HapticService>().selectionClick();
-            // TODO: Перейти на экран деталей рецепта
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text("Selected: ${recipe.title}")));
           }
@@ -388,20 +391,17 @@ class _LearnScreenState extends State<LearnScreen> {
                     ? CachedNetworkImage(
                   imageUrl: recipe.imageUrl,
                   fit: BoxFit.cover,
-                  // Пока грузится - показываем красивый серый перелив
                   placeholder: (context, url) => Shimmer.fromColors(
                     baseColor: Colors.white.withOpacity(0.1),
                     highlightColor: Colors.white.withOpacity(0.3),
                     child: Container(color: Colors.white),
                   ),
-                  // Если ошибка загрузки - показываем иконку
                   errorWidget: (context, url, error) => Container(
                     color: color.withOpacity(0.2),
                     child: Icon(Icons.restaurant_menu, color: color),
                   ),
                 )
                     : Container(
-                  // Если картинки нет в базе - показываем иконку
                   color: color.withOpacity(0.2),
                   child: Icon(Icons.restaurant_menu, color: color),
                 ),

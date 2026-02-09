@@ -610,7 +610,19 @@
                                                  "btnStartCustomPlan": "Start Custom Plan",
                                                  "btnUnlockFeature": "Unlock Custom Plan",
                                                  "proFeatureTitle": "Pro Feature",
-                                                 "proFeatureDesc": "Custom fasting schedules are available for Pro users."
+                                                 "proFeatureDesc": "Custom fasting schedules are available for Pro users.",
+                                                 "setFastingGoal": "Set Fasting Goal",
+                                                 "fastingSaved": "Fasting saved! 🏆",
+                                                 "whenStopEating": "When did you stop eating?",
+                                                 "editTime": "Edit Time",
+                                                 "customPlan": "Custom",
+                                                 "tapToEdit": "Tap to set goal",
+                                                 "timeLeft": "LEFT",
+                                                 "maxBenefits": "Maximum Benefits Reached",
+                                                 "appNameUpper": "FASTABLE",
+                                                   "splashSlogan": "Unlock your body's potential",
+                                                   "weightSaved": "Weight saved"
+
 
 
                            }

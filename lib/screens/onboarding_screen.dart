@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +10,9 @@ import 'package:fastable/bloc/weight/weight_event.dart';
 import 'package:fastable/bloc/weight/weight_state.dart'; // Для Enums
 import 'package:fastable/bloc/fasting/fasting_bloc.dart';
 import 'package:fastable/bloc/fasting/fasting_event.dart';
+import 'package:fastable/bloc/settings/settings_bloc.dart';
+import 'package:fastable/bloc/settings/settings_event.dart';
+import 'package:fastable/bloc/settings/settings_state.dart';
 
 // --- MODELS & SERVICES ---
 import 'package:fastable/models/fasting_plan.dart';
@@ -37,15 +41,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   double _weight = 70.0;
   double _height = 170.0;
   ActivityLevel _activity = ActivityLevel.moderate;
-  int _planIndex = 0;
+  int _planIndex = 1; // По умолчанию 16:8 (самый популярный)
+
+  // --- ACTIONS ---
 
   void _nextPage() {
     getIt<HapticService>().mediumImpact();
-    // У нас теперь 5 страниц (0,1,2,3,4)
     if (_currentPage < 4) {
-      _controller.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
     } else {
       _finishOnboarding();
+    }
+  }
+
+  void _prevPage() {
+    getIt<HapticService>().lightImpact();
+    if (_currentPage > 0) {
+      _controller.previousPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -70,75 +88,181 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  // --- UI BUILDERS ---
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    // Оборачиваем весь экран в BlocBuilder настроек, чтобы язык менялся на лету
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (context, settingsState) {
+        final l10n = AppLocalizations.of(context)!;
 
-    // Прогресс бар теперь делим на 5 частей
-    return Scaffold(
-      body: Stack(
-        children: [
-          const MeshBackground(isFasting: false, child: SizedBox.expand()),
-          SafeArea(
-            child: Column(
-              children: [
-                // Progress
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Row(
-                    children: List.generate(5, (index) => Expanded(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          color: index <= _currentPage ? Colors.white : Colors.white24,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+        return Scaffold(
+          body: Stack(
+            children: [
+              // 1. ФОН
+              const MeshBackground(isFasting: false, child: SizedBox.expand()),
+
+              SafeArea(
+                child: Column(
+                  children: [
+                    // 2. HEADER (Progress + Language Button)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Row(
+                        children: [
+                          // Кнопка "Назад" (только если не первая страница)
+                          if (_currentPage > 0)
+                            GestureDetector(
+                              onTap: _prevPage,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white10,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                              ),
+                            )
+                          else
+                            const SizedBox(width: 36), // Заглушка для симметрии
+
+                          const SizedBox(width: 16),
+
+                          // Индикаторы прогресса
+                          Expanded(
+                            child: Row(
+                              children: List.generate(5, (index) => Expanded(
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  height: 4,
+                                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                                  decoration: BoxDecoration(
+                                    color: index <= _currentPage ? Colors.white : Colors.white24,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              )),
+                            ),
+                          ),
+
+                          const SizedBox(width: 16),
+
+                          // Кнопка выбора языка
+                          _buildLanguageButton(context, settingsState.locale.languageCode),
+                        ],
                       ),
-                    )),
-                  ),
-                ),
+                    ),
 
-                Expanded(
-                  child: PageView(
-                    controller: _controller,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (idx) => setState(() => _currentPage = idx),
-                    children: [
-                      _buildIntroPage(l10n),
-                      _buildGenderAgePage(l10n), // NEW
-                      _buildBodyMetricsPage(l10n), // Weight/Height
-                      _buildActivityPage(l10n),  // NEW
-                      _buildPlanPage(l10n),
-                    ],
-                  ),
-                ),
+                    // 3. CONTENT (PageView)
+                    Expanded(
+                      child: PageView(
+                        controller: _controller,
+                        physics: const NeverScrollableScrollPhysics(), // Блокируем свайп рукой
+                        onPageChanged: (idx) => setState(() => _currentPage = idx),
+                        children: [
+                          _buildIntroPage(l10n),
+                          _buildGenderAgePage(l10n),
+                          _buildBodyMetricsPage(l10n),
+                          _buildActivityPage(l10n),
+                          _buildPlanPage(l10n),
+                        ],
+                      ),
+                    ),
 
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: GestureDetector(
-                    onTap: _nextPage,
-                    child: GlassCard(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Center(
-                        child: Text(
-                          _currentPage == 4 ? l10n.btnStart : l10n.btnContinue,
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    // 4. BOTTOM BUTTON
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: GestureDetector(
+                        onTap: _nextPage,
+                        child: GlassCard(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          color: Colors.blueAccent.withOpacity(0.8), // Акцентный цвет
+                          child: Center(
+                            child: Text(
+                              _currentPage == 4 ? l10n.btnStart : l10n.btnContinue,
+                              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  // --- LANGUAGE SELECTION ---
+
+  Widget _buildLanguageButton(BuildContext context, String currentCode) {
+    String flag = '🇺🇸';
+    if (currentCode == 'ru') flag = '🇷🇺';
+    if (currentCode == 'es') flag = '🇪🇸';
+    if (currentCode == 'pt') flag = '🇧🇷';
+
+    return GestureDetector(
+      onTap: () => _showLanguageSheet(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Text(
+          flag,
+          style: const TextStyle(fontSize: 20),
+        ),
       ),
     );
   }
 
-  // 1. INTRO
+  void _showLanguageSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+                "Select Language",
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)
+            ),
+            const SizedBox(height: 16),
+            _langOption(context, 'English', 'en', '🇺🇸'),
+            _langOption(context, 'Русский', 'ru', '🇷🇺'),
+            _langOption(context, 'Español', 'es', '🇪🇸'),
+            _langOption(context, 'Português', 'pt', '🇧🇷'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _langOption(BuildContext context, String name, String code, String flag) {
+    final currentCode = context.read<SettingsBloc>().state.locale.languageCode;
+    final isSelected = currentCode == code;
+
+    return ListTile(
+      leading: Text(flag, style: const TextStyle(fontSize: 24)),
+      title: Text(name, style: TextStyle(color: isSelected ? Colors.blueAccent : Colors.white)),
+      trailing: isSelected ? const Icon(Icons.check, color: Colors.blueAccent) : null,
+      onTap: () {
+        context.read<SettingsBloc>().add(ChangeLocale(Locale(code)));
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  // --- PAGE 1: INTRO ---
   Widget _buildIntroPage(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -147,20 +271,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
-            child: const Icon(Icons.bolt_rounded, size: 80, color: Colors.amber),
+            decoration: BoxDecoration(
+                color: Colors.blueAccent.withOpacity(0.15),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.blueAccent.withOpacity(0.2), blurRadius: 40, spreadRadius: 5)
+                ]
+            ),
+            child: const Icon(Icons.bolt_rounded, size: 80, color: Colors.blueAccent),
           ),
           const SizedBox(height: 40),
-          Text(l10n.onboardingTitle, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          Text(
+            l10n.onboardingTitle,
+            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 1),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 16),
-          Text(l10n.onboardingDesc,
-              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16, height: 1.5), textAlign: TextAlign.center),
+          Text(
+            l10n.onboardingDesc,
+            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16, height: 1.5),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
   }
 
-  // 2. GENDER & AGE (NEW)
+  // --- PAGE 2: GENDER & AGE ---
   Widget _buildGenderAgePage(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -169,8 +306,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(l10n.selectGender, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 30),
-
-          // Gender
           Row(
             children: [
               Expanded(child: _buildGenderCard(l10n.genderMale, Icons.male, Gender.male)),
@@ -178,30 +313,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(child: _buildGenderCard(l10n.genderFemale, Icons.female, Gender.female)),
             ],
           ),
-
           const SizedBox(height: 40),
           Text(l10n.selectAge, style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-
-          // Age Picker
+          const SizedBox(height: 20),
           SizedBox(
-            height: 120,
-            child: ListWheelScrollView.useDelegate(
-              itemExtent: 50,
-              perspective: 0.005,
-              controller: FixedExtentScrollController(initialItem: _age - 10),
+            height: 140,
+            child: CupertinoPicker(
+              itemExtent: 40,
+              magnification: 1.2,
+              useMagnifier: true,
+              scrollController: FixedExtentScrollController(initialItem: _age - 10),
               onSelectedItemChanged: (idx) {
                 getIt<HapticService>().selectionClick();
                 setState(() => _age = 10 + idx);
               },
-              childDelegate: ListWheelChildBuilderDelegate(
-                childCount: 90,
-                builder: (c, i) {
-                  final val = 10 + i;
-                  return Center(child: Text("$val",
-                      style: TextStyle(color: val == _age ? Colors.white : Colors.white24, fontSize: 28, fontWeight: FontWeight.bold)));
-                },
-              ),
+              children: List.generate(90, (i) => Center(
+                child: Text("${10 + i}", style: const TextStyle(color: Colors.white, fontSize: 24)),
+              )),
             ),
           ),
         ],
@@ -221,7 +349,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
           color: isSelected ? Colors.blueAccent.withOpacity(0.3) : Colors.white.withOpacity(0.05),
-          border: Border.all(color: isSelected ? Colors.blueAccent : Colors.transparent),
+          border: Border.all(color: isSelected ? Colors.blueAccent : Colors.transparent, width: 2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -235,55 +363,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // 3. BODY METRICS
+  // --- PAGE 3: BODY METRICS ---
   Widget _buildBodyMetricsPage(AppLocalizations l10n) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text("Body Metrics", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        Text("Help us calculate your BMI & goals", style: TextStyle(color: Colors.white54, fontSize: 14)),
         const SizedBox(height: 40),
 
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Text(l10n.selectWeight, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
-            const SizedBox(width: 40),
             Text(l10n.selectHeight, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
           ],
         ),
+
+        const SizedBox(height: 20),
 
         SizedBox(
           height: 200,
           child: Row(
             children: [
+              // Weight Wheel
               Expanded(
-                child: ListWheelScrollView.useDelegate(
-                  itemExtent: 50,
-                  perspective: 0.005,
-                  controller: FixedExtentScrollController(initialItem: (_weight - 30).toInt()),
+                child: CupertinoPicker(
+                  itemExtent: 40,
+                  magnification: 1.2,
+                  useMagnifier: true,
+                  scrollController: FixedExtentScrollController(initialItem: (_weight - 30).toInt()),
                   onSelectedItemChanged: (idx) {
                     getIt<HapticService>().selectionClick();
                     setState(() => _weight = 30.0 + idx);
                   },
-                  childDelegate: ListWheelChildBuilderDelegate(
-                    childCount: 150,
-                    builder: (c, i) => Center(child: Text("${30 + i}", style: TextStyle(color: (30 + i) == _weight.toInt() ? Colors.white : Colors.white24, fontSize: 28, fontWeight: FontWeight.bold))),
-                  ),
+                  children: List.generate(150, (i) => Center(
+                    child: Text("${30 + i} kg", style: const TextStyle(color: Colors.white, fontSize: 22)),
+                  )),
                 ),
               ),
+              // Height Wheel
               Expanded(
-                child: ListWheelScrollView.useDelegate(
-                  itemExtent: 50,
-                  perspective: 0.005,
-                  controller: FixedExtentScrollController(initialItem: (_height - 100).toInt()),
+                child: CupertinoPicker(
+                  itemExtent: 40,
+                  magnification: 1.2,
+                  useMagnifier: true,
+                  scrollController: FixedExtentScrollController(initialItem: (_height - 100).toInt()),
                   onSelectedItemChanged: (idx) {
                     getIt<HapticService>().selectionClick();
                     setState(() => _height = 100.0 + idx);
                   },
-                  childDelegate: ListWheelChildBuilderDelegate(
-                    childCount: 120,
-                    builder: (c, i) => Center(child: Text("${100 + i}", style: TextStyle(color: (100 + i) == _height.toInt() ? Colors.white : Colors.white24, fontSize: 28, fontWeight: FontWeight.bold))),
-                  ),
+                  children: List.generate(120, (i) => Center(
+                    child: Text("${100 + i} cm", style: const TextStyle(color: Colors.white, fontSize: 22)),
+                  )),
                 ),
               ),
             ],
@@ -293,7 +426,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // 4. ACTIVITY LEVEL (NEW)
+  // --- PAGE 4: ACTIVITY ---
   Widget _buildActivityPage(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -302,7 +435,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(l10n.selectActivity, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-          Text("Used to calculate your daily energy burn (TDEE).", style: TextStyle(color: Colors.white.withOpacity(0.6)), textAlign: TextAlign.center),
+          Text("Used to calculate your daily energy burn.", style: TextStyle(color: Colors.white.withOpacity(0.6)), textAlign: TextAlign.center),
           const SizedBox(height: 30),
 
           _buildActivityCard(l10n.activitySedentary, "Office job, little exercise", ActivityLevel.sedentary),
@@ -327,7 +460,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isSelected ? Colors.orangeAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
-          border: Border.all(color: isSelected ? Colors.orangeAccent : Colors.transparent),
+          border: Border.all(color: isSelected ? Colors.orangeAccent : Colors.transparent, width: 1.5),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -349,22 +482,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // 5. PLAN SELECTION (С УМНОЙ РЕКОМЕНДАЦИЕЙ)
+  // --- PAGE 5: PLAN SELECTION ---
   Widget _buildPlanPage(AppLocalizations l10n) {
-    // 1. Логика рекомендации
-    int recommendedIndex = 0; // По умолчанию 12-12 (Beginner)
+    int recommendedIndex = 0; // Default: Beginner (12:12)
 
-    // Если мужчина и возраст от 18 до 60 -> 16-8 (Index 1)
-    if (_gender == Gender.male && _age >= 18 && _age < 60) {
-      recommendedIndex = 1;
-    }
-    // Если активный образ жизни -> 16-8
-    if (_activity == ActivityLevel.active) {
-      recommendedIndex = 1;
-    }
-
-    // Если пользователь еще не выбирал, можем подставить рекомендованный (опционально)
-    // if (_planIndex == 0 && _currentPage < 4) _planIndex = recommendedIndex;
+    // Простая логика рекомендации
+    if (_gender == Gender.male && _age >= 18 && _age < 60) recommendedIndex = 1; // 16:8
+    if (_activity == ActivityLevel.active) recommendedIndex = 1; // 16:8
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -373,14 +497,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           const Text("Choose Your Goal", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-          // Показываем пояснение
           if (recommendedIndex == 1)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text("Based on your gender and activity, we recommend the 16-8 plan.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 14)),
-            ),
+            Text("We recommend the 16-8 plan for you.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 14)),
 
           const SizedBox(height: 20),
           Expanded(
@@ -412,7 +532,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           color: isSelected ? Colors.greenAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
                           border: Border.all(
                               color: isSelected ? Colors.greenAccent : (isRecommended ? Colors.amber.withOpacity(0.5) : Colors.transparent),
-                              width: isRecommended && !isSelected ? 1 : 1
+                              width: isRecommended || isSelected ? 1.5 : 1
                           ),
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -431,7 +551,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ],
                         ),
                       ),
-                      // Бейджик рекомендации
                       if (isRecommended)
                         Positioned(
                           top: -8,

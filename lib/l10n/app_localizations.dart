@@ -2828,6 +2828,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom fasting schedules are available for Pro users.'**
   String get proFeatureDesc;
+
+  /// No description provided for @setFastingGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Fasting Goal'**
+  String get setFastingGoal;
+
+  /// No description provided for @fastingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting saved! 🏆'**
+  String get fastingSaved;
+
+  /// No description provided for @whenStopEating.
+  ///
+  /// In en, this message translates to:
+  /// **'When did you stop eating?'**
+  String get whenStopEating;
+
+  /// No description provided for @editTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Time'**
+  String get editTime;
+
+  /// No description provided for @customPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get customPlan;
+
+  /// No description provided for @tapToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to set goal'**
+  String get tapToEdit;
+
+  /// No description provided for @timeLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'LEFT'**
+  String get timeLeft;
+
+  /// No description provided for @maxBenefits.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum Benefits Reached'**
+  String get maxBenefits;
+
+  /// No description provided for @appNameUpper.
+  ///
+  /// In en, this message translates to:
+  /// **'FASTABLE'**
+  String get appNameUpper;
+
+  /// No description provided for @splashSlogan.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock your body\'s potential'**
+  String get splashSlogan;
+
+  /// No description provided for @weightSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight saved'**
+  String get weightSaved;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

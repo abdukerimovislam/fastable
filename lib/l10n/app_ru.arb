@@ -611,7 +611,18 @@
                                                      "btnStartCustomPlan": "Запустить план",
                                                      "btnUnlockFeature": "Разблокировать",
                                                      "proFeatureTitle": "Pro Функция",
-                                                     "proFeatureDesc": "Кастомные планы доступны только Pro пользователям."
+                                                     "proFeatureDesc": "Кастомные планы доступны только Pro пользователям.",
+                                                     "setFastingGoal": "Цель голодания",
+                                                     "fastingSaved": "Голодание сохранено! 🏆",
+                                                     "whenStopEating": "Когда вы закончили есть?",
+                                                     "editTime": "Изменить время",
+                                                     "customPlan": "Свой план",
+                                                     "tapToEdit": "Нажми для настройки",
+                                                     "timeLeft": "ОСТАЛОСЬ",
+                                                     "maxBenefits": "Максимум пользы достигнут",
+                                                     "appNameUpper": "FASTABLE",
+                                                       "splashSlogan": "Раскрой потенциал своего тела",
+                                                       "weightSaved": "Вес сохранен"
 
 
 

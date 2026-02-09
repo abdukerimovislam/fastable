@@ -628,7 +628,18 @@
                                                        "btnStartCustomPlan": "Iniciar plan personalizado",
                                                        "btnUnlockFeature": "Desbloquear plan personalizado",
                                                        "proFeatureTitle": "Función PRO",
-                                                       "proFeatureDesc": "Los horarios de ayuno personalizados están disponibles para usuarios PRO."
+                                                       "proFeatureDesc": "Los horarios de ayuno personalizados están disponibles para usuarios PRO.",
+                                                       "setFastingGoal": "Establecer objetivo de ayuno",
+                                                         "fastingSaved": "¡Ayuno guardado! 🏆",
+                                                         "whenStopEating": "¿Cuándo dejaste de comer?",
+                                                         "editTime": "Editar hora",
+                                                         "customPlan": "Personalizado",
+                                                         "tapToEdit": "Toca para establecer el objetivo",
+                                                         "timeLeft": "RESTANTE",
+                                                         "maxBenefits": "Beneficios máximos alcanzados",
+                                                         "appNameUpper": "FASTABLE",
+                                                           "splashSlogan": "Libera el potencial de tu cuerpo",
+                                                           "weightSaved": "Peso guardado"
 
 
 

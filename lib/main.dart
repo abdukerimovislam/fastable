@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // 🔥 Для настройки статус-бара и ориентации
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,7 +29,7 @@ import 'package:fastable/bloc/history/history_event.dart';
 import 'package:fastable/bloc/stats/stats_bloc.dart';
 import 'package:fastable/bloc/stats/stats_event.dart';
 
-import 'package:fastable/bloc/pro/pro_bloc.dart'; // <--- НОВЫЙ БЛОК
+import 'package:fastable/bloc/pro/pro_bloc.dart';
 import 'package:fastable/bloc/pro/pro_event.dart';
 
 // --- СЕРВИСЫ ---
@@ -39,26 +41,50 @@ import 'package:fastable/services/auth_service.dart';
 import 'package:fastable/screens/splash_screen.dart';
 
 Future<void> main() async {
+  // 1. Обязательная инициализация движка Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  await configureDependencies();
+  // 2. 🔥 Фиксируем портретную ориентацию (чтобы не ломать верстку)
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
+  // 3. 🔥 Настраиваем стиль статус-бара (прозрачный для Edge-to-Edge)
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent, // Прозрачный статус бар
+    statusBarIconBrightness: Brightness.light, // Белые иконки (для темной темы)
+    systemNavigationBarColor: Colors.black, // Черная полоска навигации снизу
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+
+  // 4. 🔥 Инициализация Firebase (ДО внедрения зависимостей)
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await MobileAds.instance.initialize();
+  // 5. Внедрение зависимостей (GetIt) - теперь безопасно использовать Firebase внутри
+  await configureDependencies();
 
-  // Инициализация уведомлений
-  await getIt<NotificationService>().init();
+  // 6. Инициализация рекламы (фоном, не ждем await если не критично)
+  MobileAds.instance.initialize();
 
-  // Авто-вход
+  // 7. Инициализация уведомлений
+  try {
+    await getIt<NotificationService>().init();
+  } catch (e) {
+    debugPrint("Notification Init Error: $e");
+  }
+
+  // 8. Авто-вход (Анонимный)
+  // Важно для сохранения данных в Firestore
   final auth = getIt<AuthService>();
   if (auth.currentUser == null) {
     try {
+      debugPrint("🚀 Attempting anonymous sign-in...");
       await auth.signInAnonymously();
     } catch (e) {
-      debugPrint("Auth Error: $e");
+      debugPrint("❌ Auth Error: $e");
     }
   }
 
@@ -72,33 +98,51 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        // Settings & Pro
-        BlocProvider(create: (_) => getIt<SettingsBloc>()..add(LoadSettings())),
-        BlocProvider(create: (_) => getIt<ProBloc>()..add(CheckProStatus())), // Проверяем подписку
+        // 1. Настройки и Подписка (Базовые)
+        BlocProvider(
+          create: (_) => getIt<SettingsBloc>()..add(LoadSettings()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<ProBloc>()..add(CheckProStatus()),
+        ),
 
-        // Core Features
-        BlocProvider(create: (_) => getIt<FastingBloc>()..add(CheckFastingState())),
-        BlocProvider(create: (_) => getIt<WaterBloc>()..add(LoadWaterData())),
-        BlocProvider(create: (_) => getIt<WeightBloc>()..add(LoadWeightData())),
+        // 2. Основной функционал (Трекеры)
+        BlocProvider(
+          create: (_) => getIt<FastingBloc>()..add(CheckFastingState()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<WaterBloc>()..add(LoadWaterData()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<WeightBloc>()..add(LoadWeightData()),
+        ),
 
-        // Data
-        BlocProvider(create: (_) => getIt<HistoryBloc>()..add(SubscribeHistory())),
-        BlocProvider(create: (_) => getIt<StatsBloc>()..add(LoadStats())),
+        // 3. Данные и Статистика
+        BlocProvider(
+          create: (_) => getIt<HistoryBloc>()..add(SubscribeHistory()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<StatsBloc>()..add(LoadStats()),
+        ),
       ],
+      // Слушаем настройки, чтобы менять тему и язык на лету
       child: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, settingsState) {
           return MaterialApp(
-            title: 'Fastable',
-            debugShowCheckedModeBanner: false,
+            title: 'Fastable', // Название приложения в "недавних"
+            debugShowCheckedModeBanner: false, // Убираем ленточку DEBUG
 
-            theme: AppTheme.darkTheme,
+            // --- ТЕМЫ ---
+            theme: AppTheme.darkTheme, // Дефолтная (или светлая, если есть)
             darkTheme: AppTheme.darkTheme,
-            themeMode: settingsState.themeMode,
+            themeMode: settingsState.themeMode, // Переключение темы
 
-            locale: settingsState.locale,
+            // --- ЛОКАЛИЗАЦИЯ ---
+            locale: settingsState.locale, // Текущий язык из настроек
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
 
+            // --- ГЛАВНЫЙ ЭКРАН ---
             home: const SplashScreen(),
           );
         },

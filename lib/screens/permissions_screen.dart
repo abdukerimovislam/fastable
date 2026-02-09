@@ -1,3 +1,4 @@
+import 'dart:io'; // 🔥 Важно для проверки платформы
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,7 +37,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
   Future<void> _checkInitialStatuses() async {
     final notifStatus = await Permission.notification.status;
     // HealthService проверяем через наш сервис (он может вернуть false если прав нет)
-    // Но для первичного UI можно просто оставить выключенным
 
     if (mounted) {
       setState(() {
@@ -49,6 +49,13 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final haptic = getIt<HapticService>();
+    final isAndroid = Platform.isAndroid; // 🔥 Проверка платформы
+
+    // 🔥 Адаптация под платформу
+    final String healthTitle = isAndroid ? "Health Connect" : "Apple Health";
+    final IconData healthIcon = isAndroid ? Icons.health_and_safety : Icons.favorite; // health_and_safety для Android
+    final Color healthColor = isAndroid ? Colors.green : Colors.redAccent;
+    final String healthDesc = isAndroid ? "Sync weight & steps with Google" : l10n.permHealthDesc;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -96,7 +103,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                         context.read<SettingsBloc>().add(const ToggleNotifications(true));
                       }
                     } else {
-                      // Если юзер отключает свитч (опционально можно открыть настройки)
+                      // Если юзер отключает свитч
                       openAppSettings();
                     }
                   },
@@ -104,12 +111,12 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
 
                 const SizedBox(height: 16),
 
-                // 2. HEALTH
+                // 2. HEALTH (Platform specific)
                 _buildPermissionCard(
-                  icon: Icons.favorite,
-                  color: Colors.redAccent,
-                  title: l10n.permHealthTitle,
-                  desc: l10n.permHealthDesc,
+                  icon: healthIcon, // 🔥
+                  color: healthColor, // 🔥
+                  title: healthTitle, // 🔥
+                  desc: healthDesc, // 🔥
                   value: _healthGranted,
                   onChanged: (val) async {
                     haptic.selectionClick();

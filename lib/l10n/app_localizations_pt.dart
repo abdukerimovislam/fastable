@@ -1398,4 +1398,37 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get proFeatureDesc => 'Agendamentos de jejum personalizados estão disponíveis para usuários PRO.';
+
+  @override
+  String get setFastingGoal => 'Definir meta de jejum';
+
+  @override
+  String get fastingSaved => 'Jejum salvo! 🏆';
+
+  @override
+  String get whenStopEating => 'Quando você parou de comer?';
+
+  @override
+  String get editTime => 'Editar horário';
+
+  @override
+  String get customPlan => 'Personalizado';
+
+  @override
+  String get tapToEdit => 'Toque para definir a meta';
+
+  @override
+  String get timeLeft => 'RESTAM';
+
+  @override
+  String get maxBenefits => 'Benefícios máximos alcançados';
+
+  @override
+  String get appNameUpper => 'FASTABLE';
+
+  @override
+  String get splashSlogan => 'Liberte o potencial do seu corpo';
+
+  @override
+  String get weightSaved => 'Peso salvo';
 }

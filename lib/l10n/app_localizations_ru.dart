@@ -1398,4 +1398,37 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get proFeatureDesc => 'Кастомные планы доступны только Pro пользователям.';
+
+  @override
+  String get setFastingGoal => 'Цель голодания';
+
+  @override
+  String get fastingSaved => 'Голодание сохранено! 🏆';
+
+  @override
+  String get whenStopEating => 'Когда вы закончили есть?';
+
+  @override
+  String get editTime => 'Изменить время';
+
+  @override
+  String get customPlan => 'Свой план';
+
+  @override
+  String get tapToEdit => 'Нажми для настройки';
+
+  @override
+  String get timeLeft => 'ОСТАЛОСЬ';
+
+  @override
+  String get maxBenefits => 'Максимум пользы достигнут';
+
+  @override
+  String get appNameUpper => 'FASTABLE';
+
+  @override
+  String get splashSlogan => 'Раскрой потенциал своего тела';
+
+  @override
+  String get weightSaved => 'Вес сохранен';
 }

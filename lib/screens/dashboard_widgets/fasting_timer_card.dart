@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fastable/injection.dart';
@@ -17,14 +16,25 @@ import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/gradient_timer_blob.dart';
 import 'package:fastable/widgets/body_visualizer.dart';
 import 'package:fastable/widgets/end_fast_dialog.dart';
+// 🔥 ИМПОРТ ВАШЕГО ВИДЖЕТА
+import 'package:fastable/widgets/fasting_stage_widget.dart';
 import 'package:fastable/utils/time_picker_sheet.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/models/fasting_plan.dart';
-import 'package:fastable/models/fasting_record.dart';
 import 'package:fastable/screens/plan_selection_screen.dart';
 
+import '../../models/fasting_record.dart';
+
+// Если модель FastingRecord нужна, оставьте этот импорт, если нет - можно убрать
+// import '../../models/fasting_record.dart';
+
 class FastingTimerCard extends StatefulWidget {
-  const FastingTimerCard({super.key});
+  final VoidCallback? onStartFasting;
+
+  const FastingTimerCard({
+    super.key,
+    this.onStartFasting,
+  });
 
   @override
   State<FastingTimerCard> createState() => _FastingTimerCardState();
@@ -32,34 +42,14 @@ class FastingTimerCard extends StatefulWidget {
 
 class _FastingTimerCardState extends State<FastingTimerCard> {
   bool _isBodyView = false;
-  InterstitialAd? _interstitialAd;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadInterstitialAd();
-  }
-
-  void _loadInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) => _interstitialAd = ad,
-        onAdFailedToLoad: (error) => _interstitialAd = null,
-      ),
-    );
-  }
 
   // --- ACTIONS ---
 
   void _onStartFastingPressed(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
 
-    if (_interstitialAd != null) {
-      _interstitialAd!.show();
-      _interstitialAd = null;
-      _loadInterstitialAd();
+    if (widget.onStartFasting != null) {
+      widget.onStartFasting!();
     }
 
     final DateTime? pickedTime = await showTimePickerSheet(
@@ -75,6 +65,7 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
 
   void _onEndFastingPressed(BuildContext context, FastingState state) async {
     getIt<HapticService>().mediumImpact();
+    final l10n = AppLocalizations.of(context)!;
 
     final FastingMood? result = await showModalBottomSheet<FastingMood>(
       context: context,
@@ -86,7 +77,7 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
     if (result != null && mounted) {
       context.read<FastingBloc>().add(EndFasting(endTime: DateTime.now(), mood: result));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Fasting saved! 🏆"), backgroundColor: Colors.green),
+        SnackBar(content: Text(l10n.fastingSaved), backgroundColor: Colors.green),
       );
     }
   }
@@ -127,19 +118,52 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                 GlassCard(
                   onTap: () async {
                     Navigator.pop(ctx);
-                    final DateTime? pickedTime = await showTimePickerSheet(context: context, title: "When did you stop eating?", initialTime: DateTime.now());
+                    final DateTime? pickedTime = await showTimePickerSheet(
+                        context: context,
+                        title: l10n.whenStopEating,
+                        initialTime: DateTime.now()
+                    );
                     if (pickedTime != null && mounted) {
                       context.read<FastingBloc>().add(EndEatingWindow(endTime: pickedTime));
                     }
                   },
                   color: Colors.white.withOpacity(0.1),
-                  child: const Center(child: Text("Edit Time", style: TextStyle(color: Colors.white, fontSize: 16))),
+                  child: Center(child: Text(l10n.editTime, style: const TextStyle(color: Colors.white, fontSize: 16))),
                 ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  // 🔥 НОВАЯ ФУНКЦИЯ: Открывает FastingStageWidget с правильным закрытием
+  void _showStageDetails(BuildContext context, Duration elapsed) {
+    getIt<HapticService>().selectionClick();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent, // Прозрачный фон для BottomSheet
+      isScrollControlled: true, // Чтобы можно было центрировать
+      builder: (ctx) => GestureDetector(
+        // 1. ЛОВИМ НАЖАТИЕ НА ФОН -> ЗАКРЫВАЕМ
+        onTap: () => Navigator.of(context).pop(),
+        behavior: HitTestBehavior.opaque, // Ловит нажатия даже на прозрачных местах
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5), // Блюр фона
+          child: Center( // Центрируем контент
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              // 2. БЛОКИРУЕМ НАЖАТИЕ НА КАРТОЧКУ
+              child: GestureDetector(
+                onTap: () {}, // "Глотаем" нажатие, чтобы не закрывалось при клике на виджет
+                child: FastingStageWidget(elapsedDuration: elapsed),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -183,10 +207,9 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
           btnLabel = l10n.endCycle;
         }
 
-        // 🔥 ЛОГИКА ОТОБРАЖЕНИЯ ПЛАНА (CUSTOM или PRESET)
         String planName;
         if (state.planIndex == FastingState.customPlanIndex) {
-          planName = "Custom (${state.goalDuration.inHours}h)";
+          planName = "${l10n.customPlan} (${state.goalDuration.inHours}h)";
         } else {
           final currentPlan = FastingPlan.defaultPlans[state.planIndex];
           planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
@@ -195,6 +218,7 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
         return GlassCard(
           child: Column(
             children: [
+              // --- HEADER ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -229,22 +253,17 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // КНОПКА ВЫБОРА ПЛАНА
                       GestureDetector(
                         onTap: () async {
                           getIt<HapticService>().lightImpact();
                           final bool? result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanSelectionScreen()));
 
                           if (result == true && mounted) {
-                            // Если выбрали пресет, обновляем через событие
                             final prefs = await SharedPreferences.getInstance();
                             final newIdx = prefs.getInt('fast_plan_index') ?? 0;
-
-                            // Если это НЕ кастомный план, шлем событие смены
                             if (newIdx != FastingState.customPlanIndex) {
                               context.read<FastingBloc>().add(ChangePlan(newIdx));
                             }
-                            // Если кастомный (-1), событие SetCustomPlan уже отправлено из CustomPlanScreen
                           }
                         },
                         child: Container(
@@ -262,6 +281,8 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                 ],
               ),
               const SizedBox(height: 30),
+
+              // --- MAIN CONTENT (TIMER OR BODY) ---
               SizedBox(
                 height: 300,
                 width: double.infinity,
@@ -283,14 +304,18 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                             Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: Text(timeString, style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w700, color: Colors.white, fontFeatures: [FontFeature.tabularFigures()])))),
                             const SizedBox(height: 8),
                             if (isFasting)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(color: stateColor.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: stateColor.withOpacity(0.5))),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(stageIcon, color: stateColor, size: 14),
-                                  const SizedBox(width: 6),
-                                  Flexible(child: Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis))
-                                ]),
+                            // 🔥 ТУТ МЫ ДОБАВИЛИ ОБРАБОТЧИК НАЖАТИЯ НА ИНДИКАТОР СТАДИИ
+                              GestureDetector(
+                                onTap: () => _showStageDetails(context, state.elapsed),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(color: stateColor.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: stateColor.withOpacity(0.5))),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Icon(stageIcon, color: stateColor, size: 14),
+                                    const SizedBox(width: 6),
+                                    Flexible(child: Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis))
+                                  ]),
+                                ),
                               )
                             else
                               Text(l10n.targetGoal, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
@@ -302,6 +327,8 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              // --- MAIN BUTTON ---
               GlassCard(
                 onTap: onAction,
                 color: stateColor.withOpacity(0.8),
@@ -314,7 +341,7 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
     );
   }
 
-  // Helpers (internal)
+  // Helpers
   String _formatDuration(Duration d) => "${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
   Color _getPhaseColor(FastingState state) { if (state.phase == FastingPhase.eating) return const Color(0xFF84FAB0); if (state.phase == FastingPhase.stopped) return Colors.blueAccent; final h = state.elapsed.inHours; if (h < 12) return Colors.blueAccent; if (h < 16) return Colors.orangeAccent; if (h < 18) return Colors.purpleAccent; return const Color(0xFFFFD700); }
   IconData _getPhaseIcon(FastingState state) { if (state.phase == FastingPhase.eating) return Icons.restaurant; final h = state.elapsed.inHours; if (h < 12) return Icons.bloodtype; if (h < 16) return Icons.local_fire_department; if (h < 18) return Icons.bolt; return Icons.auto_awesome; }

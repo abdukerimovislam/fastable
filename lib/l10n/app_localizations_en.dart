@@ -1398,4 +1398,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proFeatureDesc => 'Custom fasting schedules are available for Pro users.';
+
+  @override
+  String get setFastingGoal => 'Set Fasting Goal';
+
+  @override
+  String get fastingSaved => 'Fasting saved! 🏆';
+
+  @override
+  String get whenStopEating => 'When did you stop eating?';
+
+  @override
+  String get editTime => 'Edit Time';
+
+  @override
+  String get customPlan => 'Custom';
+
+  @override
+  String get tapToEdit => 'Tap to set goal';
+
+  @override
+  String get timeLeft => 'LEFT';
+
+  @override
+  String get maxBenefits => 'Maximum Benefits Reached';
+
+  @override
+  String get appNameUpper => 'FASTABLE';
+
+  @override
+  String get splashSlogan => 'Unlock your body\'s potential';
+
+  @override
+  String get weightSaved => 'Weight saved';
 }
