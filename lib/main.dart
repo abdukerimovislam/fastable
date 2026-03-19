@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart'; // 🔥 Импорт Remote Config
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart'; // 🔥 ИСПРАВЛЕНИЕ: Пакет для инициализации форматов дат
 
 import 'package:fastable/app_theme.dart';
 import 'package:fastable/injection.dart';
@@ -44,6 +45,9 @@ import 'package:fastable/screens/splash_screen.dart';
 Future<void> main() async {
   // 1. Обязательная инициализация движка Flutter
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 ИСПРАВЛЕНИЕ 2: Инициализация данных локали ДО отрисовки UI (предотвращает крэш LocaleDataException)
+  await initializeDateFormatting();
 
   // 2. 🔥 Фиксируем портретную ориентацию (чтобы не ломать верстку)
   await SystemChrome.setPreferredOrientations([
@@ -110,7 +114,7 @@ Future<void> main() async {
   final auth = getIt<AuthService>();
   if (auth.currentUser == null) {
     debugPrint("🚀 Attempting anonymous sign-in...");
-    // 🔥 ИСПРАВЛЕНИЕ 2: Убрали 'await'. Теперь авторизация идет в фоне.
+    // Убрали 'await'. Теперь авторизация идет в фоне.
     // Это моментально разблокирует запуск runApp и предотвратит ANR.
     auth.signInAnonymously().catchError((e) {
       debugPrint("❌ Auth Error during background sign-in: $e");

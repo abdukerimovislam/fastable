@@ -75,9 +75,9 @@ class AiService {
       }
     }
 
-    // 🔥 ИСПРАВЛЕНИЕ 2: Запрещаем слать сообщения от "dummy" юзера. Требуем рестарт чата.
+    // 🔥 ИСПРАВЛЕНИЕ 2: Запрещаем слать сообщения от "dummy" юзера.
     if (_chat == null) {
-      return "Coach session expired. Please restart the chat.";
+      return "Coach session expired. Please close and reopen the chat to continue.";
     }
 
     try {

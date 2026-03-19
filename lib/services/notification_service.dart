@@ -6,6 +6,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:injectable/injectable.dart';
 import 'package:fastable/l10n/app_localizations.dart';
+import 'dart:io'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт dart:io для проверки платформы
 
 const String kNotifyWaterKey = 'notify_water';
 const String kNotifyWeightKey = 'notify_weight';
@@ -23,7 +24,6 @@ class NotificationService {
   Future<void> init() async {
     if (_isInitialized) return;
 
-    // 🔥 ИСПРАВЛЕНИЕ: Адаптация под flutter_timezone версии 5.x+
     tz.initializeTimeZones();
     try {
       final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
@@ -53,12 +53,28 @@ class NotificationService {
     _isInitialized = true;
   }
 
+  // 🔥 ИСПРАВЛЕНИЕ: Правильный запрос прав на Уведомления для ОБЕИХ платформ (iOS и Android)
   Future<void> requestPermissions() async {
-    final androidImplementation = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (androidImplementation != null) {
-      await androidImplementation.requestNotificationsPermission();
+    if (Platform.isIOS) {
+      final iosImplementation = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      if (iosImplementation != null) {
+        await iosImplementation.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        debugPrint("✅ iOS Notification Permissions Requested");
+      }
+    } else if (Platform.isAndroid) {
+      final androidImplementation = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation != null) {
+        await androidImplementation.requestNotificationsPermission();
+        debugPrint("✅ Android Notification Permissions Requested");
+      }
     }
   }
 

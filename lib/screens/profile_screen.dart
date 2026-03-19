@@ -316,7 +316,13 @@ class ProfileScreen extends StatelessWidget {
           body: SafeArea(
             bottom: false,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              // 🔥 ИСПРАВЛЕНИЕ: Динамический отступ снизу (120 пикселей + системная панель)
+              padding: EdgeInsets.fromLTRB(
+                16,
+                20,
+                16,
+                120 + MediaQuery.of(context).padding.bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -529,7 +535,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 40),
                 ],
               ),
             ),

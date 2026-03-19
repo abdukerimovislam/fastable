@@ -3,17 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-// DI & Bloc
 import 'package:fastable/injection.dart';
 import 'package:fastable/bloc/history/history_bloc.dart';
 import 'package:fastable/bloc/history/history_event.dart';
 import 'package:fastable/bloc/history/history_state.dart';
 import 'package:fastable/services/haptic_service.dart';
-
-// Models
 import 'package:fastable/models/fasting_record.dart';
-
-// Widgets
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 
@@ -58,12 +53,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 return const Center(child: CircularProgressIndicator(color: Colors.white24));
               }
 
-              // 1. Точки для календаря
               final fastingDatesSet = state.records.map((r) {
                 return DateTime(r.endTime.year, r.endTime.month, r.endTime.day);
               }).toSet();
 
-              // 2. Фильтрация списка
               final filteredRecords = state.records.where((r) {
                 final rDate = DateTime(r.endTime.year, r.endTime.month, r.endTime.day);
                 return rDate.isAtSameMomentAs(_selectedDate);
@@ -72,7 +65,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  // --- ЗАГОЛОВОК ---
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
                     sliver: SliverToBoxAdapter(
@@ -88,7 +80,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
 
-                  // --- КАЛЕНДАРЬ ---
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverToBoxAdapter(
@@ -104,7 +95,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
 
-                  // --- ГРАФИК ---
                   SliverPadding(
                     padding: const EdgeInsets.all(16),
                     sliver: SliverToBoxAdapter(
@@ -117,7 +107,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             const SizedBox(height: 20),
                             SizedBox(
                               height: 100,
-                              // 🔥 ИСПРАВЛЕНИЕ: Передаем l10n сюда
                               child: BarChart(_buildWeeklyChartData(state.records, l10n)),
                             ),
                           ],
@@ -126,7 +115,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
 
-                  // --- ЗАГОЛОВОК ДНЯ ---
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     sliver: SliverToBoxAdapter(
@@ -137,7 +125,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
 
-                  // --- СПИСОК ---
                   if (filteredRecords.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
@@ -167,7 +154,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
 
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+                  // 🔥 ИСПРАВЛЕНИЕ: Динамический отступ для Sliver
+                  SliverPadding(
+                    padding: EdgeInsets.only(bottom: 100 + MediaQuery.of(context).padding.bottom),
+                  ),
                 ],
               );
             },
@@ -177,8 +167,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // --- CHART LOGIC ---
-  // 🔥 ИСПРАВЛЕНИЕ: Добавлен аргумент l10n
   BarChartData _buildWeeklyChartData(List<FastingRecord> records, AppLocalizations l10n) {
     Map<int, double> last7Days = {};
     for (int i = 0; i < 7; i++) last7Days[i] = 0;
@@ -234,7 +222,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
           final date = now.subtract(Duration(days: 6 - value.toInt()));
           return Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            // 🔥 Теперь l10n доступен здесь
             child: Text(DateFormat('E', l10n.localeName).format(date), style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)),
           );
         })),
@@ -245,7 +232,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // --- ITEM WIDGET ---
   Widget _buildHistoryItem(BuildContext context, FastingRecord record, HapticService haptic, AppLocalizations l10n) {
     final duration = record.duration;
     final timeFormat = DateFormat('HH:mm');
@@ -303,7 +289,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // --- HELPERS ---
   String _getFastingType(int hours, AppLocalizations l10n) {
     if (hours < 13) return l10n.lblFastingTypeCircadian;
     if (hours < 16) return "13:11";
@@ -330,10 +315,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 }
-
-// --------------------------------------------------------------------------
-// 🔥 MODERN CALENDAR (LLLL FIX)
-// --------------------------------------------------------------------------
 
 class _ModernCalendar extends StatefulWidget {
   final DateTime selectedDate;
@@ -377,7 +358,6 @@ class _ModernCalendarState extends State<_ModernCalendar> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // --- HEADER ---
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Row(
@@ -387,7 +367,6 @@ class _ModernCalendarState extends State<_ModernCalendar> {
                 icon: const Icon(Icons.chevron_left, color: Colors.white70),
                 onPressed: () => _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
               ),
-              // Анимированный текст месяца
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Text(
@@ -405,7 +384,6 @@ class _ModernCalendarState extends State<_ModernCalendar> {
         ),
         const SizedBox(height: 10),
 
-        // --- ДНИ НЕДЕЛИ ---
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0),
           child: Row(
@@ -415,7 +393,6 @@ class _ModernCalendarState extends State<_ModernCalendar> {
         ),
         const SizedBox(height: 8),
 
-        // --- СЕТКА ---
         SizedBox(
           height: 260,
           child: PageView.builder(
@@ -436,7 +413,6 @@ class _ModernCalendarState extends State<_ModernCalendar> {
 
   List<Widget> _buildWeekDays() {
     final now = DateTime.now();
-    // Находим понедельник, чтобы правильно отобразить дни недели
     final monday = now.subtract(Duration(days: now.weekday - 1));
 
     return List.generate(7, (index) {

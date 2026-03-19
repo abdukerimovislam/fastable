@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:io'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт для Platform
 
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/services/locale_service.dart';
@@ -10,6 +11,7 @@ import 'package:fastable/widgets/mesh_background.dart';
 
 // Импорты экранов
 import 'package:fastable/screens/medical_disclaimer_screen.dart';
+import 'package:fastable/screens/pro_screen.dart'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт экрана Pro
 
 // Ключи для SharedPreferences
 const String kWaterGoalKey = 'water_goal';
@@ -247,6 +249,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
+              // 🔥 ИСПРАВЛЕНИЕ: Прячем подписку на Android (Баг №7)
+              if (Platform.isIOS) ...[
+                GlassCard(
+                  padding: EdgeInsets.zero,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
+                  child: ListTile(
+                    leading: const Icon(Icons.star, color: Colors.amber),
+                    title: const Text('Go Premium', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Unlock all features', style: TextStyle(color: Colors.white54)),
+                    trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               _buildLanguageSelector(l10n),
               const SizedBox(height: 16),
 
@@ -364,9 +381,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
 
-              // 🔥 ЖЕЛЕЗОБЕТОННЫЙ ОТСТУП СНИЗУ
-              // Это создаст огромную пустоту после всех элементов
-              // и гарантированно вытолкнет контент выше нижнего меню
+              // ЖЕЛЕЗОБЕТОННЫЙ ОТСТУП СНИЗУ
               const SizedBox(height: 250),
             ],
           ),

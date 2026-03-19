@@ -25,34 +25,24 @@ class HistoryRepository {
     _loadInitialData();
   }
 
-  // 🔥 ИСПРАВЛЕНИЕ 1: Решаем проблему пустого экрана (Race Condition).
-  // Используем async* чтобы моментально отдать текущий кэш любому новому подписчику (Bloc'у),
-  // а затем уже транслировать новые фоновые события из контроллера.
   Stream<List<FastingRecord>> getRecordsStream() async* {
     yield _currentRecords;
     yield* _recordsController.stream;
   }
 
-  /// Актуальный список без подписки
   List<FastingRecord> get currentRecords => List.unmodifiable(_currentRecords);
 
-  /// Очистка ресурсов
   @disposeMethod
   void dispose() {
     _recordsController.close();
   }
 
-  /// Первичная загрузка (фоновая)
   Future<void> _loadInitialData() async {
-    // Сначала быстро показываем локальные данные
     final local = await _getLocalRecords();
     _updateStream(local);
-
-    // Потом обновляем из облака
     await getAllRecords();
   }
 
-  // --- 2. ПОЛУЧЕНИЕ ДАННЫХ (HYBRID) ---
   Future<List<FastingRecord>> getAllRecords() async {
     final user = _auth.currentUser;
 
@@ -94,14 +84,12 @@ class HistoryRepository {
     return local;
   }
 
-  // --- ОЧИСТКА ТОЛЬКО ЛОКАЛЬНОГО КЭША ПРИ ЛОГАУТЕ ---
   Future<void> clearLocalCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localKey);
     _updateStream([]);
   }
 
-  // --- 3. ДОБАВЛЕНИЕ (ADD) ---
   Future<void> addRecord(FastingRecord record) async {
     final records = await _getLocalRecords();
     records.insert(0, record);
@@ -131,7 +119,6 @@ class HistoryRepository {
     }
   }
 
-  // --- 4. УДАЛЕНИЕ (DELETE) ---
   Future<void> deleteRecord(FastingRecord record) async {
     final records = await _getLocalRecords();
     records.removeWhere((r) => r.startTime.isAtSameMomentAs(record.startTime));
@@ -151,33 +138,43 @@ class HistoryRepository {
   }
 
   // --- 5. СТРИК ---
-  // 🔥 ИСПРАВЛЕНИЕ 2: Делаем расчет стрика синхронным и молниеносным.
-  // Нам не нужно читать диск каждый раз. Данные уже загружены в _currentRecords.
+  // 🔥 ИСПРАВЛЕНИЕ: Интеллектуальный подсчет стрика для длинных голоданий
   int calculateStreak() {
     final records = _currentRecords;
     if (records.isEmpty) return 0;
+
+    final Set<DateTime> activeDays = {};
+
+    // Собираем ВСЕ дни, затронутые голоданием (включая промежуточные дни)
+    for (var r in records) {
+      DateTime current = DateTime(r.startTime.year, r.startTime.month, r.startTime.day);
+      final endDay = DateTime(r.endTime.year, r.endTime.month, r.endTime.day);
+
+      while (!current.isAfter(endDay)) {
+        activeDays.add(current);
+        current = current.add(const Duration(days: 1));
+      }
+    }
 
     int streak = 0;
     final now = DateTime.now();
     DateTime checkDate = DateTime(now.year, now.month, now.day);
 
-    final lastEnd = records.first.endTime;
-    final lastEndDate = DateTime(lastEnd.year, lastEnd.month, lastEnd.day);
-
-    if (lastEndDate.isBefore(checkDate.subtract(const Duration(days: 1)))) {
+    // Если нет записи ни за сегодня, ни за вчера — стрик разорван
+    if (!activeDays.contains(checkDate) && !activeDays.contains(checkDate.subtract(const Duration(days: 1)))) {
       return 0;
     }
 
-    checkDate = lastEndDate;
-    final uniqueDays = records.map((r) {
-      final d = r.endTime;
-      return DateTime(d.year, d.month, d.day);
-    }).toSet();
+    // Если сегодня записи нет, но есть вчера — начинаем отсчет со вчерашнего дня
+    if (!activeDays.contains(checkDate)) {
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    }
 
-    while (uniqueDays.contains(checkDate)) {
+    while (activeDays.contains(checkDate)) {
       streak++;
       checkDate = checkDate.subtract(const Duration(days: 1));
     }
+
     return streak;
   }
 

@@ -20,35 +20,43 @@ class AchievementService {
     }).toList();
   }
 
-  // 🔥 ИСПРАВЛЕНИЕ: Логика на 100% идентична HistoryRepository.calculateStreak()
+  // 🔥 ИСПРАВЛЕНИЕ: Интеллектуальный подсчет стрика для длинных голоданий
+  // Логика на 100% синхронизирована с HistoryRepository
   int _calculateStreak(List<FastingRecord> records) {
     if (records.isEmpty) return 0;
+
+    final Set<DateTime> activeDays = {};
+
+    // Собираем ВСЕ дни, затронутые голоданием (включая промежуточные дни)
+    for (var r in records) {
+      DateTime current = DateTime(r.startTime.year, r.startTime.month, r.startTime.day);
+      final endDay = DateTime(r.endTime.year, r.endTime.month, r.endTime.day);
+
+      while (!current.isAfter(endDay)) {
+        activeDays.add(current);
+        current = current.add(const Duration(days: 1));
+      }
+    }
 
     int streak = 0;
     final now = DateTime.now();
     DateTime checkDate = DateTime(now.year, now.month, now.day);
 
-    // Сортируем копию от новых к старым (на всякий случай)
-    var sorted = List<FastingRecord>.from(records);
-    sorted.sort((a, b) => b.endTime.compareTo(a.endTime));
-
-    final lastEnd = sorted.first.endTime;
-    final lastEndDate = DateTime(lastEnd.year, lastEnd.month, lastEnd.day);
-
-    if (lastEndDate.isBefore(checkDate.subtract(const Duration(days: 1)))) {
-      return 0; // Стрик мертв
+    // Если нет записи ни за сегодня, ни за вчера — стрик разорван
+    if (!activeDays.contains(checkDate) && !activeDays.contains(checkDate.subtract(const Duration(days: 1)))) {
+      return 0;
     }
 
-    checkDate = lastEndDate;
-    final uniqueDays = sorted.map((r) {
-      final d = r.endTime;
-      return DateTime(d.year, d.month, d.day);
-    }).toSet();
+    // Если сегодня записи нет, но есть вчера — начинаем отсчет со вчерашнего дня
+    if (!activeDays.contains(checkDate)) {
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    }
 
-    while (uniqueDays.contains(checkDate)) {
+    while (activeDays.contains(checkDate)) {
       streak++;
       checkDate = checkDate.subtract(const Duration(days: 1));
     }
+
     return streak;
   }
 }

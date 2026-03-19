@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart'; // Для debugPrint и DateUtils
-import 'package:flutter/material.dart'; // Для DateUtils
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:injectable/injectable.dart';
 import 'package:fastable/models/water_entry.dart';
@@ -15,19 +15,16 @@ class WaterRepository {
 
   static const String _localKey = 'water_history_log';
 
-  // Вспомогательный метод для генерации ID документа (YYYY-MM-DD)
-  // Это гарантирует, что за один день будет только одна запись
+  // 🔥 ИСПРАВЛЕНИЕ: Генерация ID с учетом ЛОКАЛЬНОГО часового пояса (Баг №8)
   String _getDateId(DateTime date) {
-    return date.toIso8601String().substring(0, 10);
+    final localDate = date.toLocal();
+    return "${localDate.year.toString().padLeft(4, '0')}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}";
   }
 
-  // --- 1. ПОЛУЧЕНИЕ ИСТОРИИ (HYBRID + SMART MERGE) ---
   Future<List<WaterEntry>> getHistory() async {
-    // Сначала всегда читаем локальные данные (чтобы не потерять оффлайн-записи)
     final localList = await _getLocalHistory();
     final user = _auth.currentUser;
 
-    // A. Если юзер вошел -> пробуем взять из облака и слить с локальными
     if (user != null) {
       try {
         final snapshot = await _db
@@ -41,19 +38,15 @@ class WaterRepository {
             return WaterEntry.fromMap(doc.data());
           }).toList();
 
-          // 🔥 ИСПРАВЛЕНИЕ: Умное слияние (Merge) вместо глупой перезаписи
           final Map<String, WaterEntry> mergedMap = {};
 
-          // 1. Заливаем облачные данные
           for (var entry in cloudList) {
             mergedMap[_getDateId(entry.date)] = entry;
           }
 
-          // 2. Накладываем локальные данные
           for (var entry in localList) {
             final dateId = _getDateId(entry.date);
             if (mergedMap.containsKey(dateId)) {
-              // Если запись есть и там и там, берем максимальное количество стаканов (защита от потери)
               final cloudCups = mergedMap[dateId]!.cupCount;
               final localCups = entry.cupCount;
               mergedMap[dateId] = WaterEntry(
@@ -66,10 +59,8 @@ class WaterRepository {
           }
 
           final mergedList = mergedMap.values.toList();
-          // Сортируем по дате (старые -> новые)
           mergedList.sort((a, b) => a.date.compareTo(b.date));
 
-          // Обновляем локальный кэш объединенными данными
           await _saveToLocal(mergedList);
           return mergedList;
         }
@@ -78,32 +69,23 @@ class WaterRepository {
       }
     }
 
-    // B. Берем только локально (если офлайн, ошибка, или облако пустое)
     return localList;
   }
 
-  // --- 2. ДОБАВЛЕНИЕ / ОБНОВЛЕНИЕ (SYNC) ---
   Future<void> saveEntry(DateTime date, int cupCount) async {
     final entry = WaterEntry(date: date, cupCount: cupCount);
-
-    // 1. Сохраняем локально (Мгновенно)
     final entries = await _getLocalHistory();
-
-    // Ищем, есть ли запись за этот день
     final index = entries.indexWhere((e) => DateUtils.isSameDay(e.date, date));
 
     if (index != -1) {
-      // Обновляем существующую (immutable replace)
       entries[index] = entry;
     } else {
-      // Добавляем новую
       entries.add(entry);
     }
 
     await _saveToLocal(entries);
     debugPrint("💧 Water saved locally: $cupCount cups");
 
-    // 2. Отправляем в облако (Фоном)
     final user = _auth.currentUser;
     if (user != null) {
       try {
@@ -114,7 +96,7 @@ class WaterRepository {
             .collection('water_history')
             .doc(docId)
             .set({
-          'date': Timestamp.fromDate(date), // Firestore любит Timestamp
+          'date': Timestamp.fromDate(date),
           'cupCount': cupCount,
         });
         debugPrint("☁️ Water synced to cloud");
@@ -124,9 +106,7 @@ class WaterRepository {
     }
   }
 
-  // --- 3. ПОЛУЧЕНИЕ ЗА ДЕНЬ (Из кэша) ---
   Future<int> getWaterForDay(DateTime date) async {
-    // Работаем с локальным кэшем, так как он всегда актуален (благодаря getHistory)
     final entries = await _getLocalHistory();
     try {
       final entry = entries.firstWhere(
@@ -139,8 +119,6 @@ class WaterRepository {
     }
   }
 
-  // --- 4. МИГРАЦИЯ (LOCAL -> CLOUD) ---
-  // Вызывается AuthService при входе
   Future<void> migrateLocalToCloud(String uid) async {
     final localData = await _getLocalHistory();
     if (localData.isEmpty) return;
@@ -162,13 +140,10 @@ class WaterRepository {
     debugPrint("✅ Water history migration complete");
   }
 
-  // --- 5. ОЧИСТКА ВСЕГО (GDPR) ---
   Future<void> clearAllData() async {
-    // 1. Локально
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localKey);
 
-    // 2. Облако
     final user = _auth.currentUser;
     if (user != null) {
       final batch = _db.batch();
@@ -186,8 +161,6 @@ class WaterRepository {
     }
   }
 
-  // --- HELPERS ---
-
   Future<List<WaterEntry>> _getLocalHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final String? jsonString = prefs.getString(_localKey);
@@ -202,11 +175,9 @@ class WaterRepository {
     }
   }
 
-  // --- ОЧИСТКА ТОЛЬКО ЛОКАЛЬНОГО КЭША ПРИ ЛОГАУТЕ ---
   Future<void> clearLocalCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localKey);
-    // Сбрасываем трекер Health при логауте
     await prefs.remove('health_water_last_liters');
   }
 
