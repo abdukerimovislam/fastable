@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// 🔥 ИСПРАВЛЕНИЕ: Добавлены импорты для безопасной авторизации
+import 'package:fastable/injection.dart';
+import 'package:fastable/services/auth_service.dart';
+
 import 'package:fastable/screens/onboarding_screen.dart';
 import 'package:fastable/home_page.dart';
-// 🔥 Импорт локализации
 import 'package:fastable/l10n/app_localizations.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -69,7 +73,24 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 
   Future<void> _checkState() async {
-    await Future.delayed(const Duration(milliseconds: 3000));
+    // 1. Запускаем таймер красивой анимации (минимум 3 секунды)
+    final minSplashDuration = Future.delayed(const Duration(milliseconds: 3000));
+
+    // 2. 🔥 ИСПРАВЛЕНИЕ: Гарантируем, что юзер авторизован до входа в приложение
+    final authService = getIt<AuthService>();
+    if (authService.currentUser == null) {
+      try {
+        await authService.signInAnonymously();
+      } catch (e) {
+        debugPrint("Splash auth error: $e");
+        // В случае критической ошибки сети мы все равно пустим юзера дальше,
+        // Firebase Auth умеет кэшировать запросы при оффлайне.
+      }
+    }
+
+    // 3. Ждем окончания анимации (если логин прошел быстрее 3 секунд)
+    await minSplashDuration;
+
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();

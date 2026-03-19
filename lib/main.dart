@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт для Platform
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 🔥 Для настройки статус-бара и ориентации
 import 'package:firebase_core/firebase_core.dart';
@@ -6,6 +7,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart'; // 🔥 И�
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart'; // 🔥 ИСПРАВЛЕНИЕ: Пакет для инициализации форматов дат
+import 'package:purchases_flutter/purchases_flutter.dart'; // 🔥 ИСПРАВЛЕНИЕ: Пакет RevenueCat для подписок
 
 import 'package:fastable/app_theme.dart';
 import 'package:fastable/injection.dart';
@@ -46,7 +48,7 @@ Future<void> main() async {
   // 1. Обязательная инициализация движка Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🔥 ИСПРАВЛЕНИЕ 2: Инициализация данных локали ДО отрисовки UI (предотвращает крэш LocaleDataException)
+  // 🔥 ИСПРАВЛЕНИЕ: Инициализация данных локали ДО отрисовки UI (предотвращает крэш LocaleDataException)
   await initializeDateFormatting();
 
   // 2. 🔥 Фиксируем портретную ориентацию (чтобы не ломать верстку)
@@ -68,7 +70,19 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 5. 🔥 Инициализация Remote Config (Безопасная загрузка ключей)
+  // 5. 🔥 ИСПРАВЛЕНИЕ: Инициализация RevenueCat (Подписки и встроенные покупки)
+  // Вставь сюда свои публичные ключи из дашборда RevenueCat (Project Settings -> API Keys)
+  try {
+    if (Platform.isIOS) {
+      await Purchases.configure(PurchasesConfiguration("appl_GshcBpjCuJljIBYIccfLROgoGMW")); // ⚠️ НАПРИМЕР: appl_xxxxxxxxx
+    } else if (Platform.isAndroid) {
+      await Purchases.configure(PurchasesConfiguration("google")); // ⚠️ НАПРИМЕР: goog_xxxxxxxxx
+    }
+  } catch (e) {
+    debugPrint("⚠️ RevenueCat init error: $e");
+  }
+
+  // 6. 🔥 Инициализация Remote Config (Безопасная загрузка ключей)
   try {
     final remoteConfig = FirebaseRemoteConfig.instance;
 
@@ -82,7 +96,7 @@ Future<void> main() async {
       "ai_api_key": "default_value_if_offline",
     });
 
-    // 🔥 ИСПРАВЛЕНИЕ 1: Ограничиваем ожидание сети ровно 2 секундами.
+    // Ограничиваем ожидание сети ровно 2 секундами.
     // Если интернет очень медленный, мы просто перейдем к запуску UI с дефолтными значениями.
     await remoteConfig.fetchAndActivate().timeout(
       const Duration(seconds: 2),
@@ -97,20 +111,20 @@ Future<void> main() async {
     // Приложение продолжит работать, просто AI может быть недоступен
   }
 
-  // 6. Внедрение зависимостей (GetIt)
+  // 7. Внедрение зависимостей (GetIt)
   await configureDependencies();
 
-  // 7. Инициализация рекламы (фоном)
+  // 8. Инициализация рекламы (фоном)
   MobileAds.instance.initialize();
 
-  // 8. Инициализация уведомлений
+  // 9. Инициализация уведомлений
   try {
     await getIt<NotificationService>().init();
   } catch (e) {
     debugPrint("Notification Init Error: $e");
   }
 
-  // 9. Авто-вход (Анонимный)
+  // 10. Авто-вход (Анонимный)
   final auth = getIt<AuthService>();
   if (auth.currentUser == null) {
     debugPrint("🚀 Attempting anonymous sign-in...");
