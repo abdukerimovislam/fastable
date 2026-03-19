@@ -16,7 +16,7 @@ import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/history_screen.dart';
 import 'package:fastable/screens/stats_screen.dart';
 import 'package:fastable/screens/learn_screen.dart';
-import 'package:fastable/screens/profile_screen.dart';
+import 'package:fastable/screens/settings_screen.dart'; // 🔥 ИСПРАВЛЕНИЕ: Теперь тут Настройки
 import 'package:fastable/screens/dashboard_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -32,15 +32,13 @@ class _HomePageState extends State<HomePage> {
 
   int _selectedIndex = 2; // Таймер по центру
 
-  // ИСПРАВЛЕНИЕ: Убрали late final и создание списка в initState,
-  // так как экраны теперь const и не требуют параметров (репозиториев).
-  // Это делает код чище и безопаснее.
+  // 🔥 ИСПРАВЛЕНИЕ: Вкладка 4 теперь SettingsScreen
   final List<Widget> _pages = const [
-    HistoryScreen(), // Больше не нужно передавать historyRepository
-    StatsScreen(),   // Больше не нужно передавать repository
+    HistoryScreen(),
+    StatsScreen(),
     DashboardScreen(),
     LearnScreen(),
-    ProfileScreen(),
+    SettingsScreen(), // Заменили ProfileScreen на SettingsScreen
   ];
 
   @override
@@ -59,7 +57,6 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.transparent,
       extendBody: true,
       body: BlocBuilder<FastingBloc, FastingState>(
-        // Оптимизация: перерисовываем фон только если сменилась фаза (голод/еда)
         buildWhen: (previous, current) => previous.phase != current.phase,
         builder: (context, state) {
           return MeshBackground(
@@ -76,16 +73,17 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           color: Colors.transparent,
           child: GlassCard(
-            height: 70, // Чуть компактнее
+            height: 70,
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildDockItem(Icons.history_rounded, 0, l10n.navHistory),
                 _buildDockItem(Icons.bar_chart_rounded, 1, l10n.navStats),
-                _buildDockItem(Icons.timer_rounded, 2, l10n.navTimer, isCenter: true), // Используем ключ navHome, так привычнее
+                _buildDockItem(Icons.timer_rounded, 2, l10n.navTimer, isCenter: true),
                 _buildDockItem(Icons.school_rounded, 3, l10n.navLearn),
-                _buildDockItem(Icons.person_rounded, 4, l10n.navProfile),
+                // 🔥 ИСПРАВЛЕНИЕ: Иконка шестеренки для настроек
+                _buildDockItem(Icons.settings_rounded, 4, l10n.navSettings),
               ],
             ),
           ),
@@ -104,7 +102,7 @@ class _HomePageState extends State<HomePage> {
         _hapticService.selectionClick();
         setState(() => _selectedIndex = index);
       },
-      behavior: HitTestBehavior.opaque, // Важно для кликабельности
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

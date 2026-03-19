@@ -1,9 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart'; // Добавлено для кликабельного текста
+import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:url_launcher/url_launcher.dart'; // Добавлено для открытия ссылок
+import 'package:url_launcher/url_launcher.dart';
 
 // BLoC
 import 'package:fastable/bloc/pro/pro_bloc.dart';
@@ -17,6 +17,12 @@ import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 
+// 🔥 ИСПРАВЛЕНИЕ: Выносим ссылки в константы.
+// Замени эти ссылки на РЕАЛЬНЫЕ адреса твоих политик перед финальной сборкой!
+const String _privacyPolicyUrl = 'https://sites.google.com/view/fastable-privacy-policy';
+// Apple часто отклоняет дефолтную ссылку EULA на Paywall'е. Рекомендуется использовать свою.
+const String _termsOfUseUrl = 'https://sites.google.com/view/fastabletermsofuse';
+
 class ProScreen extends StatefulWidget {
   const ProScreen({super.key});
 
@@ -28,7 +34,6 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
   late AnimationController _controller;
   Package? _selectedPackage;
 
-  // Распознаватели жестов для ссылок EULA и Privacy Policy
   late TapGestureRecognizer _termsRecognizer;
   late TapGestureRecognizer _privacyRecognizer;
 
@@ -42,21 +47,23 @@ class _ProScreenState extends State<ProScreen> with SingleTickerProviderStateMix
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
 
-    // Инициализация кликов по ссылкам
     _termsRecognizer = TapGestureRecognizer()
       ..onTap = () async {
-        final uri = Uri.parse('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+        final uri = Uri.parse(_termsOfUseUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          debugPrint("Could not launch $_termsOfUseUrl");
         }
       };
 
     _privacyRecognizer = TapGestureRecognizer()
       ..onTap = () async {
-        // ⚠️ ЗАМЕНИТЕ ЭТУ ССЫЛКУ НА ВАШУ ПОЛИТИКУ КОНФИДЕНЦИАЛЬНОСТИ
-        final uri = Uri.parse('https://sites.google.com/view/fastable-privacy-policy');
+        final uri = Uri.parse(_privacyPolicyUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          debugPrint("Could not launch $_privacyPolicyUrl");
         }
       };
   }

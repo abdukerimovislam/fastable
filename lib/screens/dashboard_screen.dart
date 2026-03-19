@@ -15,6 +15,7 @@ import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/screens/coach_screen.dart';
 import 'package:fastable/screens/medical_disclaimer_screen.dart';
+import 'package:fastable/screens/profile_screen.dart'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт экрана профиля
 
 import 'package:fastable/screens/dashboard_widgets/fasting_timer_card.dart';
 import 'package:fastable/screens/dashboard_widgets/water_weight_row.dart';
@@ -168,7 +169,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               body: SafeArea(
                 bottom: false,
                 child: SingleChildScrollView(
-                  // 🔥 ИСПРАВЛЕНИЕ: Динамический нижний отступ для SafeArea
                   padding: EdgeInsets.fromLTRB(16, 10, 16, 100 + MediaQuery.of(context).padding.bottom),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,10 +185,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           Row(
                             children: [
+                              // 🔥 ИСПРАВЛЕНИЕ: Кнопка Профиля (левее всех)
+                              IconButton(
+                                icon: const Icon(Icons.account_circle_outlined, color: Colors.white, size: 28),
+                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
+                              ),
+
+                              // Кнопка дисклеймера
                               IconButton(
                                 icon: const Icon(Icons.info_outline, color: Colors.white54, size: 28),
                                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalDisclaimerScreen())),
                               ),
+
+                              // Кнопка ИИ-коуча
                               if (showProFeatures) ...[
                                 const SizedBox(width: 8),
                                 GestureDetector(
