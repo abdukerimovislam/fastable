@@ -14,11 +14,13 @@ class WeightRepository {
   static const String _localKey = 'weight_history';
   static const String _currentWeightKey = 'user_current_weight';
 
-  // --- 1. ПОЛУЧЕНИЕ ИСТОРИИ (HYBRID) ---
+  // --- 1. ПОЛУЧЕНИЕ ИСТОРИИ (HYBRID + SMART MERGE) ---
   Future<List<WeightEntry>> getWeightHistory() async {
+    // Сначала читаем локальные данные
+    final localList = await _getLocalHistory();
     final user = _auth.currentUser;
 
-    // A. Если онлайн -> берем из облака
+    // A. Если онлайн -> берем из облака и сливаем
     if (user != null) {
       try {
         final snapshot = await _db
@@ -34,22 +36,38 @@ class WeightRepository {
             return WeightEntry.fromMap(doc.data());
           }).toList();
 
+          // 🔥 ИСПРАВЛЕНИЕ: Безопасное слияние (Merge) вместо перезаписи
+          final Map<String, WeightEntry> mergedMap = {};
+
+          // 1. Заливаем облачные данные
+          for (var entry in cloudList) {
+            mergedMap[entry.date.toIso8601String().substring(0, 10)] = entry;
+          }
+
+          // 2. Накладываем локальные данные (Они приоритетнее, т.к. могли быть добавлены оффлайн)
+          for (var entry in localList) {
+            mergedMap[entry.date.toIso8601String().substring(0, 10)] = entry;
+          }
+
+          final mergedList = mergedMap.values.toList();
+          mergedList.sort((a, b) => a.date.compareTo(b.date));
+
           // Обновляем локальный кэш
-          await _saveToLocal(cloudList);
+          await _saveToLocal(mergedList);
 
           // Обновляем текущий вес (последняя запись)
-          if (cloudList.isNotEmpty) {
-            await _saveCurrentWeightLocal(cloudList.last.weight);
+          if (mergedList.isNotEmpty) {
+            await _saveCurrentWeightLocal(mergedList.last.weight);
           }
-          return cloudList;
+          return mergedList;
         }
       } catch (e) {
         debugPrint("⚠️ Cloud fetch failed (using local): $e");
       }
     }
 
-    // B. Если офлайн -> берем локально
-    return _getLocalHistory();
+    // B. Если офлайн или облако пустое -> берем локально
+    return localList;
   }
 
   // --- 2. ДОБАВЛЕНИЕ (SYNC) ---

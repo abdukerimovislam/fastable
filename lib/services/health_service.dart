@@ -7,18 +7,22 @@ class HealthService {
   final Health _health = Health();
 
   // Типы данных, которые нам нужны
-  // Вода в HealthKit/HealthConnect часто пишется через NUTRITION -> WATER
   static final _types = [
     HealthDataType.WEIGHT,
     HealthDataType.WATER,
   ];
 
+  // 🔥 ИСПРАВЛЕНИЕ 1: Явно указываем права на ЧТЕНИЕ и ЗАПИСЬ для каждого типа данных.
+  // Иначе системные API (Apple Health / Health Connect) дадут доступ только на чтение.
+  static final _permissions = [
+    HealthDataAccess.READ_WRITE, // Для WEIGHT
+    HealthDataAccess.READ_WRITE, // Для WATER
+  ];
+
   // Проверка: поддерживается ли API на устройстве
   Future<bool> isHealthSupported() async {
-    // Для Android проверяем наличие Health Connect
-    // Для iOS HealthKit доступен всегда (если включен в Capabilities)
     try {
-      // Пакет health сам проверяет поддержку
+      // Пакет health сам проверяет поддержку (наличие Health Connect на Android или HealthKit на iOS)
       return true;
     } catch (e) {
       return false;
@@ -27,7 +31,11 @@ class HealthService {
 
   // Запрос разрешений
   Future<bool> requestPermissions() async {
-    bool requested = await _health.requestAuthorization(_types);
+    // 🔥 ИСПРАВЛЕНИЕ 1: Передаем массив permissions
+    bool requested = await _health.requestAuthorization(
+      _types,
+      permissions: _permissions,
+    );
     return requested;
   }
 
@@ -52,9 +60,10 @@ class HealthService {
   /// Получить последний записанный вес
   Future<double?> getLatestWeight() async {
     try {
-      // Запрашиваем данные за последние 30 дней
+      // 🔥 ИСПРАВЛЕНИЕ 2: 30 дней — слишком мало. Пользователь может не взвешиваться месяцами.
+      // Берем окно в 1 год (365 дней), чтобы точно найти последнюю актуальную запись веса.
       final now = DateTime.now();
-      final from = now.subtract(const Duration(days: 30));
+      final from = now.subtract(const Duration(days: 365));
 
       List<HealthDataPoint> data = await _health.getHealthDataFromTypes(
         startTime: from,
@@ -64,7 +73,7 @@ class HealthService {
 
       if (data.isEmpty) return null;
 
-      // Сортируем по дате, берем последний
+      // Сортируем по дате по убыванию, берем самую свежую запись
       data.sort((a, b) => b.dateTo.compareTo(a.dateTo));
 
       // Значение веса (HealthValue) нужно привести к double

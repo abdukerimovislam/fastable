@@ -1,25 +1,29 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // Для проверки kDebugMode
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:injectable/injectable.dart';
 
 @lazySingleton
 class ProService {
-  // ⚠️ ВАЖНО: Вставьте сюда ваш реальный ключ RevenueCat для iOS
-  // Ключ для Android не нужен, так как там нет подписок.
+  // Ключ RevenueCat для iOS
   final String _apiKeyIOS = 'appl_GshcBpjCuJljIBYIccfLROgoGMW';
 
   bool _isInitialized = false;
 
   /// Инициализация сервиса покупок
   Future<void> init() async {
-    // Если это Android, мы просто выходим. RevenueCat не нужен.
+    // Если это Android, мы просто выходим. RevenueCat пока не нужен.
     if (Platform.isAndroid) return;
 
     if (_isInitialized) return;
 
-    // Настройка логов для отладки (можно убрать в релизе или поставить LogLevel.error)
-    await Purchases.setLogLevel(LogLevel.debug);
+    // Строгая настройка логов для релизной сборки (никакого спама в продакшене)
+    if (kDebugMode) {
+      await Purchases.setLogLevel(LogLevel.debug);
+    } else {
+      await Purchases.setLogLevel(LogLevel.error);
+    }
 
     PurchasesConfiguration? configuration;
     if (Platform.isIOS) {
@@ -34,55 +38,52 @@ class ProService {
 
   /// Проверка статуса подписки
   Future<bool> checkProStatus() async {
-    if (Platform.isAndroid) return false; // На Андроиде всегда "Не PRO"
+    if (Platform.isAndroid) return false;
 
     try {
       if (!_isInitialized) await init();
       final customerInfo = await Purchases.getCustomerInfo();
       // Проверяем наличие активного права доступа 'pro'
       return customerInfo.entitlements.all['pro']?.isActive ?? false;
-    } on PlatformException catch (_) {
+    } on PlatformException catch (e) {
+      debugPrint("RevenueCat Check Status Error: ${e.message}");
       return false;
     }
   }
 
   /// Получение доступных тарифов
   Future<List<Package>> fetchOfferings() async {
-    if (Platform.isAndroid) return []; // Нет тарифов
+    if (Platform.isAndroid) return [];
 
     try {
       if (!_isInitialized) await init();
       final offerings = await Purchases.getOfferings();
       return offerings.current?.availablePackages ?? [];
-    } on PlatformException catch (_) {
+    } on PlatformException catch (e) {
+      debugPrint("RevenueCat Fetch Offerings Error: ${e.message}");
       return [];
     }
   }
 
-  /// Покупка пакета (Исправлена ошибка с PurchaseResult)
+  /// Покупка пакета
   Future<bool> purchasePackage(Package package) async {
     if (Platform.isAndroid) return false;
 
     try {
-      // 1. Совершаем покупку
-      // Используем dynamic, чтобы обработать и CustomerInfo, и PurchaseResult
-      final dynamic result = await Purchases.purchasePackage(package);
+      // 🔥 ИСПРАВЛЕНИЕ: Используем строгий тип PurchaseResult для новых версий RevenueCat
+      final PurchaseResult result = await Purchases.purchasePackage(package);
+      final CustomerInfo customerInfo = result.customerInfo;
 
-      // 2. Извлекаем CustomerInfo
-      CustomerInfo customerInfo;
-      try {
-        // Если вернулся PurchaseResult (как в ошибке), берем из него customerInfo
-        customerInfo = result.customerInfo;
-      } catch (_) {
-        // Если вернулся сразу CustomerInfo (в других версиях), используем его
-        customerInfo = result;
-      }
-
-      // 3. Проверяем подписку
+      // Проверяем подписку после успешной транзакции
       return customerInfo.entitlements.all['pro']?.isActive ?? false;
     } on PlatformException catch (e) {
-      // Ошибка покупки или отмена пользователем
-      print("Purchase Error: $e");
+      // Изящная обработка отмены пользователем, чтобы не считать это критической ошибкой
+      var errorCode = PurchasesErrorHelper.getErrorCode(e);
+      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
+        debugPrint("User cancelled the purchase");
+      } else {
+        debugPrint("Purchase Error: ${e.message}");
+      }
       return false;
     }
   }
@@ -94,7 +95,8 @@ class ProService {
     try {
       final customerInfo = await Purchases.restorePurchases();
       return customerInfo.entitlements.all['pro']?.isActive ?? false;
-    } on PlatformException catch (_) {
+    } on PlatformException catch (e) {
+      debugPrint("Restore Purchases Error: ${e.message}");
       return false;
     }
   }

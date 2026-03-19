@@ -5,6 +5,8 @@ import 'package:fastable/bloc/history/history_event.dart';
 import 'package:fastable/bloc/history/history_state.dart';
 import 'package:fastable/repositories/history_repository.dart';
 
+import '../../models/fasting_record.dart';
+
 @injectable
 class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   final HistoryRepository _historyRepository;
@@ -22,15 +24,21 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
 
     await _historySubscription?.cancel();
 
+    // 🔥 Благодаря нашему исправлению в репозитории (yield _currentRecords),
+    // этот слушатель моментально получит данные из кэша и UI отрисуется без задержек.
     _historySubscription = _historyRepository.getRecordsStream().listen(
           (records) {
         add(HistoryUpdated(records));
       },
       onError: (error) {
         print("Stream error: $error");
-        // Можно добавить emit(state.copyWith(status: HistoryStatus.failure));
+        emit(state.copyWith(status: HistoryStatus.failure));
       },
     );
+
+    // 🔥 ИСПРАВЛЕНИЕ 3: При каждом открытии экрана истории (подписке)
+    // мы фоном пинаем облако, чтобы подтянуть свежие записи (если юзер добавил их на другом девайсе).
+    _historyRepository.getAllRecords().catchError((_) => <FastingRecord>[]);
   }
 
   Future<void> _onHistoryUpdated(HistoryUpdated event, Emitter<HistoryState> emit) async {
@@ -47,11 +55,10 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
         ? Duration(minutes: totalTime.inMinutes ~/ records.length)
         : Duration.zero;
 
-    // 3. Считаем Стрик (асинхронно из репозитория)
-    // Это гарантирует, что цифра будет совпадать с Dashboard
+    // 3. Считаем Стрик (Теперь это мгновенная синхронная операция)
     int streak = 0;
     try {
-      streak = await _historyRepository.calculateStreak();
+      streak = _historyRepository.calculateStreak();
     } catch (e) {
       print("Error calc streak in bloc: $e");
     }
@@ -61,14 +68,13 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       records: records,
       totalFastingTime: totalTime,
       averageDuration: avgTime,
-      currentStreak: streak, // <--- Обновляем стрик
+      currentStreak: streak,
     ));
   }
 
   Future<void> _onDeleteRecord(DeleteRecordEvent event, Emitter<HistoryState> emit) async {
     try {
       await _historyRepository.deleteRecord(event.record);
-      // Stream сам обновит состояние, ничего emit'ить не нужно
     } catch (e) {
       emit(state.copyWith(errorMessage: "Failed to delete record"));
     }
@@ -77,7 +83,6 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   Future<void> _onAddManualRecord(AddManualRecord event, Emitter<HistoryState> emit) async {
     try {
       await _historyRepository.addRecord(event.record);
-      // Stream сам обновит состояние
     } catch (e) {
       emit(state.copyWith(errorMessage: "Failed to add record"));
     }

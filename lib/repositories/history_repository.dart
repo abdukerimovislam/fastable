@@ -17,7 +17,7 @@ class HistoryRepository {
   // Контроллер потока
   final _recordsController = StreamController<List<FastingRecord>>.broadcast();
 
-  // Кэш текущих записей, чтобы новые подписчики могли получить данные (решает проблему broadcast)
+  // Кэш текущих записей
   List<FastingRecord> _currentRecords = [];
 
   // Конструктор: Загружаем данные один раз при создании репозитория
@@ -25,15 +25,18 @@ class HistoryRepository {
     _loadInitialData();
   }
 
-  /// 🔹 1. ПОТОК (Только отдает stream)
-  Stream<List<FastingRecord>> get recordsStream => _recordsController.stream;
-
-  Stream<List<FastingRecord>> getRecordsStream() => _recordsController.stream;
+  // 🔥 ИСПРАВЛЕНИЕ 1: Решаем проблему пустого экрана (Race Condition).
+  // Используем async* чтобы моментально отдать текущий кэш любому новому подписчику (Bloc'у),
+  // а затем уже транслировать новые фоновые события из контроллера.
+  Stream<List<FastingRecord>> getRecordsStream() async* {
+    yield _currentRecords;
+    yield* _recordsController.stream;
+  }
 
   /// Актуальный список без подписки
   List<FastingRecord> get currentRecords => List.unmodifiable(_currentRecords);
 
-  /// Очистка ресурсов (вызывается при logout или уничтожении DI)
+  /// Очистка ресурсов
   @disposeMethod
   void dispose() {
     _recordsController.close();
@@ -53,7 +56,6 @@ class HistoryRepository {
   Future<List<FastingRecord>> getAllRecords() async {
     final user = _auth.currentUser;
 
-    // A. Онлайн -> Облако
     if (user != null) {
       try {
         final snapshot = await _db
@@ -64,13 +66,9 @@ class HistoryRepository {
             .get();
 
         if (snapshot.docs.isNotEmpty) {
-          // 🔥 ИСПРАВЛЕНИЕ: Парсим на главном потоке.
-          // Изоляты не могут принимать QueryDocumentSnapshot.
           final cloudList = snapshot.docs.map((doc) {
             final data = doc.data();
 
-            // Нормализуем Timestamp в DateTime или ISO-строку до передачи в fromMap,
-            // чтобы fromMap не упал, ожидая String из JSON.
             if (data['startTime'] is Timestamp) {
               data['startTime'] = (data['startTime'] as Timestamp).toDate().toIso8601String();
             }
@@ -81,7 +79,6 @@ class HistoryRepository {
             return FastingRecord.fromMap(data);
           }).toList();
 
-          // Обновляем локальный кэш
           await _saveToLocal(cloudList);
           _updateStream(cloudList);
 
@@ -92,7 +89,6 @@ class HistoryRepository {
       }
     }
 
-    // B. Офлайн -> Локально
     final local = await _getLocalRecords();
     _updateStream(local);
     return local;
@@ -100,7 +96,6 @@ class HistoryRepository {
 
   // --- 3. ДОБАВЛЕНИЕ (ADD) ---
   Future<void> addRecord(FastingRecord record) async {
-    // Локально (мгновенно)
     final records = await _getLocalRecords();
     records.insert(0, record);
     records.sort((a, b) => b.startTime.compareTo(a.startTime));
@@ -108,12 +103,10 @@ class HistoryRepository {
     await _saveToLocal(records);
     _updateStream(records);
 
-    // Облако (фоном)
     final user = _auth.currentUser;
     if (user != null) {
       try {
         final docId = record.startTime.millisecondsSinceEpoch.toString();
-        // Используем set с merge: true на случай, если это обновление существующей записи
         await _db
             .collection('users')
             .doc(user.uid)
@@ -151,8 +144,10 @@ class HistoryRepository {
   }
 
   // --- 5. СТРИК ---
-  Future<int> calculateStreak() async {
-    final records = await _getLocalRecords();
+  // 🔥 ИСПРАВЛЕНИЕ 2: Делаем расчет стрика синхронным и молниеносным.
+  // Нам не нужно читать диск каждый раз. Данные уже загружены в _currentRecords.
+  int calculateStreak() {
+    final records = _currentRecords;
     if (records.isEmpty) return 0;
 
     int streak = 0;
@@ -213,8 +208,6 @@ class HistoryRepository {
   }
 
   // --- HELPERS ---
-
-  /// Единый метод для обновления стейта
   void _updateStream(List<FastingRecord> records) {
     _currentRecords = records;
     if (!_recordsController.isClosed) {

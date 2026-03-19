@@ -21,11 +21,13 @@ class WaterRepository {
     return date.toIso8601String().substring(0, 10);
   }
 
-  // --- 1. ПОЛУЧЕНИЕ ИСТОРИИ (HYBRID) ---
+  // --- 1. ПОЛУЧЕНИЕ ИСТОРИИ (HYBRID + SMART MERGE) ---
   Future<List<WaterEntry>> getHistory() async {
+    // Сначала всегда читаем локальные данные (чтобы не потерять оффлайн-записи)
+    final localList = await _getLocalHistory();
     final user = _auth.currentUser;
 
-    // A. Если юзер вошел -> пробуем взять из облака
+    // A. Если юзер вошел -> пробуем взять из облака и слить с локальными
     if (user != null) {
       try {
         final snapshot = await _db
@@ -39,17 +41,45 @@ class WaterRepository {
             return WaterEntry.fromMap(doc.data());
           }).toList();
 
-          // Обновляем локальный кэш
-          await _saveToLocal(cloudList);
-          return cloudList;
+          // 🔥 ИСПРАВЛЕНИЕ: Умное слияние (Merge) вместо глупой перезаписи
+          final Map<String, WaterEntry> mergedMap = {};
+
+          // 1. Заливаем облачные данные
+          for (var entry in cloudList) {
+            mergedMap[_getDateId(entry.date)] = entry;
+          }
+
+          // 2. Накладываем локальные данные
+          for (var entry in localList) {
+            final dateId = _getDateId(entry.date);
+            if (mergedMap.containsKey(dateId)) {
+              // Если запись есть и там и там, берем максимальное количество стаканов (защита от потери)
+              final cloudCups = mergedMap[dateId]!.cupCount;
+              final localCups = entry.cupCount;
+              mergedMap[dateId] = WaterEntry(
+                date: entry.date,
+                cupCount: localCups > cloudCups ? localCups : cloudCups,
+              );
+            } else {
+              mergedMap[dateId] = entry;
+            }
+          }
+
+          final mergedList = mergedMap.values.toList();
+          // Сортируем по дате (старые -> новые)
+          mergedList.sort((a, b) => a.date.compareTo(b.date));
+
+          // Обновляем локальный кэш объединенными данными
+          await _saveToLocal(mergedList);
+          return mergedList;
         }
       } catch (e) {
         debugPrint("⚠️ Water sync failed, using local: $e");
       }
     }
 
-    // B. Берем локально (если офлайн или ошибка)
-    return _getLocalHistory();
+    // B. Берем только локально (если офлайн, ошибка, или облако пустое)
+    return localList;
   }
 
   // --- 2. ДОБАВЛЕНИЕ / ОБНОВЛЕНИЕ (SYNC) ---

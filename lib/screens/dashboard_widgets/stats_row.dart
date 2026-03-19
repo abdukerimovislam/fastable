@@ -24,6 +24,9 @@ class StatsRow extends StatelessWidget {
     final bmiStr = bmi.toStringAsFixed(1);
     final bmiColor = _getBMIColor(bmi);
 
+    // 🔥 ИСПРАВЛЕНИЕ: Получаем стрик синхронно и моментально без FutureBuilder
+    final streak = getIt<HistoryRepository>().calculateStreak();
+
     return GlassCard(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
       child: Row(
@@ -39,20 +42,12 @@ class StatsRow extends StatelessWidget {
 
           Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
 
-          // 2. STREAK (ТЕПЕРЬ ЖИВОЙ)
-          // Используем FutureBuilder, чтобы загрузить стрик из базы
-          FutureBuilder<int>(
-            future: getIt<HistoryRepository>().calculateStreak(),
-            initialData: 0,
-            builder: (context, snapshot) {
-              final streak = snapshot.data ?? 0;
-              return _buildInfoItem(
-                icon: Icons.bolt_rounded,
-                color: const Color(0xFFF9D423),
-                label: l10n.metricStreak,
-                value: l10n.valStreakDays(streak), // Используем реальное значение
-              );
-            },
+          // 2. STREAK (ТЕПЕРЬ ЖИВОЙ И СИНХРОННЫЙ)
+          _buildInfoItem(
+            icon: Icons.bolt_rounded,
+            color: const Color(0xFFF9D423),
+            label: l10n.metricStreak,
+            value: l10n.valStreakDays(streak),
           ),
 
           Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
