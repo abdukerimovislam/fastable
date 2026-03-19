@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart'; // Для debugPrint
+import 'package:flutter/widgets.dart';    // 🔥 Добавлено для WidgetsBindingObserver и AppLifecycleState
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +16,8 @@ import 'package:fastable/repositories/history_repository.dart';
 import 'package:fastable/models/fasting_record.dart';
 
 @injectable
-class FastingBloc extends Bloc<FastingEvent, FastingState> {
+// 🔥 ИСПРАВЛЕНИЕ: Добавляем WidgetsBindingObserver для отслеживания сворачивания/разворачивания приложения
+class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingObserver {
   final NotificationService _notificationService;
   final HapticService _hapticService;
   final HistoryRepository _historyRepository;
@@ -29,6 +31,10 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
   FastingBloc(
       this._notificationService, this._hapticService, this._historyRepository)
       : super(const FastingState()) {
+
+    // 🔥 Регистрируем наш Bloc как наблюдателя за жизненным циклом приложения
+    WidgetsBinding.instance.addObserver(this);
+
     on<CheckFastingState>(_onCheckState);
     on<StartFasting>(_onStartFasting);
     on<EndFasting>(_onEndFasting);
@@ -37,6 +43,21 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
     on<ChangePlan>(_onChangePlan);
     on<SetCustomPlan>(_onSetCustomPlan); // 🔥 Обработка кастомного плана
     on<ResetFasting>(_onReset);
+  }
+
+  // 🔥 ИСПРАВЛЕНИЕ: Мгновенно обновляем таймер, как только пользователь возвращается в приложение
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState stateLifecycle) {
+    if (stateLifecycle == AppLifecycleState.resumed) {
+      if (state.startTime != null && state.phase != FastingPhase.stopped) {
+        final now = DateTime.now();
+        final diff = now.difference(state.startTime!);
+        final elapsed = diff.isNegative ? Duration.zero : diff;
+
+        // Принудительно кидаем ивент тика, чтобы обновить UI мгновенно без задержки в 1 секунду
+        add(TickTimer(elapsed));
+      }
+    }
   }
 
   Future<void> _onCheckState(
@@ -307,6 +328,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> {
 
   @override
   Future<void> close() {
+    // 🔥 Обязательно отписываемся от наблюдения при уничтожении Bloc, чтобы избежать утечек памяти
+    WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
     return super.close();
   }

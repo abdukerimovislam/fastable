@@ -5,10 +5,49 @@ import 'package:fastable/models/article.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Future<List<Article>> getArticles(String languageCode) async {
-    final articlesRef = _db.collection('articles').orderBy('order', descending: false);
+  // 🔥 ИСПРАВЛЕНИЕ: Храним время последнего обращения к серверу (в памяти текущей сессии)
+  DateTime? _lastFetchTime;
 
-    final snapshot = await articlesRef.get();
+  Future<List<Article>> getArticles(String languageCode, {int limit = 50}) async {
+    // 🔥 ЗАЩИТА 1: Ограничиваем максимальное количество документов (limit),
+    // чтобы случайно не выкачать 1000+ статей и не разориться на квотах
+    final articlesRef = _db.collection('articles')
+        .orderBy('order', descending: false)
+        .limit(limit);
+
+    QuerySnapshot<Map<String, dynamic>> snapshot;
+
+    try {
+      // 🔥 ЗАЩИТА 2: Умное кэширование. Экономим Firestore Reads.
+      // Если мы уже скачивали статьи менее 12 часов назад, берем их из бесплатного кэша устройства.
+      bool shouldFetchFromServer = true;
+      if (_lastFetchTime != null) {
+        final diff = DateTime.now().difference(_lastFetchTime!);
+        if (diff.inHours < 12) {
+          shouldFetchFromServer = false;
+        }
+      }
+
+      if (shouldFetchFromServer) {
+        // Читаем с сервера и обновляем кэш
+        snapshot = await articlesRef.get(const GetOptions(source: Source.serverAndCache));
+        _lastFetchTime = DateTime.now();
+      } else {
+        // Читаем только из локального кэша (0 затрат квот Firestore)
+        snapshot = await articlesRef.get(const GetOptions(source: Source.cache));
+
+        // Подстраховка: если кэш по какой-то причине пуст, делаем фоллбэк на сервер
+        if (snapshot.docs.isEmpty) {
+          snapshot = await articlesRef.get(const GetOptions(source: Source.serverAndCache));
+          _lastFetchTime = DateTime.now();
+        }
+      }
+
+    } catch (e) {
+      debugPrint("⚠️ Firestore getArticles error (falling back to cache): $e");
+      // Если нет интернета или ошибка сети, принудительно отдаем то, что есть в кэше
+      snapshot = await articlesRef.get(const GetOptions(source: Source.cache));
+    }
 
     final List<Article> articles = [];
 

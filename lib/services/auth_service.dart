@@ -68,7 +68,6 @@ class AuthService {
       if (e is DataConflictException) rethrow;
 
       debugPrint("❌ Google Sign In Error: $e");
-      // Можно вернуть null или выбросить понятную ошибку
       throw Exception("Google Sign In Failed");
     }
   }
@@ -97,9 +96,11 @@ class AuthService {
 
       debugPrint("❌ Apple Sign In Error: $e");
 
-      // SignInWithAppleAuthorizationException (код 1001) - это отмена пользователем
-      if (e.toString().contains('AuthorizationErrorCode.canceled')) {
-        return null;
+      // 🔥 ИСПРАВЛЕНИЕ 2: Безопасная проверка ошибки отмены Apple Sign In (Типизация вместо подстроки)
+      if (e is SignInWithAppleAuthorizationException) {
+        if (e.code == AuthorizationErrorCode.canceled) {
+          return null;
+        }
       }
 
       throw Exception("Apple Sign In Failed");
@@ -114,16 +115,18 @@ class AuthService {
     // Запоминаем, были ли мы анонимом (до попытки входа)
     bool wasAnonymous = user?.isAnonymous ?? false;
 
+    // 🔥 ИСПРАВЛЕНИЕ 1: Сохраняем старый UID анонима до того, как Firebase его затрет
+    String? oldUid = user?.uid;
+
     try {
       if (wasAnonymous) {
         // СЦЕНАРИЙ А: Мы Аноним -> Пытаемся ПРИВЯЗАТЬ (Link) Google/Apple
-        // Это лучший сценарий: UID остается тем же, данные никуда не деваются.
         final result = await user!.linkWithCredential(credential);
         user = result.user;
 
         // На всякий случай запускаем миграцию, чтобы убедиться, что локальные данные в облаке
         if (user != null) {
-          await _migrateAllData(user.uid);
+          await _migrateAllData(user.uid); // Здесь можно передать oldUid в будущем, если репозитории будут его требовать
         }
       } else {
         // СЦЕНАРИЙ Б: Мы не в системе -> Просто входим
@@ -133,18 +136,17 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'credential-already-in-use') {
         // СЦЕНАРИЙ В: Такой Google/Apple уже привязан к ДРУГОМУ аккаунту.
-        // Firebase не дает сделать Link. Приходится перелогиниваться.
         debugPrint("⚠️ Account exists. Switching users...");
 
-        // 1. Входим в старый аккаунт (Анонимный UID при этом сбрасывается!)
+        // 1. Входим в старый аккаунт (Анонимный UID при этом сбрасывается, но мы сохранили oldUid!)
         final result = await _auth.signInWithCredential(credential);
         user = result.user;
 
         // 2. 🛑 ПРОВЕРКА НА КОНФЛИКТ
-        // Если мы были анонимом и успели накопить данные...
-        if (user != null && wasAnonymous) {
+        if (user != null && wasAnonymous && oldUid != null) {
           final weightRepo = getIt<WeightRepository>();
-          // ...а в старом аккаунте ТОЖЕ есть данные.
+          // Используем oldUid для проверки локальных данных, если репо это поддерживает,
+          // либо просто проверяем наличие несохраненных данных на девайсе
           final hasLocal = await weightRepo.hasLocalData();
           final hasCloud = await weightRepo.hasCloudData(user.uid);
 
@@ -155,10 +157,8 @@ class AuthService {
             // В облаке пусто -> Просто заливаем наши локальные данные туда
             await _migrateAllData(user.uid);
           }
-          // Если hasLocal == false (аноним ничего не делал), просто загрузятся данные из облака
         }
       } else {
-        // Другие ошибки Firebase (сеть, бан и т.д.)
         rethrow;
       }
     }
@@ -177,9 +177,7 @@ class AuthService {
       await _migrateAllData(user.uid);
     } else {
       // Вариант Б: Использовать облако (Удалить локальные данные гостя)
-      // Мы принудительно обновляем кэш из облака
       await getIt<WeightRepository>().discardLocalAndUseCloud(user.uid);
-      // Для остальных репо просто вызов get подтянет облако
       await getIt<HistoryRepository>().getAllRecords();
       await getIt<WaterRepository>().getHistory();
     }

@@ -65,14 +65,12 @@ Future<void> main() async {
   );
 
   // 5. 🔥 Инициализация Remote Config (Безопасная загрузка ключей)
-  // Это нужно сделать ДО configureDependencies, чтобы сервисы могли прочитать конфиг
   try {
     final remoteConfig = FirebaseRemoteConfig.instance;
 
     await remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(minutes: 1), // Таймаут соединения
-      minimumFetchInterval: const Duration(hours: 12), // В РЕЛИЗЕ: 12 часов (чтобы не превысить лимиты)
-      // minimumFetchInterval: const Duration(minutes: 1), // ДЛЯ ТЕСТОВ: 1 минута
+      fetchTimeout: const Duration(seconds: 10), // Безопасный таймаут для самого пакета
+      minimumFetchInterval: const Duration(hours: 12),
     ));
 
     // Устанавливаем дефолтное значение (если нет интернета)
@@ -80,9 +78,16 @@ Future<void> main() async {
       "ai_api_key": "default_value_if_offline",
     });
 
-    // Скачиваем актуальные данные с сервера
-    await remoteConfig.fetchAndActivate();
-    debugPrint("✅ Remote Config fetched successfully");
+    // 🔥 ИСПРАВЛЕНИЕ 1: Ограничиваем ожидание сети ровно 2 секундами.
+    // Если интернет очень медленный, мы просто перейдем к запуску UI с дефолтными значениями.
+    await remoteConfig.fetchAndActivate().timeout(
+      const Duration(seconds: 2),
+      onTimeout: () {
+        debugPrint("⚠️ Remote Config fetch timeout. App proceeding with defaults.");
+        return false;
+      },
+    );
+    debugPrint("✅ Remote Config ready");
   } catch (e) {
     debugPrint("⚠️ Remote Config fetch failed: $e");
     // Приложение продолжит работать, просто AI может быть недоступен
@@ -104,12 +109,13 @@ Future<void> main() async {
   // 9. Авто-вход (Анонимный)
   final auth = getIt<AuthService>();
   if (auth.currentUser == null) {
-    try {
-      debugPrint("🚀 Attempting anonymous sign-in...");
-      await auth.signInAnonymously();
-    } catch (e) {
-      debugPrint("❌ Auth Error: $e");
-    }
+    debugPrint("🚀 Attempting anonymous sign-in...");
+    // 🔥 ИСПРАВЛЕНИЕ 2: Убрали 'await'. Теперь авторизация идет в фоне.
+    // Это моментально разблокирует запуск runApp и предотвратит ANR.
+    auth.signInAnonymously().catchError((e) {
+      debugPrint("❌ Auth Error during background sign-in: $e");
+      return null;
+    });
   }
 
   runApp(const MyApp());
