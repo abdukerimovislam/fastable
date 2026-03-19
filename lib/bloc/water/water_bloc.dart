@@ -7,12 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/bloc/water/water_event.dart';
 import 'package:fastable/bloc/water/water_state.dart';
 import 'package:fastable/repositories/water_repository.dart';
-import 'package:fastable/services/health_service.dart'; // <--- Импорт сервиса
+import 'package:fastable/services/health_service.dart';
 
 @injectable
 class WaterBloc extends Bloc<WaterEvent, WaterState> {
   final WaterRepository _repository;
-  final HealthService _healthService; // <--- Добавляем зависимость
+  final HealthService _healthService;
 
   WaterBloc(this._repository, this._healthService) : super(const WaterState()) {
     on<LoadWaterData>(_onLoadData);
@@ -28,42 +28,45 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // 1. Проверяем смену дня
       final lastDate = prefs.getString('water_last_date');
       final today = DateTime.now().toIso8601String().substring(0, 10);
 
       int currentCups = prefs.getInt('water_consumed') ?? 0;
 
       if (lastDate != today) {
-        currentCups = 0; // Новый день — сбрасываем счетчик
+        currentCups = 0;
         await prefs.setString('water_last_date', today);
         await prefs.setInt('water_consumed', 0);
+        // 🔥 ИСПРАВЛЕНИЕ: Сбрасываем трекер системного здоровья с наступлением нового дня
+        await prefs.setDouble('health_water_last_liters', 0.0);
       }
 
-      // 2. Загружаем настройки
       final goal = prefs.getInt('water_goal') ?? 8;
       final recommended = prefs.getInt('water_recommended') ?? 8;
       final isAuto = prefs.getBool('water_is_auto') ?? true;
 
-      // --- ИНТЕГРАЦИЯ HEALTH (ЧТЕНИЕ) ---
-      // Если пользователь добавил воду через Apple Watch или другое приложение,
-      // мы хотим подтянуть эти данные.
+      // --- ИНТЕГРАЦИЯ HEALTH (УМНОЕ ЧТЕНИЕ) ---
       try {
         if (await _healthService.isHealthSupported()) {
-          // Получаем сумму литров за сегодня
           final healthLiters = await _healthService.getTodayWater();
+          final lastHealthLiters = prefs.getDouble('health_water_last_liters') ?? 0.0;
 
-          if (healthLiters > 0) {
-            // Конвертируем литры в стаканы (1 стакан ~ 0.25 л)
-            final healthCups = (healthLiters / 0.25).round();
+          // 🔥 ИСПРАВЛЕНИЕ: Дифференциальная синхронизация.
+          // Добавляем стаканы ТОЛЬКО если вода была добавлена извне (Apple Watch и т.д.)
+          if (healthLiters > lastHealthLiters) {
+            final addedLiters = healthLiters - lastHealthLiters;
+            final addedCups = (addedLiters / 0.25).round();
 
-            // Если в Health больше данных, чем локально - обновляем локальные
-            if (healthCups > currentCups) {
-              debugPrint("💧 Syncing from Health: Found $healthCups cups (Local: $currentCups)");
-              currentCups = healthCups;
-              // Сохраняем обновленные данные локально
+            if (addedCups > 0) {
+              debugPrint("💧 Smart Sync: Added $addedCups cups from Apple Health");
+              currentCups += addedCups;
               await prefs.setInt('water_consumed', currentCups);
             }
+            // Запоминаем новый уровень в Health
+            await prefs.setDouble('health_water_last_liters', healthLiters);
+          } else if (healthLiters < lastHealthLiters) {
+            // Юзер удалил воду напрямую в приложении Health - просто обновляем наш якорь
+            await prefs.setDouble('health_water_last_liters', healthLiters);
           }
         }
       } catch (e) {
@@ -87,8 +90,6 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
   Future<void> _onAddCup(AddWaterCup event, Emitter<WaterState> emit) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // Проверяем, не наступил ли новый день, пока приложение было открыто
       final lastDate = prefs.getString('water_last_date');
       final today = DateTime.now().toIso8601String().substring(0, 10);
 
@@ -97,21 +98,22 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
       if (lastDate != today) {
         currentCups = 0;
         await prefs.setString('water_last_date', today);
+        await prefs.setDouble('health_water_last_liters', 0.0);
       }
 
       final newCount = currentCups + 1;
       await prefs.setInt('water_consumed', newCount);
 
       // --- ИНТЕГРАЦИЯ HEALTH (ЗАПИСЬ) ---
-      // Пишем 250 мл (0.25 л) в Здоровье
-      _healthService.writeWater(0.25).then((success) {
+      _healthService.writeWater(0.25).then((success) async {
         if (success) {
           debugPrint("✅ Added 250ml water to Health App");
-        } else {
-          debugPrint("⚠️ Failed to sync water (permissions?)");
+          // 🔥 ИСПРАВЛЕНИЕ: Плюсуем в наш якорь, чтобы при следующем открытии
+          // этот же стакан не добавился второй раз как "внешний"
+          final lastHealthLiters = prefs.getDouble('health_water_last_liters') ?? 0.0;
+          await prefs.setDouble('health_water_last_liters', lastHealthLiters + 0.25);
         }
       });
-      // ----------------------------------
 
       emit(state.copyWith(consumedCups: newCount));
     } catch (e) {
@@ -129,9 +131,8 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('water_consumed', newCount);
 
-      // Примечание: Удаление конкретной записи из HealthKit сложно без ID,
-      // поэтому пока просто уменьшаем локальный счетчик.
-      // В будущем можно реализовать логику "удаления последнего сэмпла".
+      // Мы просто уменьшаем локальный счетчик. Якорь Health не трогаем.
+      // Это убивает баг "бессмертной воды".
 
       emit(state.copyWith(consumedCups: newCount));
     } catch (e) {
@@ -144,7 +145,6 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('water_goal', event.newGoal);
-      // Если пользователь меняет вручную — выключаем авто-режим
       await prefs.setBool('water_is_auto', false);
 
       emit(state.copyWith(dailyGoal: event.newGoal, isAutoGoal: false));
@@ -159,7 +159,6 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('water_is_auto', event.isEnabled);
 
-      // Если включили авто, сразу применяем рекомендованную цель
       int newGoal = state.dailyGoal;
       if (event.isEnabled) {
         newGoal = state.recommendedGoal;
@@ -178,7 +177,6 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('water_recommended', event.cups);
 
-      // Если авто-режим включен, обновляем и текущую цель
       int currentGoal = state.dailyGoal;
       if (state.isAutoGoal) {
         currentGoal = event.cups;

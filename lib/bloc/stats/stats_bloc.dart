@@ -18,15 +18,14 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
   Future<void> _onLoadStats(LoadStats event, Emitter<StatsState> emit) async {
     emit(state.copyWith(status: StatsStatus.loading));
     await _historySubscription?.cancel();
-    // Подписываемся на поток истории
     _historySubscription = _historyRepository.getRecordsStream().listen((records) {
       add(const StatsUpdated());
     });
   }
 
   Future<void> _onStatsUpdated(StatsUpdated event, Emitter<StatsState> emit) async {
-    // Берем свежие данные
-    final records = await _historyRepository.getRecordsStream().first;
+    // 🔥 ИСПРАВЛЕНИЕ 1: Читаем синхронный кэш, избегая Race Conditions
+    final records = _historyRepository.currentRecords;
 
     if (records.isEmpty) {
       emit(state.copyWith(status: StatsStatus.success));
@@ -36,11 +35,9 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
     // --- МАТЕМАТИКА ---
     final totalFasts = records.length;
     final totalDuration = records.fold(Duration.zero, (prev, e) => prev + e.duration);
-    final totalHours = totalDuration.inMinutes / 60.0; // Более точно через минуты
+    final totalHours = totalDuration.inMinutes / 60.0;
     final avgHours = totalFasts > 0 ? totalHours / totalFasts : 0.0;
 
-    // Success Rate (считаем успешным, если > 16 часов)
-    // Можно сделать настройку, но пока хардкод 16ч как "золотой стандарт"
     final successCount = records.where((r) => r.duration.inHours >= 16).length;
     final successRate = totalFasts > 0 ? (successCount / totalFasts) * 100 : 0.0;
 
@@ -60,44 +57,42 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
       }
     }
 
-    // Масштаб графика
     if (chartData.isNotEmpty) {
       maxVal = chartData.reduce((curr, next) => curr > next ? curr : next);
     }
     if (maxVal < 12) maxVal = 12;
     if (maxVal > 24) maxVal += 4;
 
-    // Стрики
-    Set<String> activeDays = {};
-    for (var r in records) {
-      activeDays.add(r.endTime.toIso8601String().substring(0, 10));
-    }
+    // 🔥 ИСПРАВЛЕНИЕ 2: Используем единый источник правды для текущего стрика
+    final currentStreak = _historyRepository.calculateStreak();
 
-    int currentStreak = 0;
-    DateTime checkDate = today;
-    while (true) {
-      String key = checkDate.toIso8601String().substring(0, 10);
-      if (activeDays.contains(key)) {
-        currentStreak++;
-        checkDate = checkDate.subtract(const Duration(days: 1));
-      } else {
-        if (checkDate == today && currentStreak == 0) {
-          checkDate = checkDate.subtract(const Duration(days: 1));
-          continue;
+    // 🔥 ИСПРАВЛЕНИЕ 3: Честный подсчет Максимального стрика (Longest Streak)
+    int longestStreak = 0;
+    int tempStreak = 0;
+    final uniqueDays = records.map((r) => DateTime(r.endTime.year, r.endTime.month, r.endTime.day)).toSet().toList();
+    uniqueDays.sort((a, b) => b.compareTo(a)); // От новых к старым
+
+    if (uniqueDays.isNotEmpty) {
+      tempStreak = 1;
+      longestStreak = 1;
+      for (int i = 0; i < uniqueDays.length - 1; i++) {
+        if (uniqueDays[i].difference(uniqueDays[i+1]).inDays == 1) {
+          tempStreak++;
+          if (tempStreak > longestStreak) longestStreak = tempStreak;
+        } else {
+          tempStreak = 1;
         }
-        break;
       }
     }
 
-    // Обновляем состояние
     emit(state.copyWith(
       status: StatsStatus.success,
       totalFasts: totalFasts,
       totalHours: totalHours,
       averageDuration: avgHours,
-      successRate: successRate, // <--- Передаем
+      successRate: successRate,
       currentStreak: currentStreak,
-      longestStreak: currentStreak, // Пока упрощенно
+      longestStreak: longestStreak, // Честные данные
       weeklyChartData: chartData,
       maxChartValue: maxVal,
     ));

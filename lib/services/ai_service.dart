@@ -1,16 +1,15 @@
-import 'package:firebase_remote_config/firebase_remote_config.dart'; // 🔥 Импорт
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:injectable/injectable.dart';
 import 'package:flutter/foundation.dart';
 
 @lazySingleton
 class AiService {
-  late final GenerativeModel _model;
+  // 🔥 ИСПРАВЛЕНИЕ 1: Безопасный nullable вместо опасного late final
+  GenerativeModel? _model;
   ChatSession? _chat;
 
-  // Имя параметра в Firebase Console
   static const String _remoteConfigKey = 'ai_api_key';
-
   static const String _modelName = 'gemini-2.5-flash';
 
   AiService() {
@@ -18,10 +17,8 @@ class AiService {
   }
 
   void _initModel() {
-    // 1. 🔥 Берем ключ из Remote Config (который скачался в main.dart)
     final apiKey = FirebaseRemoteConfig.instance.getString(_remoteConfigKey);
 
-    // Проверка: если ключа нет или он дефолтный
     if (apiKey.isNotEmpty && apiKey != 'default_value_if_offline') {
       _model = GenerativeModel(
         model: _modelName,
@@ -33,9 +30,11 @@ class AiService {
       );
       debugPrint('✅ AI Service initialized with Remote Config key.');
     } else {
-      debugPrint('⚠️ AI Service Warning: Key not found in Remote Config. AI will be disabled.');
+      debugPrint('⚠️ AI Service Warning: Key not found in Remote Config. AI disabled.');
     }
   }
+
+  bool _isModelReady() => _model != null;
 
   /// --- ЧАТ (AI COACH) ---
   void startChat({
@@ -46,7 +45,6 @@ class AiService {
     required String activity,
     required String greeting,
   }) {
-    // Проверяем, инициализирована ли модель
     if (!_isModelReady()) return;
 
     final systemPrompt = Content.text('''
@@ -60,7 +58,7 @@ class AiService {
     ''');
 
     try {
-      _chat = _model.startChat(history: [
+      _chat = _model!.startChat(history: [
         systemPrompt,
         Content.model([TextPart(greeting)]),
       ]);
@@ -70,20 +68,16 @@ class AiService {
   }
 
   Future<String> sendMessage(String message) async {
-    // 🔥 Если модель не готова (ключ не пришел), пробуем инициализировать снова
     if (!_isModelReady()) {
-      _initModel(); // Попытка переинициализации (вдруг конфиг долетел)
+      _initModel();
       if (!_isModelReady()) {
         return "AI is updating configuration. Please check internet and restart app.";
       }
     }
 
+    // 🔥 ИСПРАВЛЕНИЕ 2: Запрещаем слать сообщения от "dummy" юзера. Требуем рестарт чата.
     if (_chat == null) {
-      startChat(
-        weight: 70, height: 170, age: 25,
-        gender: 'User', activity: 'Moderate',
-        greeting: 'Hello',
-      );
+      return "Coach session expired. Please restart the chat.";
     }
 
     try {
@@ -118,21 +112,10 @@ class AiService {
     ''';
 
     try {
-      final response = await _model.generateContent([Content.text(prompt)]);
+      final response = await _model!.generateContent([Content.text(prompt)]);
       return response.text ?? fallbackText;
     } catch (e) {
       return fallbackText;
-    }
-  }
-
-  // Вспомогательный метод проверки
-  bool _isModelReady() {
-    try {
-      // Пытаемся обратиться к переменной. Если она не инициализирована, выбросит ошибку
-      _model;
-      return true;
-    } catch (e) {
-      return false;
     }
   }
 }

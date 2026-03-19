@@ -15,19 +15,14 @@ class ProBloc extends Bloc<ProEvent, ProState> {
     on<RestorePurchasesEvent>(_onRestore);
   }
 
-  /// Проверка статуса при запуске приложения
   Future<void> _onCheckStatus(CheckProStatus event, Emitter<ProState> emit) async {
-    // Инициализацию лучше делать в main.dart, но проверка здесь — ок
     final isPro = await _proService.checkProStatus();
-
-    // Обновляем состояние (сохраняя текущие пакеты, если они были)
     emit(state.copyWith(
       isPro: isPro,
       status: isPro ? ProStatus.proActive : ProStatus.initial,
     ));
   }
 
-  /// Загрузка товаров для Paywall
   Future<void> _onLoadOfferings(LoadOfferings event, Emitter<ProState> emit) async {
     emit(state.copyWith(status: ProStatus.loading));
     try {
@@ -39,29 +34,27 @@ class ProBloc extends Bloc<ProEvent, ProState> {
     } catch (e) {
       emit(state.copyWith(
           status: ProStatus.failure,
-          errorMessage: "Failed to load offers: $e" // Можно сделать локализованную ошибку
+          errorMessage: "Failed to load offers: $e"
       ));
     }
   }
 
-  /// Покупка пакета
   Future<void> _onPurchase(PurchasePackageEvent event, Emitter<ProState> emit) async {
     emit(state.copyWith(status: ProStatus.loading));
     try {
       final success = await _proService.purchasePackage(event.package);
       if (success) {
-        // 🔥 Важно: ProActive триггерит закрытие экрана в UI
         emit(state.copyWith(
           status: ProStatus.proActive,
           isPro: true,
-          errorMessage: null, // Очищаем ошибки
+          errorMessage: null,
         ));
       } else {
-        // Если пользователь отменил покупку, просто возвращаем старый статус (не ошибку)
-        // Но если нужно показать ошибку, то Failure
+        // 🔥 ИСПРАВЛЕНИЕ: Молча возвращаемся в статус success (чтобы Пэйвол остался открытым).
+        // Не выдаем Failure, если пользователь просто нажал "Отмена".
         emit(state.copyWith(
-            status: ProStatus.failure,
-            errorMessage: "Purchase cancelled or failed"
+            status: ProStatus.success,
+            errorMessage: null
         ));
       }
     } catch (e) {
@@ -72,7 +65,6 @@ class ProBloc extends Bloc<ProEvent, ProState> {
     }
   }
 
-  /// Восстановление покупок
   Future<void> _onRestore(RestorePurchasesEvent event, Emitter<ProState> emit) async {
     emit(state.copyWith(status: ProStatus.loading));
     try {

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart'; // Для debugPrint
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:injectable/injectable.dart';
-import 'package:fastable/l10n/app_localizations.dart'; // Must import for ARB
+import 'package:fastable/l10n/app_localizations.dart';
 
 const String kNotifyWaterKey = 'notify_water';
 const String kNotifyWeightKey = 'notify_weight';
@@ -21,7 +23,17 @@ class NotificationService {
   Future<void> init() async {
     if (_isInitialized) return;
 
+    // 🔥 ИСПРАВЛЕНИЕ: Адаптация под flutter_timezone версии 5.x+
     tz.initializeTimeZones();
+    try {
+      final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+      // Вытаскиваем IANA идентификатор из объекта TimezoneInfo
+      final String timeZoneName = timeZoneInfo.identifier;
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      debugPrint("✅ Timezone set to: $timeZoneName");
+    } catch (e) {
+      debugPrint("⚠️ Could not get local timezone: $e");
+    }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
     AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -50,19 +62,16 @@ class NotificationService {
     }
   }
 
-  // --- 🥑 NEW: DAILY AI INSIGHT NOTIFICATIONS ---
+  // --- 🥑 DAILY AI INSIGHT NOTIFICATIONS ---
 
-  // Теперь принимаем локализацию
   Future<void> scheduleDailyInsight(AppLocalizations l10n) async {
-    // 1. Отменяем старое
     await cancelDailyInsight();
 
-    // 2. Планируем на 9:00 утра с локализованным текстом
     await _notificationsPlugin.zonedSchedule(
       _idDailyInsight,
-      l10n.notifyAiInsightTitle, // Текст из ARB
-      l10n.notifyAiInsightBody,  // Текст из ARB
-      _nextInstanceOf9AM(),
+      l10n.notifyAiInsightTitle,
+      l10n.notifyAiInsightBody,
+      _nextInstanceOfTime(9), // 9:00 AM Локального времени
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_insight_channel',
@@ -101,7 +110,7 @@ class NotificationService {
       final stageTime = startTime.add(Duration(hours: hour));
       if (stageTime.isAfter(now) && stageTime.isBefore(endTime.add(const Duration(minutes: 15)))) {
         _scheduleOneShot(
-          id: 1000 + hour,
+          id: 1000 + hour, // ID от 1000 до 1024
           title: content.title,
           body: content.body,
           scheduledTime: stageTime,
@@ -182,12 +191,11 @@ class NotificationService {
       return;
     }
 
-    // Теперь используем l10n
     await _notificationsPlugin.zonedSchedule(
       _idWeight,
-      l10n.notifyWeightTitle, // Текст из ARB
-      l10n.notifyWeightBody,  // Текст из ARB
-      _nextInstanceOf8AM(),
+      l10n.notifyWeightTitle,
+      l10n.notifyWeightBody,
+      _nextInstanceOfTime(8), // 8:00 AM Локального времени
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_channel',
@@ -205,7 +213,12 @@ class NotificationService {
   // --- CANCELLATION ---
 
   Future<void> cancelFastingNotifications() async {
-    await _notificationsPlugin.cancelAll();
+    await _notificationsPlugin.cancel(500);
+    await _notificationsPlugin.cancel(900);
+    await _notificationsPlugin.cancel(999);
+    for (int i = 0; i <= 30; i++) {
+      await _notificationsPlugin.cancel(1000 + i);
+    }
   }
 
   Future<void> cancelWeightReminder() async {
@@ -213,7 +226,7 @@ class NotificationService {
   }
 
   Future<void> cancelAllFastingNotifications() async {
-    await _notificationsPlugin.cancelAll();
+    await cancelFastingNotifications();
   }
 
   // --- HELPERS ---
@@ -251,22 +264,13 @@ class NotificationService {
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
-      // print("Error scheduling notification $id: $e");
+      debugPrint("Error scheduling notification $id: $e");
     }
   }
 
-  tz.TZDateTime _nextInstanceOf8AM() {
+  tz.TZDateTime _nextInstanceOfTime(int hour) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 8);
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-    return scheduledDate;
-  }
-
-  tz.TZDateTime _nextInstanceOf9AM() {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 9); // 9:00
+    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour);
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }

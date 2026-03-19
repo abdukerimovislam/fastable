@@ -20,41 +20,34 @@ class AchievementService {
     }).toList();
   }
 
+  // 🔥 ИСПРАВЛЕНИЕ: Логика на 100% идентична HistoryRepository.calculateStreak()
   int _calculateStreak(List<FastingRecord> records) {
     if (records.isEmpty) return 0;
 
-    // Создаем копию и сортируем
-    var sorted = List<FastingRecord>.from(records);
-    sorted.sort((a, b) => b.endTime.compareTo(a.endTime)); // От новых к старым
-
-    DateTime today = DateTime.now();
-    DateTime todayDate = DateTime(today.year, today.month, today.day);
-
-    // Дата последнего голодания (без времени)
-    DateTime lastFastDate = DateTime(
-        sorted.first.endTime.year, sorted.first.endTime.month, sorted.first.endTime.day);
-
     int streak = 0;
+    final now = DateTime.now();
+    DateTime checkDate = DateTime(now.year, now.month, now.day);
 
-    // Если последнее голодание было сегодня или вчера — стрик жив
-    if (lastFastDate.isAtSameMomentAs(todayDate) ||
-        lastFastDate.isAtSameMomentAs(todayDate.subtract(const Duration(days: 1)))) {
-      streak = 1;
-      DateTime checkDate = lastFastDate.subtract(const Duration(days: 1));
+    // Сортируем копию от новых к старым (на всякий случай)
+    var sorted = List<FastingRecord>.from(records);
+    sorted.sort((a, b) => b.endTime.compareTo(a.endTime));
 
-      for (int i = 1; i < sorted.length; i++) {
-        DateTime currentFastDate = DateTime(
-            sorted[i].endTime.year, sorted[i].endTime.month, sorted[i].endTime.day);
+    final lastEnd = sorted.first.endTime;
+    final lastEndDate = DateTime(lastEnd.year, lastEnd.month, lastEnd.day);
 
-        if (currentFastDate.isAtSameMomentAs(checkDate)) {
-          streak++;
-          checkDate = checkDate.subtract(const Duration(days: 1));
-        } else if (currentFastDate.isBefore(checkDate)) {
-          // Разрыв в днях — стрик прерван
-          break;
-        }
-        // Если дата та же (несколько голоданий в день), просто идем дальше
-      }
+    if (lastEndDate.isBefore(checkDate.subtract(const Duration(days: 1)))) {
+      return 0; // Стрик мертв
+    }
+
+    checkDate = lastEndDate;
+    final uniqueDays = sorted.map((r) {
+      final d = r.endTime;
+      return DateTime(d.year, d.month, d.day);
+    }).toSet();
+
+    while (uniqueDays.contains(checkDate)) {
+      streak++;
+      checkDate = checkDate.subtract(const Duration(days: 1));
     }
     return streak;
   }
