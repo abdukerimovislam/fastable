@@ -240,6 +240,13 @@ class WeightRepository {
     await getWeightHistory();
   }
 
+  // --- ОЧИСТКА ТОЛЬКО ЛОКАЛЬНОГО КЭША ПРИ ЛОГАУТЕ ---
+  Future<void> clearLocalCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_localKey);
+    await prefs.remove(_currentWeightKey);
+  }
+
   // --- HELPERS ---
 
   Future<List<WeightEntry>> _getLocalHistory() async {

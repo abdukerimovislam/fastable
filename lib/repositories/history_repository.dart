@@ -94,6 +94,13 @@ class HistoryRepository {
     return local;
   }
 
+  // --- ОЧИСТКА ТОЛЬКО ЛОКАЛЬНОГО КЭША ПРИ ЛОГАУТЕ ---
+  Future<void> clearLocalCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_localKey);
+    _updateStream([]);
+  }
+
   // --- 3. ДОБАВЛЕНИЕ (ADD) ---
   Future<void> addRecord(FastingRecord record) async {
     final records = await _getLocalRecords();

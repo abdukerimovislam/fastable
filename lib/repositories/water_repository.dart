@@ -202,6 +202,14 @@ class WaterRepository {
     }
   }
 
+  // --- ОЧИСТКА ТОЛЬКО ЛОКАЛЬНОГО КЭША ПРИ ЛОГАУТЕ ---
+  Future<void> clearLocalCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_localKey);
+    // Сбрасываем трекер Health при логауте
+    await prefs.remove('health_water_last_liters');
+  }
+
   Future<void> _saveToLocal(List<WaterEntry> list) async {
     final prefs = await SharedPreferences.getInstance();
     final String jsonString = jsonEncode(list.map((e) => e.toMap()).toList());

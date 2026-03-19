@@ -199,11 +199,21 @@ class AuthService {
   // ===========================================================================
   // 4. ВЫХОД
   // ===========================================================================
+  // 🔥 ИСПРАВЛЕНИЕ: Очищаем локальные данные при выходе, чтобы не слить их другому юзеру!
   Future<void> signOut() async {
     try {
+      debugPrint("👋 Signing out and clearing local cache...");
+
+      // Очищаем кэши репозиториев перед выходом из Firebase
+      await Future.wait([
+        getIt<WeightRepository>().clearLocalCache(),
+        getIt<HistoryRepository>().clearLocalCache(),
+        getIt<WaterRepository>().clearLocalCache(),
+      ]);
+
       await _googleSignIn.signOut();
       await _auth.signOut();
-      debugPrint("👋 Signed out");
+      debugPrint("✅ Signed out successfully");
     } catch (e) {
       debugPrint("❌ Sign out error: $e");
     }

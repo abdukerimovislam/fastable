@@ -172,16 +172,23 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       final endDate = event.endTime ?? DateTime.now();
 
       if (state.startTime != null && state.phase == FastingPhase.fasting) {
-        try {
-          final record = FastingRecord(
-            startTime: state.startTime!,
-            endTime: endDate,
-            duration: endDate.difference(state.startTime!),
-            mood: event.mood,
-          );
-          await _historyRepository.addRecord(record);
-        } catch (e) {
-          debugPrint("History Save Error: $e");
+        final duration = endDate.difference(state.startTime!);
+
+        // 🔥 ИСПРАВЛЕНИЕ: Защита от случайных нажатий (сохраняем только > 5 минут)
+        if (duration.inMinutes >= 5) {
+          try {
+            final record = FastingRecord(
+              startTime: state.startTime!,
+              endTime: endDate,
+              duration: duration,
+              mood: event.mood,
+            );
+            await _historyRepository.addRecord(record);
+          } catch (e) {
+            debugPrint("History Save Error: $e");
+          }
+        } else {
+          debugPrint("⏳ Fasting too short (< 5 min), discarded to protect stats.");
         }
       }
 
