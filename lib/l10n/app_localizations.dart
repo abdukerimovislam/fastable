@@ -390,7 +390,7 @@ abstract class AppLocalizations {
   /// No description provided for @proTitle.
   ///
   /// In en, this message translates to:
-  /// **'GET PRO'**
+  /// **'Unlock Fastable Pro'**
   String get proTitle;
 
   /// No description provided for @proMonthly.
@@ -408,7 +408,7 @@ abstract class AppLocalizations {
   /// No description provided for @unlockAll.
   ///
   /// In en, this message translates to:
-  /// **'Unlock PRO'**
+  /// **'Unlock All Features'**
   String get unlockAll;
 
   /// No description provided for @accessStatus.
@@ -2352,13 +2352,13 @@ abstract class AppLocalizations {
   /// No description provided for @statusNoArticles.
   ///
   /// In en, this message translates to:
-  /// **'No articles found.'**
+  /// **'No articles found'**
   String get statusNoArticles;
 
   /// No description provided for @msgComingSoon.
   ///
   /// In en, this message translates to:
-  /// **'Coming soon...'**
+  /// **'This feature is coming soon!'**
   String get msgComingSoon;
 
   /// No description provided for @learnBannerTitle.
@@ -2898,19 +2898,19 @@ abstract class AppLocalizations {
   /// No description provided for @proSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Unlock your full potential'**
+  /// **'Get unlimited access to AI Coach & Recipes'**
   String get proSubtitle;
 
   /// No description provided for @featureCoach.
   ///
   /// In en, this message translates to:
-  /// **'Personal AI Coach'**
+  /// **'AI Coach Fasty'**
   String get featureCoach;
 
   /// No description provided for @featureCoachDesc.
   ///
   /// In en, this message translates to:
-  /// **'Ask questions, get advice 24/7'**
+  /// **'Personalized advice & motivation 24/7'**
   String get featureCoachDesc;
 
   /// No description provided for @featureRecipes.
@@ -2922,19 +2922,19 @@ abstract class AppLocalizations {
   /// No description provided for @featureRecipesDesc.
   ///
   /// In en, this message translates to:
-  /// **'Keto, Low-Carb & more'**
+  /// **'Keto, Low-Carb & Fasting friendly meals'**
   String get featureRecipesDesc;
 
   /// No description provided for @featureNoAds.
   ///
   /// In en, this message translates to:
-  /// **'No Ads, Pure Focus'**
+  /// **'Ad-Free Experience'**
   String get featureNoAds;
 
   /// No description provided for @featureNoAdsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Distraction-free experience'**
+  /// **'Focus on your goals without distractions'**
   String get featureNoAdsDesc;
 
   /// No description provided for @bestValue.
@@ -2952,13 +2952,13 @@ abstract class AppLocalizations {
   /// No description provided for @welcomePro.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Pro! 🌟'**
+  /// **'Welcome to Pro! 🚀'**
   String get welcomePro;
 
   /// No description provided for @errorPro.
   ///
   /// In en, this message translates to:
-  /// **'Something went wrong'**
+  /// **'Purchase failed. Please try again.'**
   String get errorPro;
 
   /// No description provided for @confirmDeleteMsg.
@@ -3086,6 +3086,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync weight & steps with Google Fit'**
   String get permHealthConnectDesc;
+
+  /// No description provided for @planMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get planMonthly;
+
+  /// No description provided for @planAnnual.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual'**
+  String get planAnnual;
+
+  /// No description provided for @planLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime'**
+  String get planLifetime;
+
+  /// No description provided for @savePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVE {percent}%'**
+  String savePercent(String percent);
+
+  /// No description provided for @medicalDisclaimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer & Sources'**
+  String get medicalDisclaimerTitle;
+
+  /// No description provided for @medicalDisclaimerHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer'**
+  String get medicalDisclaimerHeading;
+
+  /// No description provided for @medicalDisclaimerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastable is designed to help you track your intermittent fasting and provide AI coaching based on general knowledge. It is NOT a medical device. The information provided is for educational purposes only and should not replace professional medical advice.\n\nPlease consult a doctor before starting any fasting regimen, especially if you are pregnant, nursing, diabetic, or have any other medical conditions.'**
+  String get medicalDisclaimerBody;
+
+  /// No description provided for @scientificSourcesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Scientific Sources & Citations'**
+  String get scientificSourcesHeading;
+
+  /// No description provided for @sourceJohnsHopkins.
+  ///
+  /// In en, this message translates to:
+  /// **'Johns Hopkins Medicine'**
+  String get sourceJohnsHopkins;
+
+  /// No description provided for @sourceJohnsHopkinsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermittent Fasting: What is it, and how does it work?'**
+  String get sourceJohnsHopkinsDesc;
+
+  /// No description provided for @sourceMayoClinic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mayo Clinic'**
+  String get sourceMayoClinic;
+
+  /// No description provided for @sourceMayoClinicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting diet: Can it improve my heart health?'**
+  String get sourceMayoClinicDesc;
+
+  /// No description provided for @sourceHarvard.
+  ///
+  /// In en, this message translates to:
+  /// **'Harvard Medical School'**
+  String get sourceHarvard;
+
+  /// No description provided for @sourceHarvardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermittent fasting: Surprising update'**
+  String get sourceHarvardDesc;
+
+  /// No description provided for @legalAgreementPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you agree to Apple\'s standard '**
+  String get legalAgreementPrefix;
+
+  /// No description provided for @legalTermsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use (EULA)'**
+  String get legalTermsOfUse;
+
+  /// No description provided for @legalAgreementAnd.
+  ///
+  /// In en, this message translates to:
+  /// **' and our '**
+  String get legalAgreementAnd;
+
+  /// No description provided for @legalPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get legalPrivacyPolicy;
+
+  /// No description provided for @comingSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon!'**
+  String get comingSoonTitle;
+
+  /// No description provided for @comingSoonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We are working hard to prepare amazing content for you. Stay tuned!'**
+  String get comingSoonDesc;
+
+  /// No description provided for @statusNoRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'No recipes found'**
+  String get statusNoRecipes;
+
+  /// No description provided for @aboutAndLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'About & Legal'**
+  String get aboutAndLegal;
+
+  /// No description provided for @settingsMedicalDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer & Sources'**
+  String get settingsMedicalDisclaimer;
+
+  /// No description provided for @settingsTermsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use (EULA)'**
+  String get settingsTermsOfUse;
+
+  /// No description provided for @deleteAccountAndData.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account & Data'**
+  String get deleteAccountAndData;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is irreversible. All your fasting history and local data will be permanently deleted.'**
+  String get deleteAccountContent;
+
+  /// No description provided for @cancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelButton;
+
+  /// No description provided for @deleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteButton;
+
+  /// No description provided for @planExtended.
+  ///
+  /// In en, this message translates to:
+  /// **'Extended'**
+  String get planExtended;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

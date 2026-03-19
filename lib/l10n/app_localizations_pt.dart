@@ -153,7 +153,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get restorePurchases => 'Restaurar compras';
 
   @override
-  String get proTitle => 'OBTER PRO';
+  String get proTitle => 'Desbloquear Fastable Pro';
 
   @override
   String get proMonthly => 'Assinatura mensal';
@@ -162,7 +162,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get proAnnual => 'Assinatura anual (40% OFF)';
 
   @override
-  String get unlockAll => 'Desbloquear PRO';
+  String get unlockAll => 'Desbloquear todas as funcionalidades';
 
   @override
   String get accessStatus => 'Acesso atual';
@@ -1152,10 +1152,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get headerHealthyChoices => 'Escolhas saudáveis';
 
   @override
-  String get statusNoArticles => 'Nenhum artigo encontrado.';
+  String get statusNoArticles => 'Nenhum artigo encontrado';
 
   @override
-  String get msgComingSoon => 'Em breve...';
+  String get msgComingSoon => 'Este recurso estará disponível em breve!';
 
   @override
   String get learnBannerTitle => 'Desbloqueie mais de 500 receitas';
@@ -1433,37 +1433,37 @@ class AppLocalizationsPt extends AppLocalizations {
   String get weightSaved => 'Peso salvo';
 
   @override
-  String get proSubtitle => 'Desbloqueie todo o seu potencial';
+  String get proSubtitle => 'Acesso ilimitado ao AI Coach e às receitas';
 
   @override
-  String get featureCoach => 'Coach pessoal com IA';
+  String get featureCoach => 'AI Coach Fasty';
 
   @override
-  String get featureCoachDesc => 'Faça perguntas e receba conselhos 24/7';
+  String get featureCoachDesc => 'Conselhos personalizados e motivação 24/7';
 
   @override
   String get featureRecipes => 'Receitas saudáveis';
 
   @override
-  String get featureRecipesDesc => 'Keto, baixo carboidrato e mais';
+  String get featureRecipesDesc => 'Refeições keto, com baixo teor de carboidratos e adequadas ao jejum';
 
   @override
-  String get featureNoAds => 'Sem anúncios, foco total';
+  String get featureNoAds => 'Sem anúncios';
 
   @override
-  String get featureNoAdsDesc => 'Experiência sem distrações';
+  String get featureNoAdsDesc => 'Foque nos seus objetivos sem distrações';
 
   @override
-  String get bestValue => 'MELHOR VALOR';
+  String get bestValue => 'MELHOR OFERTA';
 
   @override
-  String get loadingOffers => 'Carregando ofertas...';
+  String get loadingOffers => 'A carregar ofertas...';
 
   @override
-  String get welcomePro => 'Bem-vindo ao Pro! 🌟';
+  String get welcomePro => 'Bem-vindo ao Pro! 🚀';
 
   @override
-  String get errorPro => 'Algo deu errado';
+  String get errorPro => 'A compra falhou. Por favor, tente novamente.';
 
   @override
   String get confirmDeleteMsg => 'Esta ação não pode ser desfeita. Todos os seus dados serão perdidos.';
@@ -1527,4 +1527,96 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get permHealthConnectDesc => 'Sincronize peso e passos com o Google Fit';
+
+  @override
+  String get planMonthly => 'Mensal';
+
+  @override
+  String get planAnnual => 'Anual';
+
+  @override
+  String get planLifetime => 'Vitalício';
+
+  @override
+  String savePercent(String percent) {
+    return 'POUPE $percent%';
+  }
+
+  @override
+  String get medicalDisclaimerTitle => 'Aviso Médico e Fontes';
+
+  @override
+  String get medicalDisclaimerHeading => 'Aviso Médico';
+
+  @override
+  String get medicalDisclaimerBody => 'O Fastable foi projetado para ajudar você a monitorar seu jejum intermitente e fornecer treinamento com IA com base em conhecimentos gerais. NÃO é um dispositivo médico. As informações fornecidas são apenas para fins educacionais e não devem substituir o aconselhamento médico profissional.\n\nPor favor, consulte um médico antes de iniciar qualquer regime de jejum, especialmente se estiver grávida, amamentando, tiver diabetes ou qualquer outra condição médica.';
+
+  @override
+  String get scientificSourcesHeading => 'Fontes Científicas e Citações';
+
+  @override
+  String get sourceJohnsHopkins => 'Medicina Johns Hopkins';
+
+  @override
+  String get sourceJohnsHopkinsDesc => 'Jejum Intermitente: O que é e como funciona?';
+
+  @override
+  String get sourceMayoClinic => 'Clínica Mayo';
+
+  @override
+  String get sourceMayoClinicDesc => 'Dieta de jejum: Pode melhorar a saúde do meu coração?';
+
+  @override
+  String get sourceHarvard => 'Escola de Medicina de Harvard';
+
+  @override
+  String get sourceHarvardDesc => 'Jejum intermitente: Atualização surpreendente';
+
+  @override
+  String get legalAgreementPrefix => 'Ao continuar, você concorda com os ';
+
+  @override
+  String get legalTermsOfUse => 'Termos de Uso (EULA)';
+
+  @override
+  String get legalAgreementAnd => ' padrão da Apple e nossa ';
+
+  @override
+  String get legalPrivacyPolicy => 'Política de Privacidade';
+
+  @override
+  String get comingSoonTitle => 'Em breve!';
+
+  @override
+  String get comingSoonDesc => 'Estamos trabalhando duro para preparar um conteúdo incrível para você. Fique ligado!';
+
+  @override
+  String get statusNoRecipes => 'Nenhuma receita encontrada';
+
+  @override
+  String get aboutAndLegal => 'Sobre e Legal';
+
+  @override
+  String get settingsMedicalDisclaimer => 'Aviso Médico e Fontes';
+
+  @override
+  String get settingsTermsOfUse => 'Termos de Uso (EULA)';
+
+  @override
+  String get deleteAccountAndData => 'Excluir Conta e Dados';
+
+  @override
+  String get deleteAccountTitle => 'Excluir Conta?';
+
+  @override
+  String get deleteAccountContent => 'Esta ação é irreversível. Todo o seu histórico de jejum e dados locais serão excluídos permanentemente.';
+
+  @override
+  String get cancelButton => 'Cancelar';
+
+  @override
+  String get deleteButton => 'Excluir';
+
+  @override
+  String get planExtended => 'Prolongado';
 }

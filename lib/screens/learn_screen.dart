@@ -22,7 +22,6 @@ import 'package:shimmer/shimmer.dart';
 // Модели и Локализация
 import 'package:fastable/models/content_models.dart';
 import 'package:fastable/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
@@ -39,14 +38,14 @@ class _LearnScreenState extends State<LearnScreen> {
   Widget build(BuildContext context) {
     final locale = context.read<SettingsBloc>().state.locale.languageCode;
     final l10n = AppLocalizations.of(context)!;
-    final isAndroid = Platform.isAndroid; // 🔥 Проверка платформы
+    final isAndroid = Platform.isAndroid; // Проверка платформы
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (context) => getIt<ArticleBloc>()..add(LoadArticles(locale)),
         ),
-        // 🔥 На Android не грузим рецепты, чтобы не тратить ресурсы
+        // На Android не грузим рецепты, чтобы не тратить ресурсы
         if (!isAndroid)
           BlocProvider(
             create: (context) => getIt<RecipeBloc>()..add(LoadRecipes(locale)),
@@ -77,7 +76,7 @@ class _LearnScreenState extends State<LearnScreen> {
                     ),
                   ),
 
-                  // 🔥 ПЕРЕКЛЮЧАТЕЛЬ (ТОЛЬКО НА iOS)
+                  // ПЕРЕКЛЮЧАТЕЛЬ (ТОЛЬКО НА iOS)
                   if (!isAndroid)
                     SliverToBoxAdapter(
                       child: Padding(
@@ -117,7 +116,6 @@ class _LearnScreenState extends State<LearnScreen> {
       ),
       child: Stack(
         children: [
-          // Анимированный фон
           AnimatedAlign(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOut,
@@ -140,7 +138,6 @@ class _LearnScreenState extends State<LearnScreen> {
               ),
             ),
           ),
-          // Текстовые кнопки
           Row(
             children: [
               _buildTabButton(l10n.tabArticles, 0),
@@ -182,7 +179,6 @@ class _LearnScreenState extends State<LearnScreen> {
 
   List<Widget> _buildArticlesTab(BuildContext context, bool isPro, AppLocalizations l10n) {
     return [
-      // Категории
       SliverToBoxAdapter(
         child: SizedBox(
           height: 110,
@@ -221,8 +217,10 @@ class _LearnScreenState extends State<LearnScreen> {
           if (state.status == ArticleStatus.loading) {
             return const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator(color: Colors.white)));
           }
-          if (state.articles.isEmpty) {
-            return SliverToBoxAdapter(child: Center(child: Text(l10n.statusNoArticles, style: const TextStyle(color: Colors.white54))));
+          if (state.articles.isEmpty || state.status == ArticleStatus.failure) {
+            return SliverToBoxAdapter(
+              child: _buildComingSoonWidget(l10n, Icons.menu_book_rounded),
+            );
           }
           return SliverList(
             delegate: SliverChildBuilderDelegate(
@@ -255,50 +253,71 @@ class _LearnScreenState extends State<LearnScreen> {
         ),
       ),
 
-      // Используем Builder для безопасности, если RecipeBloc не найден (теоретически не должно случаться)
-      SliverToBoxAdapter(
-        child: Builder(builder: (context) {
-          return BlocBuilder<RecipeBloc, RecipeState>(
-            builder: (context, state) {
-              if (state.status == RecipeStatus.loading) {
-                return const Padding(
-                  padding: EdgeInsets.only(top: 40),
-                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
-                );
-              }
+      BlocBuilder<RecipeBloc, RecipeState>(
+        builder: (context, state) {
+          if (state.status == RecipeStatus.loading) {
+            return const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Center(child: CircularProgressIndicator(color: Colors.white)),
+              ),
+            );
+          }
 
-              if (state.status == RecipeStatus.failure) {
-                return const Padding(
-                  padding: EdgeInsets.only(top: 40),
-                  child: Center(child: Text("Error loading recipes", style: TextStyle(color: Colors.white54))),
-                );
-              }
+          if (state.recipes.isEmpty || state.status == RecipeStatus.failure) {
+            return SliverToBoxAdapter(
+              child: _buildComingSoonWidget(l10n, Icons.restaurant_menu),
+            );
+          }
 
-              if (state.recipes.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.only(top: 40),
-                  child: Center(child: Text("No recipes yet", style: TextStyle(color: Colors.white54))),
-                );
-              }
-
-              return Column(
-                children: state.recipes.map((recipe) {
-                  return _buildRecipeItem(
-                    context,
-                    recipe: recipe,
-                    userIsPro: isPro,
-                    l10n: l10n,
-                  );
-                }).toList(),
-              );
-            },
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                final recipe = state.recipes[index];
+                return _buildRecipeItem(context, recipe: recipe, userIsPro: isPro, l10n: l10n);
+              },
+              childCount: state.recipes.length,
+            ),
           );
-        }),
+        },
       ),
     ];
   }
 
-  // --- ITEMS ---
+  // --- COMMON WIDGETS ---
+
+  /// Универсальный виджет "Скоро появится"
+  Widget _buildComingSoonWidget(AppLocalizations l10n, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 60, color: Colors.white.withOpacity(0.5)),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l10n.comingSoonTitle,
+            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.comingSoonDesc,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16, height: 1.5),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
 
   Widget _buildArticleItem(BuildContext context,
       {required ArticleModel article,
@@ -314,14 +333,11 @@ class _LearnScreenState extends State<LearnScreen> {
       padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
       child: GestureDetector(
         onTap: () {
-          // Убрали async/await и launchUrl
           if (isLocked) {
             getIt<HapticService>().mediumImpact();
             Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
           } else {
             getIt<HapticService>().selectionClick();
-
-            // 🔥 Раньше тут был launchUrl, теперь просто заглушка или навигация
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.msgComingSoon))
@@ -373,14 +389,14 @@ class _LearnScreenState extends State<LearnScreen> {
                 context, MaterialPageRoute(builder: (_) => const ProScreen()));
           } else {
             getIt<HapticService>().selectionClick();
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Selected: ${recipe.title}")));
+                SnackBar(content: Text(l10n.msgComingSoon)));
           }
         },
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            // --- УМНАЯ КАРТИНКА ---
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
@@ -406,7 +422,6 @@ class _LearnScreenState extends State<LearnScreen> {
                 ),
               ),
             ),
-            // -----------------------
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -457,7 +472,7 @@ class _LearnScreenState extends State<LearnScreen> {
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: color, size: 24)),
         const SizedBox(height: 12),
-        Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))
+        Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14), textAlign: TextAlign.center)
       ]),
     );
   }

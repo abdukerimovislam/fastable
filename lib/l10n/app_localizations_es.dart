@@ -153,7 +153,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restorePurchases => 'Restaurar compras';
 
   @override
-  String get proTitle => 'OBTENER PRO';
+  String get proTitle => 'Desbloquear Fastable Pro';
 
   @override
   String get proMonthly => 'Suscripción mensual';
@@ -162,7 +162,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proAnnual => 'Suscripción anual (40% de descuento)';
 
   @override
-  String get unlockAll => 'Desbloquear PRO';
+  String get unlockAll => 'Desbloquear todas las funciones';
 
   @override
   String get accessStatus => 'Acceso actual';
@@ -1152,10 +1152,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get headerHealthyChoices => 'Opciones saludables';
 
   @override
-  String get statusNoArticles => 'No se encontraron artículos.';
+  String get statusNoArticles => 'No se encontraron artículos';
 
   @override
-  String get msgComingSoon => 'Próximamente...';
+  String get msgComingSoon => '¡Esta función estará disponible pronto!';
 
   @override
   String get learnBannerTitle => 'Desbloquea más de 500 recetas';
@@ -1433,25 +1433,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weightSaved => 'Peso guardado';
 
   @override
-  String get proSubtitle => 'Desbloquea todo tu potencial';
+  String get proSubtitle => 'Acceso ilimitado al AI Coach y a las recetas';
 
   @override
-  String get featureCoach => 'Coach personal con IA';
+  String get featureCoach => 'AI Coach Fasty';
 
   @override
-  String get featureCoachDesc => 'Haz preguntas y recibe consejos 24/7';
+  String get featureCoachDesc => 'Consejos personalizados y motivación 24/7';
 
   @override
   String get featureRecipes => 'Recetas saludables';
 
   @override
-  String get featureRecipesDesc => 'Keto, bajas en carbohidratos y más';
+  String get featureRecipesDesc => 'Comidas keto, bajas en carbohidratos y aptas para el ayuno';
 
   @override
-  String get featureNoAds => 'Sin anuncios, enfoque total';
+  String get featureNoAds => 'Sin anuncios';
 
   @override
-  String get featureNoAdsDesc => 'Experiencia sin distracciones';
+  String get featureNoAdsDesc => 'Concéntrate en tus objetivos sin distracciones';
 
   @override
   String get bestValue => 'MEJOR OFERTA';
@@ -1460,10 +1460,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loadingOffers => 'Cargando ofertas...';
 
   @override
-  String get welcomePro => '¡Bienvenido a Pro! 🌟';
+  String get welcomePro => '¡Bienvenido a Pro! 🚀';
 
   @override
-  String get errorPro => 'Algo salió mal';
+  String get errorPro => 'La compra ha fallado. Por favor, inténtalo de nuevo.';
 
   @override
   String get confirmDeleteMsg => 'Esta acción no se puede deshacer. Todos tus datos se perderán.';
@@ -1527,4 +1527,96 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get permHealthConnectDesc => 'Sincroniza peso y pasos con Google Fit';
+
+  @override
+  String get planMonthly => 'Mensual';
+
+  @override
+  String get planAnnual => 'Anual';
+
+  @override
+  String get planLifetime => 'De por vida';
+
+  @override
+  String savePercent(String percent) {
+    return 'AHORRA $percent%';
+  }
+
+  @override
+  String get medicalDisclaimerTitle => 'Aviso Médico y Fuentes';
+
+  @override
+  String get medicalDisclaimerHeading => 'Aviso Médico';
+
+  @override
+  String get medicalDisclaimerBody => 'Fastable está diseñado para ayudarte a registrar tu ayuno intermitente y brindarte asesoramiento con IA basado en conocimientos generales. NO es un dispositivo médico. La información proporcionada tiene fines educativos únicamente y no debe reemplazar el consejo médico profesional.\n\nPor favor, consulta a un médico antes de comenzar cualquier régimen de ayuno, especialmente si estás embarazada, en periodo de lactancia, tienes diabetes o cualquier otra condición médica.';
+
+  @override
+  String get scientificSourcesHeading => 'Fuentes Científicas y Citas';
+
+  @override
+  String get sourceJohnsHopkins => 'Medicina Johns Hopkins';
+
+  @override
+  String get sourceJohnsHopkinsDesc => 'Ayuno intermitente: ¿Qué es y cómo funciona?';
+
+  @override
+  String get sourceMayoClinic => 'Clínica Mayo';
+
+  @override
+  String get sourceMayoClinicDesc => 'Dieta de ayuno: ¿Puede mejorar la salud de mi corazón?';
+
+  @override
+  String get sourceHarvard => 'Escuela de Medicina de Harvard';
+
+  @override
+  String get sourceHarvardDesc => 'Ayuno intermitente: Actualización sorprendente';
+
+  @override
+  String get legalAgreementPrefix => 'Al continuar, aceptas los ';
+
+  @override
+  String get legalTermsOfUse => 'Términos de uso (EULA)';
+
+  @override
+  String get legalAgreementAnd => ' estándar de Apple y nuestra ';
+
+  @override
+  String get legalPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get comingSoonTitle => '¡Próximamente!';
+
+  @override
+  String get comingSoonDesc => 'Estamos trabajando duro para preparar contenido increíble para ti. ¡Mantente al tanto!';
+
+  @override
+  String get statusNoRecipes => 'No se encontraron recetas';
+
+  @override
+  String get aboutAndLegal => 'Acerca de y Legal';
+
+  @override
+  String get settingsMedicalDisclaimer => 'Aviso Médico y Fuentes';
+
+  @override
+  String get settingsTermsOfUse => 'Términos de uso (EULA)';
+
+  @override
+  String get deleteAccountAndData => 'Eliminar cuenta y datos';
+
+  @override
+  String get deleteAccountTitle => '¿Eliminar cuenta?';
+
+  @override
+  String get deleteAccountContent => 'Esta acción es irreversible. Todo tu historial de ayuno y datos locales serán eliminados permanentemente.';
+
+  @override
+  String get cancelButton => 'Cancelar';
+
+  @override
+  String get deleteButton => 'Eliminar';
+
+  @override
+  String get planExtended => 'Prolongado';
 }

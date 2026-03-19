@@ -7,7 +7,7 @@ import 'package:injectable/injectable.dart';
 class ProService {
   // ⚠️ ВАЖНО: Вставьте сюда ваш реальный ключ RevenueCat для iOS
   // Ключ для Android не нужен, так как там нет подписок.
-  final String _apiKeyIOS = 'appl_YOUR_IOS_KEY';
+  final String _apiKeyIOS = 'appl_GshcBpjCuJljIBYIccfLROgoGMW';
 
   bool _isInitialized = false;
 

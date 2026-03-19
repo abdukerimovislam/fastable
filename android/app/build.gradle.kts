@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -5,6 +8,13 @@ plugins {
     // END: FlutterFire Configuration
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// 🔥 1. ЗАГРУЗКА КЛЮЧЕЙ ИЗ ФАЙЛА key.properties
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -15,12 +25,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        // 🔥 ИСПРАВЛЕНИЕ 1: Включаем desugaring
+        // Включаем desugaring
         isCoreLibraryDesugaringEnabled = true
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -30,24 +36,52 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        resConfigs("en", "ru", "es", "pt")
+        // ✅ вместо resConfigs(...)
+        androidResources {
+            localeFilters += listOf("en", "ru", "es", "pt")
+        }
 
-        // 🔥 ИСПРАВЛЕНИЕ 2: Включаем MultiDex (часто нужно при desugaring)
+        // Включаем MultiDex
         multiDexEnabled = true
+    }
+
+    // 🔥 2. НАСТРОЙКА КОНФИГУРАЦИИ ПОДПИСИ
+    signingConfigs {
+        create("release") {
+            // Читаем данные из key.properties
+            keyAlias = keystoreProperties["keyAlias"]?.toString()
+            keyPassword = keystoreProperties["keyPassword"]?.toString()
+            storeFile = keystoreProperties["storeFile"]?.toString()?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"]?.toString()
+        }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // 🔥 3. ПРИМЕНЯЕМ РЕЛИЗНУЮ ПОДПИСЬ
+            signingConfig = signingConfigs.getByName("release")
+
+            // 🔥 4. ВКЛЮЧАЕМ ОБФУСКАЦИЮ И СЖАТИЕ
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
+}
+
+// ✅ современный способ вместо kotlinOptions.jvmTarget
+kotlin {
+    jvmToolchain(17)
 }
 
 flutter {
     source = "../.."
 }
 
-// 🔥 ИСПРАВЛЕНИЕ 3: Добавляем зависимость для desugaring
 dependencies {
+    // Добавляем зависимость для desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

@@ -153,7 +153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restorePurchases => 'Restore Purchases';
 
   @override
-  String get proTitle => 'GET PRO';
+  String get proTitle => 'Unlock Fastable Pro';
 
   @override
   String get proMonthly => 'Monthly Subscription';
@@ -162,7 +162,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proAnnual => 'Annual Subscription (40% Off)';
 
   @override
-  String get unlockAll => 'Unlock PRO';
+  String get unlockAll => 'Unlock All Features';
 
   @override
   String get accessStatus => 'Current Access';
@@ -1152,10 +1152,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get headerHealthyChoices => 'Healthy Choices';
 
   @override
-  String get statusNoArticles => 'No articles found.';
+  String get statusNoArticles => 'No articles found';
 
   @override
-  String get msgComingSoon => 'Coming soon...';
+  String get msgComingSoon => 'This feature is coming soon!';
 
   @override
   String get learnBannerTitle => 'Unlock 500+ Recipes';
@@ -1433,25 +1433,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weightSaved => 'Weight saved';
 
   @override
-  String get proSubtitle => 'Unlock your full potential';
+  String get proSubtitle => 'Get unlimited access to AI Coach & Recipes';
 
   @override
-  String get featureCoach => 'Personal AI Coach';
+  String get featureCoach => 'AI Coach Fasty';
 
   @override
-  String get featureCoachDesc => 'Ask questions, get advice 24/7';
+  String get featureCoachDesc => 'Personalized advice & motivation 24/7';
 
   @override
   String get featureRecipes => 'Healthy Recipes';
 
   @override
-  String get featureRecipesDesc => 'Keto, Low-Carb & more';
+  String get featureRecipesDesc => 'Keto, Low-Carb & Fasting friendly meals';
 
   @override
-  String get featureNoAds => 'No Ads, Pure Focus';
+  String get featureNoAds => 'Ad-Free Experience';
 
   @override
-  String get featureNoAdsDesc => 'Distraction-free experience';
+  String get featureNoAdsDesc => 'Focus on your goals without distractions';
 
   @override
   String get bestValue => 'BEST VALUE';
@@ -1460,10 +1460,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadingOffers => 'Loading offers...';
 
   @override
-  String get welcomePro => 'Welcome to Pro! 🌟';
+  String get welcomePro => 'Welcome to Pro! 🚀';
 
   @override
-  String get errorPro => 'Something went wrong';
+  String get errorPro => 'Purchase failed. Please try again.';
 
   @override
   String get confirmDeleteMsg => 'This action cannot be undone. All your data will be lost.';
@@ -1527,4 +1527,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permHealthConnectDesc => 'Sync weight & steps with Google Fit';
+
+  @override
+  String get planMonthly => 'Monthly';
+
+  @override
+  String get planAnnual => 'Annual';
+
+  @override
+  String get planLifetime => 'Lifetime';
+
+  @override
+  String savePercent(String percent) {
+    return 'SAVE $percent%';
+  }
+
+  @override
+  String get medicalDisclaimerTitle => 'Medical Disclaimer & Sources';
+
+  @override
+  String get medicalDisclaimerHeading => 'Medical Disclaimer';
+
+  @override
+  String get medicalDisclaimerBody => 'Fastable is designed to help you track your intermittent fasting and provide AI coaching based on general knowledge. It is NOT a medical device. The information provided is for educational purposes only and should not replace professional medical advice.\n\nPlease consult a doctor before starting any fasting regimen, especially if you are pregnant, nursing, diabetic, or have any other medical conditions.';
+
+  @override
+  String get scientificSourcesHeading => 'Scientific Sources & Citations';
+
+  @override
+  String get sourceJohnsHopkins => 'Johns Hopkins Medicine';
+
+  @override
+  String get sourceJohnsHopkinsDesc => 'Intermittent Fasting: What is it, and how does it work?';
+
+  @override
+  String get sourceMayoClinic => 'Mayo Clinic';
+
+  @override
+  String get sourceMayoClinicDesc => 'Fasting diet: Can it improve my heart health?';
+
+  @override
+  String get sourceHarvard => 'Harvard Medical School';
+
+  @override
+  String get sourceHarvardDesc => 'Intermittent fasting: Surprising update';
+
+  @override
+  String get legalAgreementPrefix => 'By continuing, you agree to Apple\'s standard ';
+
+  @override
+  String get legalTermsOfUse => 'Terms of Use (EULA)';
+
+  @override
+  String get legalAgreementAnd => ' and our ';
+
+  @override
+  String get legalPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get comingSoonTitle => 'Coming Soon!';
+
+  @override
+  String get comingSoonDesc => 'We are working hard to prepare amazing content for you. Stay tuned!';
+
+  @override
+  String get statusNoRecipes => 'No recipes found';
+
+  @override
+  String get aboutAndLegal => 'About & Legal';
+
+  @override
+  String get settingsMedicalDisclaimer => 'Medical Disclaimer & Sources';
+
+  @override
+  String get settingsTermsOfUse => 'Terms of Use (EULA)';
+
+  @override
+  String get deleteAccountAndData => 'Delete Account & Data';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account?';
+
+  @override
+  String get deleteAccountContent => 'This action is irreversible. All your fasting history and local data will be permanently deleted.';
+
+  @override
+  String get cancelButton => 'Cancel';
+
+  @override
+  String get deleteButton => 'Delete';
+
+  @override
+  String get planExtended => 'Extended';
 }

@@ -153,7 +153,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restorePurchases => 'Восстановить покупки';
 
   @override
-  String get proTitle => 'ПОЛУЧИТЬ PRO';
+  String get proTitle => 'Открыть Fastable Pro';
 
   @override
   String get proMonthly => 'Подписка на месяц';
@@ -162,7 +162,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get proAnnual => 'Подписка на год (Скидка 40%)';
 
   @override
-  String get unlockAll => 'Разблокировать всё';
+  String get unlockAll => 'Открыть все функции';
 
   @override
   String get accessStatus => 'Текущий доступ';
@@ -1152,10 +1152,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get headerHealthyChoices => 'Полезный выбор';
 
   @override
-  String get statusNoArticles => 'Статьи не найдены.';
+  String get statusNoArticles => 'Статьи не найдены';
 
   @override
-  String get msgComingSoon => 'Скоро появится...';
+  String get msgComingSoon => 'Эта функция скоро появится!';
 
   @override
   String get learnBannerTitle => 'Откройте 500+ рецептов';
@@ -1433,37 +1433,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get weightSaved => 'Вес сохранен';
 
   @override
-  String get proSubtitle => 'Раскрой свой полный потенциал';
+  String get proSubtitle => 'Неограниченный доступ к AI-коучу и рецептам';
 
   @override
-  String get featureCoach => 'Персональный AI-коуч';
+  String get featureCoach => 'AI-коуч Fasty';
 
   @override
-  String get featureCoachDesc => 'Задавай вопросы и получай советы 24/7';
+  String get featureCoachDesc => 'Персональные советы и мотивация 24/7';
 
   @override
-  String get featureRecipes => 'Полезные рецепты';
+  String get featureRecipes => 'Здоровые рецепты';
 
   @override
-  String get featureRecipesDesc => 'Кето, низкоуглеводные и другие';
+  String get featureRecipesDesc => 'Кето, низкоуглеводные и для голодания';
 
   @override
-  String get featureNoAds => 'Без рекламы — полный фокус';
+  String get featureNoAds => 'Без рекламы';
 
   @override
-  String get featureNoAdsDesc => 'Ничто не отвлекает';
+  String get featureNoAdsDesc => 'Фокусируйтесь на целях без отвлекающих факторов';
 
   @override
-  String get bestValue => 'ЛУЧШЕЕ ПРЕДЛОЖЕНИЕ';
+  String get bestValue => 'ВЫГОДНО';
 
   @override
-  String get loadingOffers => 'Загрузка предложений…';
+  String get loadingOffers => 'Загрузка тарифов...';
 
   @override
-  String get welcomePro => 'Добро пожаловать в Pro! 🌟';
+  String get welcomePro => 'Добро пожаловать в Pro! 🚀';
 
   @override
-  String get errorPro => 'Что-то пошло не так';
+  String get errorPro => 'Ошибка покупки. Попробуйте снова.';
 
   @override
   String get confirmDeleteMsg => 'Это действие нельзя отменить. Все ваши данные будут потеряны.';
@@ -1527,4 +1527,96 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get permHealthConnectDesc => 'Синхронизация веса и шагов с Google Fit';
+
+  @override
+  String get planMonthly => 'Месячный';
+
+  @override
+  String get planAnnual => 'Годовой';
+
+  @override
+  String get planLifetime => 'Навсегда';
+
+  @override
+  String savePercent(String percent) {
+    return 'СКИДКА $percent%';
+  }
+
+  @override
+  String get medicalDisclaimerTitle => 'Отказ от ответственности';
+
+  @override
+  String get medicalDisclaimerHeading => 'Медицинский отказ';
+
+  @override
+  String get medicalDisclaimerBody => 'Fastable создан для помощи в отслеживании интервального голодания и предоставляет AI-коучинг на основе общедоступных знаний. Это НЕ медицинское устройство. Предоставленная информация носит исключительно образовательный характер и не должна заменять профессиональную медицинскую консультацию.\n\nПожалуйста, проконсультируйтесь с врачом перед началом любого режима голодания, особенно если вы беременны, кормите грудью, страдаете диабетом или имеете другие заболевания.';
+
+  @override
+  String get scientificSourcesHeading => 'Научные источники и статьи';
+
+  @override
+  String get sourceJohnsHopkins => 'Медицина Джонса Хопкинса';
+
+  @override
+  String get sourceJohnsHopkinsDesc => 'Интервальное голодание: что это такое и как оно работает?';
+
+  @override
+  String get sourceMayoClinic => 'Клиника Мэйо';
+
+  @override
+  String get sourceMayoClinicDesc => 'Диета с голоданием: может ли она улучшить здоровье сердца?';
+
+  @override
+  String get sourceHarvard => 'Гарвардская медицинская школа';
+
+  @override
+  String get sourceHarvardDesc => 'Интервальное голодание: новые факты';
+
+  @override
+  String get legalAgreementPrefix => 'Продолжая, вы соглашаетесь со стандартными ';
+
+  @override
+  String get legalTermsOfUse => 'Условиями использования (EULA)';
+
+  @override
+  String get legalAgreementAnd => ' от Apple и нашей ';
+
+  @override
+  String get legalPrivacyPolicy => 'Политикой конфиденциальности';
+
+  @override
+  String get comingSoonTitle => 'Скоро появится!';
+
+  @override
+  String get comingSoonDesc => 'Мы усердно работаем над созданием отличного контента. Следите за обновлениями!';
+
+  @override
+  String get statusNoRecipes => 'Рецепты не найдены';
+
+  @override
+  String get aboutAndLegal => 'О приложении и Правовая информация';
+
+  @override
+  String get settingsMedicalDisclaimer => 'Медицинский отказ и источники';
+
+  @override
+  String get settingsTermsOfUse => 'Условия использования (EULA)';
+
+  @override
+  String get deleteAccountAndData => 'Удалить аккаунт и данные';
+
+  @override
+  String get deleteAccountTitle => 'Удалить аккаунт?';
+
+  @override
+  String get deleteAccountContent => 'Это действие необратимо. Вся ваша история голоданий и локальные данные будут удалены навсегда.';
+
+  @override
+  String get cancelButton => 'Отмена';
+
+  @override
+  String get deleteButton => 'Удалить';
+
+  @override
+  String get planExtended => 'Длительный';
 }

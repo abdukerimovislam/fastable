@@ -1,8 +1,8 @@
 name: fastable
-description: "A new Flutter project."
+description: "Fastable - Modern Fasting Tracker App"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+4
 
 environment:
   sdk: ^3.10.4
@@ -55,11 +55,13 @@ dependencies:
 
   # --- NEW TOP TIER FEATURES ---
   health: ^13.1.4               # Apple Health & Google Health Connect
-  purchases_flutter: ^9.10.8    # RevenueCat (Subscriptions)
+  purchases_flutter: ^9.11.0    # RevenueCat (Subscriptions)
   google_generative_ai: ^0.4.7
   flutter_markdown: ^0.7.7+1
   sign_in_with_apple: ^7.0.1
   firebase_remote_config: ^5.5.0
+  purchases_ui_flutter: ^9.11.0
+  upgrader: ^12.5.0
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart'; // Для compute
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,22 +17,33 @@ class HistoryRepository {
   // Контроллер потока
   final _recordsController = StreamController<List<FastingRecord>>.broadcast();
 
+  // Кэш текущих записей, чтобы новые подписчики могли получить данные (решает проблему broadcast)
+  List<FastingRecord> _currentRecords = [];
+
   // Конструктор: Загружаем данные один раз при создании репозитория
   HistoryRepository() {
     _loadInitialData();
   }
 
-  /// 🔹 1. ПОТОК (Только отдает stream, никакой логики)
+  /// 🔹 1. ПОТОК (Только отдает stream)
   Stream<List<FastingRecord>> get recordsStream => _recordsController.stream;
 
-  // Для совместимости со старым кодом, если где-то вызывается как метод
   Stream<List<FastingRecord>> getRecordsStream() => _recordsController.stream;
+
+  /// Актуальный список без подписки
+  List<FastingRecord> get currentRecords => List.unmodifiable(_currentRecords);
+
+  /// Очистка ресурсов (вызывается при logout или уничтожении DI)
+  @disposeMethod
+  void dispose() {
+    _recordsController.close();
+  }
 
   /// Первичная загрузка (фоновая)
   Future<void> _loadInitialData() async {
     // Сначала быстро показываем локальные данные
     final local = await _getLocalRecords();
-    if (!_recordsController.isClosed) _recordsController.add(local);
+    _updateStream(local);
 
     // Потом обновляем из облака
     await getAllRecords();
@@ -53,15 +64,27 @@ class HistoryRepository {
             .get();
 
         if (snapshot.docs.isNotEmpty) {
-          // Парсим в изоляте (чтобы не фризило UI при большом списке)
-          final cloudList = await compute(_parseFirestoreData, snapshot.docs);
+          // 🔥 ИСПРАВЛЕНИЕ: Парсим на главном потоке.
+          // Изоляты не могут принимать QueryDocumentSnapshot.
+          final cloudList = snapshot.docs.map((doc) {
+            final data = doc.data();
+
+            // Нормализуем Timestamp в DateTime или ISO-строку до передачи в fromMap,
+            // чтобы fromMap не упал, ожидая String из JSON.
+            if (data['startTime'] is Timestamp) {
+              data['startTime'] = (data['startTime'] as Timestamp).toDate().toIso8601String();
+            }
+            if (data['endTime'] is Timestamp) {
+              data['endTime'] = (data['endTime'] as Timestamp).toDate().toIso8601String();
+            }
+
+            return FastingRecord.fromMap(data);
+          }).toList();
 
           // Обновляем локальный кэш
           await _saveToLocal(cloudList);
+          _updateStream(cloudList);
 
-          if (!_recordsController.isClosed) {
-            _recordsController.add(cloudList);
-          }
           return cloudList;
         }
       } catch (e) {
@@ -71,7 +94,7 @@ class HistoryRepository {
 
     // B. Офлайн -> Локально
     final local = await _getLocalRecords();
-    if (!_recordsController.isClosed) _recordsController.add(local);
+    _updateStream(local);
     return local;
   }
 
@@ -83,13 +106,14 @@ class HistoryRepository {
     records.sort((a, b) => b.startTime.compareTo(a.startTime));
 
     await _saveToLocal(records);
-    if (!_recordsController.isClosed) _recordsController.add(records);
+    _updateStream(records);
 
     // Облако (фоном)
     final user = _auth.currentUser;
     if (user != null) {
       try {
         final docId = record.startTime.millisecondsSinceEpoch.toString();
+        // Используем set с merge: true на случай, если это обновление существующей записи
         await _db
             .collection('users')
             .doc(user.uid)
@@ -100,7 +124,7 @@ class HistoryRepository {
           'startTime': Timestamp.fromDate(record.startTime),
           'endTime': Timestamp.fromDate(record.endTime),
           'createdAt': FieldValue.serverTimestamp(),
-        });
+        }, SetOptions(merge: true));
       } catch (e) {
         debugPrint("❌ Sync error: $e");
       }
@@ -113,7 +137,7 @@ class HistoryRepository {
     records.removeWhere((r) => r.startTime.isAtSameMomentAs(record.startTime));
 
     await _saveToLocal(records);
-    if (!_recordsController.isClosed) _recordsController.add(records);
+    _updateStream(records);
 
     final user = _auth.currentUser;
     if (user != null) {
@@ -177,7 +201,7 @@ class HistoryRepository {
   Future<void> clearAllData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localKey);
-    if (!_recordsController.isClosed) _recordsController.add([]);
+    _updateStream([]);
 
     final user = _auth.currentUser;
     if (user != null) {
@@ -188,35 +212,33 @@ class HistoryRepository {
     }
   }
 
-  // --- HELPERS (Оптимизация: работаем в compute если нужно) ---
+  // --- HELPERS ---
+
+  /// Единый метод для обновления стейта
+  void _updateStream(List<FastingRecord> records) {
+    _currentRecords = records;
+    if (!_recordsController.isClosed) {
+      _recordsController.add(records);
+    }
+  }
 
   Future<List<FastingRecord>> _getLocalRecords() async {
     final prefs = await SharedPreferences.getInstance();
     final String? jsonString = prefs.getString(_localKey);
     if (jsonString == null) return [];
 
-    // Если записей очень много, JSON декодинг может фризить.
-    // Для >1000 записей лучше использовать compute, но пока оставим так для скорости.
     try {
       final List<dynamic> jsonList = jsonDecode(jsonString);
       return jsonList.map((e) => FastingRecord.fromMap(e)).toList();
     } catch (e) {
+      debugPrint("⚠️ JSON Decode Error: $e");
       return [];
     }
   }
 
   Future<void> _saveToLocal(List<FastingRecord> list) async {
     final prefs = await SharedPreferences.getInstance();
-    // JSON encode тоже может быть тяжелым
     final String jsonString = jsonEncode(list.map((e) => e.toMap()).toList());
     await prefs.setString(_localKey, jsonString);
   }
-}
-
-// ⚡️ ВЫНОСИМ ТЯЖЕЛУЮ ФУНКЦИЮ ИЗ КЛАССА (для compute)
-// Это предотвратит фризы при парсинге большого ответа от Firebase
-List<FastingRecord> _parseFirestoreData(List<QueryDocumentSnapshot> docs) {
-  return docs.map((doc) {
-    return FastingRecord.fromMap(doc.data() as Map<String, dynamic>);
-  }).toList();
 }

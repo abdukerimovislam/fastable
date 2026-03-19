@@ -639,7 +639,61 @@
                                     "planExpert": "Especialista (OMAD)",
                                     "labelRecommended": "RECOMENDADO",
                                     "permHealthConnect": "Health Connect",
-                                    "permHealthConnectDesc": "Sincronize peso e passos com o Google Fit"
+                                    "permHealthConnectDesc": "Sincronize peso e passos com o Google Fit",
+                                    "proTitle": "Desbloquear Fastable Pro",
+                                      "welcomePro": "Bem-vindo ao Pro! 🚀",
+                                      "errorPro": "A compra falhou. Por favor, tente novamente.",
+                                      "loadingOffers": "A carregar ofertas...",
+                                      "restorePurchases": "Restaurar compras",
+                                      "continueAction": "Continuar",
+                                      "bestValue": "MELHOR OFERTA",
+                                      "unlockAll": "Desbloquear todas as funcionalidades",
+                                      "proSubtitle": "Acesso ilimitado ao AI Coach e às receitas",
+                                      "featureCoach": "AI Coach Fasty",
+                                      "featureCoachDesc": "Conselhos personalizados e motivação 24/7",
+                                      "featureRecipes": "Receitas saudáveis",
+                                      "featureRecipesDesc": "Refeições keto, com baixo teor de carboidratos e adequadas ao jejum",
+                                      "featureNoAds": "Sem anúncios",
+                                      "featureNoAdsDesc": "Foque nos seus objetivos sem distrações",
+                                      "planMonthly": "Mensal",
+                                      "planAnnual": "Anual",
+                                      "planLifetime": "Vitalício",
+                                      "savePercent": "POUPE {percent}%",
+                                      "@savePercent": {
+                                        "placeholders": {
+                                          "percent": {
+                                            "type": "String"
+                                          }
+                                        }
+                                      },
+                                      "medicalDisclaimerTitle": "Aviso Médico e Fontes",
+                                      "medicalDisclaimerHeading": "Aviso Médico",
+                                      "medicalDisclaimerBody": "O Fastable foi projetado para ajudar você a monitorar seu jejum intermitente e fornecer treinamento com IA com base em conhecimentos gerais. NÃO é um dispositivo médico. As informações fornecidas são apenas para fins educacionais e não devem substituir o aconselhamento médico profissional.\n\nPor favor, consulte um médico antes de iniciar qualquer regime de jejum, especialmente se estiver grávida, amamentando, tiver diabetes ou qualquer outra condição médica.",
+                                      "scientificSourcesHeading": "Fontes Científicas e Citações",
+                                      "sourceJohnsHopkins": "Medicina Johns Hopkins",
+                                      "sourceJohnsHopkinsDesc": "Jejum Intermitente: O que é e como funciona?",
+                                      "sourceMayoClinic": "Clínica Mayo",
+                                      "sourceMayoClinicDesc": "Dieta de jejum: Pode melhorar a saúde do meu coração?",
+                                      "sourceHarvard": "Escola de Medicina de Harvard",
+                                      "sourceHarvardDesc": "Jejum intermitente: Atualização surpreendente",
+                                      "legalAgreementPrefix": "Ao continuar, você concorda com os ",
+                                      "legalTermsOfUse": "Termos de Uso (EULA)",
+                                      "legalAgreementAnd": " padrão da Apple e nossa ",
+                                      "legalPrivacyPolicy": "Política de Privacidade",
+                                      "comingSoonTitle": "Em breve!",
+                                      "comingSoonDesc": "Estamos trabalhando duro para preparar um conteúdo incrível para você. Fique ligado!",
+                                      "statusNoArticles": "Nenhum artigo encontrado",
+                                      "statusNoRecipes": "Nenhuma receita encontrada",
+                                      "msgComingSoon": "Este recurso estará disponível em breve!",
+                                      "aboutAndLegal": "Sobre e Legal",
+                                      "settingsMedicalDisclaimer": "Aviso Médico e Fontes",
+                                      "settingsTermsOfUse": "Termos de Uso (EULA)",
+                                      "deleteAccountAndData": "Excluir Conta e Dados",
+                                      "deleteAccountTitle": "Excluir Conta?",
+                                      "deleteAccountContent": "Esta ação é irreversível. Todo o seu histórico de jejum e dados locais serão excluídos permanentemente.",
+                                      "cancelButton": "Cancelar",
+                                      "deleteButton": "Excluir",
+                                      "planExtended": "Prolongado"
 
 
 

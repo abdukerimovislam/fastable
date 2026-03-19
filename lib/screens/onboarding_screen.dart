@@ -36,15 +36,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
   final int _totalPages = 6;
 
-  // Локальное состояние
   Gender _gender = Gender.male;
   int _age = 25;
   double _weight = 70.0;
   double _height = 170.0;
   ActivityLevel _activity = ActivityLevel.moderate;
-
-  // Индекс по умолчанию 0 (это 16:8)
   int _planIndex = 0;
+
+  // 🔥 ИСПРАВЛЕНО: Добавлен dispose для предотвращения утечки памяти
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   // --- ACTIONS ---
 
@@ -71,7 +75,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finishOnboarding() async {
-    // 1. Сохраняем данные
     final wb = context.read<WeightBloc>();
     wb.add(UpdateGender(_gender));
     wb.add(UpdateAge(_age));
@@ -85,10 +88,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await prefs.setBool('onboarding_complete', true);
 
     if (mounted) {
-      // 2. 🔥 Плавный переход (Fade Transition)
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 800), // Медленное появление
+          transitionDuration: const Duration(milliseconds: 800),
           pageBuilder: (context, animation, secondaryAnimation) => const PermissionsScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
@@ -108,11 +110,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return BlocBuilder<SettingsBloc, SettingsState>(
       builder: (context, settingsState) {
         final l10n = AppLocalizations.of(context)!;
+        final currentLanguageCode = settingsState.locale.languageCode; // Получаем текущую локаль
 
         return Scaffold(
           body: Stack(
             children: [
-              // Фон
               const MeshBackground(isFasting: false, child: SizedBox.expand()),
 
               SafeArea(
@@ -168,7 +170,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         onPageChanged: (idx) => setState(() => _currentPage = idx),
                         children: [
-                          _buildLanguagePage(l10n),
+                          _buildLanguagePage(l10n, currentLanguageCode),
                           _buildIntroPage(l10n),
                           _buildGenderAgePage(l10n),
                           _buildBodyMetricsPage(l10n),
@@ -207,7 +209,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // --- PAGES ---
 
-  Widget _buildLanguagePage(AppLocalizations l10n) {
+  Widget _buildLanguagePage(AppLocalizations l10n, String currentLanguageCode) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -217,47 +219,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 24),
           Text(l10n.stepLanguage, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 40),
-          _buildLangOption("English", "en", "🇺🇸"),
+          _buildLangOption("English", "en", "🇺🇸", currentLanguageCode),
           const SizedBox(height: 12),
-          _buildLangOption("Русский", "ru", "🇷🇺"),
+          _buildLangOption("Русский", "ru", "🇷🇺", currentLanguageCode),
           const SizedBox(height: 12),
-          _buildLangOption("Español", "es", "🇪🇸"),
+          _buildLangOption("Español", "es", "🇪🇸", currentLanguageCode),
           const SizedBox(height: 12),
-          _buildLangOption("Português", "pt", "🇧🇷"),
+          _buildLangOption("Português", "pt", "🇧🇷", currentLanguageCode),
         ],
       ),
     );
   }
 
-  Widget _buildLangOption(String name, String code, String flag) {
-    return BlocBuilder<SettingsBloc, SettingsState>(
-      builder: (context, state) {
-        final isSelected = state.locale.languageCode == code;
-        return GestureDetector(
-          onTap: () {
-            getIt<HapticService>().selectionClick();
-            context.read<SettingsBloc>().add(ChangeLocale(Locale(code)));
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.blueAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isSelected ? Colors.blueAccent : Colors.transparent, width: 2),
-            ),
-            child: Row(
-              children: [
-                Text(flag, style: const TextStyle(fontSize: 24)),
-                const SizedBox(width: 16),
-                Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
-                const Spacer(),
-                if (isSelected) const Icon(Icons.check_circle, color: Colors.blueAccent),
-              ],
-            ),
-          ),
-        );
+  // 🔥 ИСПРАВЛЕНО: Убрали лишний BlocBuilder
+  Widget _buildLangOption(String name, String code, String flag, String currentLanguageCode) {
+    final isSelected = currentLanguageCode == code;
+    return GestureDetector(
+      onTap: () {
+        getIt<HapticService>().selectionClick();
+        context.read<SettingsBloc>().add(ChangeLocale(Locale(code)));
       },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blueAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isSelected ? Colors.blueAccent : Colors.transparent, width: 2),
+        ),
+        child: Row(
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 16),
+            Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
+            const Spacer(),
+            if (isSelected) const Icon(Icons.check_circle, color: Colors.blueAccent),
+          ],
+        ),
+      ),
     );
   }
 
@@ -356,46 +355,55 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         const SizedBox(height: 10),
         Text(l10n.stepBodyMetricsDesc, style: const TextStyle(color: Colors.white54, fontSize: 14)),
         const SizedBox(height: 40),
+        // 🔥 ИСПРАВЛЕНО: Верстка центрирована для любых языков
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Text(l10n.selectWeight, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
-            Text(l10n.selectHeight, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: Column(
+                children: [
+                  Text(l10n.selectWeight, style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 200,
+                    child: CupertinoPicker(
+                      itemExtent: 40,
+                      magnification: 1.2,
+                      useMagnifier: true,
+                      scrollController: FixedExtentScrollController(initialItem: (_weight - 30).toInt()),
+                      onSelectedItemChanged: (idx) {
+                        getIt<HapticService>().selectionClick();
+                        setState(() => _weight = 30.0 + idx);
+                      },
+                      children: List.generate(150, (i) => Center(child: Text("${30 + i} ${l10n.unitKg}", style: const TextStyle(color: Colors.white, fontSize: 22)))),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  Text(l10n.selectHeight, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 200,
+                    child: CupertinoPicker(
+                      itemExtent: 40,
+                      magnification: 1.2,
+                      useMagnifier: true,
+                      scrollController: FixedExtentScrollController(initialItem: (_height - 100).toInt()),
+                      onSelectedItemChanged: (idx) {
+                        getIt<HapticService>().selectionClick();
+                        setState(() => _height = 100.0 + idx);
+                      },
+                      children: List.generate(120, (i) => Center(child: Text("${100 + i} cm", style: const TextStyle(color: Colors.white, fontSize: 22)))),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          height: 200,
-          child: Row(
-            children: [
-              Expanded(
-                child: CupertinoPicker(
-                  itemExtent: 40,
-                  magnification: 1.2,
-                  useMagnifier: true,
-                  scrollController: FixedExtentScrollController(initialItem: (_weight - 30).toInt()),
-                  onSelectedItemChanged: (idx) {
-                    getIt<HapticService>().selectionClick();
-                    setState(() => _weight = 30.0 + idx);
-                  },
-                  children: List.generate(150, (i) => Center(child: Text("${30 + i} ${l10n.unitKg}", style: const TextStyle(color: Colors.white, fontSize: 22)))),
-                ),
-              ),
-              Expanded(
-                child: CupertinoPicker(
-                  itemExtent: 40,
-                  magnification: 1.2,
-                  useMagnifier: true,
-                  scrollController: FixedExtentScrollController(initialItem: (_height - 100).toInt()),
-                  onSelectedItemChanged: (idx) {
-                    getIt<HapticService>().selectionClick();
-                    setState(() => _height = 100.0 + idx);
-                  },
-                  children: List.generate(120, (i) => Center(child: Text("${100 + i} cm", style: const TextStyle(color: Colors.white, fontSize: 22)))),
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -455,12 +463,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // --- PAGE 6: PLAN SELECTION ---
   Widget _buildPlanPage(AppLocalizations l10n) {
-    // Индекс 0 = 16:8 (в вашем списке планов 16:8 идет первым)
     int recommendedIndex = 0;
 
-    // Логика рекомендаций (всегда 16:8 для старта)
     if (_gender == Gender.male && _age >= 18 && _age < 60) recommendedIndex = 0;
     if (_activity == ActivityLevel.active) recommendedIndex = 0;
 
@@ -471,7 +476,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(l10n.stepGoal, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-          // Текст: "Рекомендуем 16-8"
           if (recommendedIndex == 0)
             Text(l10n.recommendationMsg,
                 textAlign: TextAlign.center,
@@ -487,12 +491,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 final isSelected = _planIndex == index;
                 final isRecommended = index == recommendedIndex;
 
-                // Список планов: [0: 16-8, 1: 18-6, 2: 20-4, 3: 24-0]
+                // 🔥 ИСПРАВЛЕНО: Убран хардкод
                 String label = l10n.planBeginner;
-                if (index == 0) label = l10n.planPopular;  // 16:8
-                if (index == 1) label = l10n.planAdvanced; // 18:6
-                if (index == 2) label = l10n.planExpert;   // 20:4
-                if (index == 3) label = "Extended";
+                switch (index) {
+                  case 0: label = l10n.planPopular; break;
+                  case 1: label = l10n.planAdvanced; break;
+                  case 2: label = l10n.planExpert; break;
+                  default:
+                  // Fallback на случай, если ключа planExtended еще нет в ARB
+                    label = "Extended";
+                    try { label = l10n.planExtended; } catch (_) {}
+                    break;
+                }
 
                 return GestureDetector(
                   onTap: () {

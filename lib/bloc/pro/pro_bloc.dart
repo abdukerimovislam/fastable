@@ -15,48 +15,85 @@ class ProBloc extends Bloc<ProEvent, ProState> {
     on<RestorePurchasesEvent>(_onRestore);
   }
 
+  /// Проверка статуса при запуске приложения
   Future<void> _onCheckStatus(CheckProStatus event, Emitter<ProState> emit) async {
-    // Инициализируем сервис при первой проверке
-    await _proService.init();
+    // Инициализацию лучше делать в main.dart, но проверка здесь — ок
     final isPro = await _proService.checkProStatus();
-    emit(state.copyWith(isPro: isPro));
+
+    // Обновляем состояние (сохраняя текущие пакеты, если они были)
+    emit(state.copyWith(
+      isPro: isPro,
+      status: isPro ? ProStatus.proActive : ProStatus.initial,
+    ));
   }
 
+  /// Загрузка товаров для Paywall
   Future<void> _onLoadOfferings(LoadOfferings event, Emitter<ProState> emit) async {
     emit(state.copyWith(status: ProStatus.loading));
     try {
       final packages = await _proService.fetchOfferings();
-      emit(state.copyWith(status: ProStatus.success, packages: packages));
+      emit(state.copyWith(
+          status: ProStatus.success,
+          packages: packages
+      ));
     } catch (e) {
-      emit(state.copyWith(status: ProStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(
+          status: ProStatus.failure,
+          errorMessage: "Failed to load offers: $e" // Можно сделать локализованную ошибку
+      ));
     }
   }
 
+  /// Покупка пакета
   Future<void> _onPurchase(PurchasePackageEvent event, Emitter<ProState> emit) async {
     emit(state.copyWith(status: ProStatus.loading));
     try {
       final success = await _proService.purchasePackage(event.package);
       if (success) {
-        emit(state.copyWith(status: ProStatus.proActive, isPro: true));
+        // 🔥 Важно: ProActive триггерит закрытие экрана в UI
+        emit(state.copyWith(
+          status: ProStatus.proActive,
+          isPro: true,
+          errorMessage: null, // Очищаем ошибки
+        ));
       } else {
-        emit(state.copyWith(status: ProStatus.failure, errorMessage: "Purchase cancelled or failed"));
+        // Если пользователь отменил покупку, просто возвращаем старый статус (не ошибку)
+        // Но если нужно показать ошибку, то Failure
+        emit(state.copyWith(
+            status: ProStatus.failure,
+            errorMessage: "Purchase cancelled or failed"
+        ));
       }
     } catch (e) {
-      emit(state.copyWith(status: ProStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(
+          status: ProStatus.failure,
+          errorMessage: e.toString()
+      ));
     }
   }
 
+  /// Восстановление покупок
   Future<void> _onRestore(RestorePurchasesEvent event, Emitter<ProState> emit) async {
     emit(state.copyWith(status: ProStatus.loading));
     try {
       final success = await _proService.restorePurchases();
       if (success) {
-        emit(state.copyWith(status: ProStatus.proActive, isPro: true));
+        emit(state.copyWith(
+            status: ProStatus.proActive,
+            isPro: true,
+            errorMessage: null
+        ));
       } else {
-        emit(state.copyWith(status: ProStatus.failure, errorMessage: "No active subscriptions found"));
+        emit(state.copyWith(
+            status: ProStatus.failure,
+            errorMessage: "No active subscriptions found to restore."
+        ));
       }
     } catch (e) {
-      emit(state.copyWith(status: ProStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(
+          status: ProStatus.failure,
+          errorMessage: e.toString()
+      ));
     }
   }
 }

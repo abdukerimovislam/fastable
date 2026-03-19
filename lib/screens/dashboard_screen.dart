@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:permission_handler/permission_handler.dart'; // 🔥 Обязательно для Apple ATT
+import 'package:upgrader/upgrader.dart'; // 🔥 Добавили импорт upgrader
 
 import 'package:fastable/injection.dart'; // Для getIt
 import 'package:fastable/services/notification_service.dart';
@@ -12,6 +14,7 @@ import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/screens/coach_screen.dart';
+import 'package:fastable/screens/medical_disclaimer_screen.dart'; // Импорт экрана с источниками
 
 import 'package:fastable/screens/dashboard_widgets/fasting_timer_card.dart';
 import 'package:fastable/screens/dashboard_widgets/water_weight_row.dart';
@@ -32,14 +35,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   InterstitialAd? _interstitialAd;
 
   // 🔥 РЕАЛЬНЫЕ ID РЕКЛАМЫ (Для релиза)
-  // Убедитесь, что эти ID активны в AdMob
   final String _bannerId = Platform.isAndroid
       ? 'ca-app-pub-7039790177400209/1487192350' // Android Real ID
-      : 'ca-app-pub-7039790177400209/1487192350'; // iOS Real ID
+      : 'ca-app-pub-7039790177400209/7671069742'; // iOS Real ID
 
   final String _interstitialId = Platform.isAndroid
       ? 'ca-app-pub-7039790177400209/3371119662' // Android Real ID
-      : 'ca-app-pub-7039790177400209/3371119662'; // iOS Real ID
+      : 'ca-app-pub-7039790177400209/9605397701'; // iOS Real ID
+
+  @override
+  void initState() {
+    super.initState();
+    _initDashboard();
+  }
+
+  Future<void> _initDashboard() async {
+    // 1. Окно трекинга для Apple (App Tracking Transparency)
+    if (Platform.isIOS) {
+      // Задержка, чтобы UI успел отрисоваться перед показом окна
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      final status = await Permission.appTrackingTransparency.status;
+      if (status.isDenied) {
+        await Permission.appTrackingTransparency.request();
+      }
+    }
+
+    // 2. Первичная загрузка рекламы (если юзер не Pro)
+    final isPro = context.read<ProBloc>().state.isPro;
+    if (Platform.isAndroid || !isPro) {
+      _loadAds();
+    }
+  }
 
   @override
   void dispose() {
@@ -51,6 +78,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // --- МЕТОДЫ РЕКЛАМЫ ---
 
   void _loadAds() {
+    if (_bannerAd != null) return; // Защита от двойной загрузки
+
     // 1. Загрузка Баннера
     _bannerAd = BannerAd(
       adUnitId: _bannerId,
@@ -67,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     )..load();
 
-    // 2. Загрузка Межстраничной рекламы (для кнопки Старт)
+    // 2. Загрузка Межстраничной рекламы
     _loadInterstitial();
   }
 
@@ -78,11 +107,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
-          // Перезагружаем рекламу после закрытия
           _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
-              _loadInterstitial(); // Загружаем следующую сразу
+              _loadInterstitial(); // Грузим следующую после закрытия
             },
             onAdFailedToShowFullScreenContent: (ad, err) {
               ad.dispose();
@@ -95,13 +123,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// Метод, который мы передадим в FastingTimerCard
   void _showInterstitialAd() {
     if (_interstitialAd != null) {
       _interstitialAd!.show();
-      _interstitialAd = null; // Сбрасываем, новая загрузится через колбэк
+      _interstitialAd = null;
     } else {
-      // Если реклама еще не загрузилась, пробуем загрузить снова
       _loadInterstitial();
     }
   }
@@ -109,18 +135,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isAndroid = Platform.isAndroid; // 🔥 Проверка платформы
+    final isAndroid = Platform.isAndroid;
 
     return BlocProvider(
       create: (_) => getIt<InsightBloc>(),
       child: BlocConsumer<ProBloc, ProState>(
         listener: (context, proState) {
-          // Определяем, нужно ли показывать рекламу
-          // Android: Всегда ДА. iOS: Только если НЕ Pro.
           final shouldShowAds = isAndroid || !proState.isPro;
 
           if (!shouldShowAds) {
-            // Если мы на iOS и купили Pro -> Убираем всю рекламу
+            // Пользователь купил PRO -> Убиваем рекламу
             _bannerAd?.dispose();
             _interstitialAd?.dispose();
             setState(() {
@@ -128,127 +152,137 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _isBannerReady = false;
             });
 
-            // Включаем уведомления с инсайтами (только для Pro)
             final notificationService = getIt<NotificationService>();
             notificationService.requestPermissions().then((_) {
               notificationService.scheduleDailyInsight(l10n);
             });
           } else {
-            // Если мы на Android или iOS Free -> Грузим рекламу
+            // Восстановление рекламы, если подписка закончилась
             if (!_isBannerReady && _bannerAd == null) {
               _loadAds();
             }
-            // Отключаем инсайты (так как они для Pro)
             getIt<NotificationService>().cancelDailyInsight();
           }
         },
         builder: (context, proState) {
-          // 🔥 ЛОГИКА UI
-          // 1. Реклама: Android = Всегда, iOS = Если не Pro
           final showAds = isAndroid || !proState.isPro;
-
-          // 2. Pro Баннер: Android = Никогда, iOS = Если не Pro
           final showProBanner = !isAndroid && !proState.isPro;
-
-          // 3. Pro Фичи (Коуч, Инсайты): Android = Нет, iOS = Да (доступность внутри виджетов может зависеть от Pro)
-          // *Примечание: На iOS мы показываем карточки, но блокируем контент замком. На Android скрываем полностью.*
           final showProFeatures = !isAndroid;
 
-          return Scaffold(
-            backgroundColor: Colors.transparent,
-            body: SafeArea(
-              bottom: false,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // --- HEADER ROW ---
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(l10n.dashboardToday, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16)),
-                            Text(l10n.dashboardOverview, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        // 🔥 КНОПКА КОУЧА (Скрыта на Android)
-                        if (showProFeatures)
-                          GestureDetector(
-                            onTap: () => Navigator.push(context, CoachScreen.route()),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.purpleAccent.withOpacity(0.15),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.purpleAccent.withOpacity(0.4), width: 1),
+          // 🔥 ИСПРАВЛЕНИЕ: dialogStyle теперь находится в UpgradeAlert, а не в Upgrader
+          return UpgradeAlert(
+            upgrader: Upgrader(),
+            dialogStyle: Platform.isIOS
+                ? UpgradeDialogStyle.cupertino
+                : UpgradeDialogStyle.material,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(
+                bottom: false,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // --- HEADER ROW ---
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.dashboardToday, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16)),
+                              Text(l10n.dashboardOverview, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          // Блок кнопок справа
+                          Row(
+                            children: [
+                              // КНОПКА МЕДИЦИНСКОГО ДИСКЛЕЙМЕРА (Для Apple)
+                              IconButton(
+                                icon: const Icon(Icons.info_outline, color: Colors.white54, size: 28),
+                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalDisclaimerScreen())),
                               ),
-                              child: const Icon(Icons.auto_awesome, color: Colors.purpleAccent, size: 28),
-                            ),
+
+                              // КНОПКА КОУЧА
+                              if (showProFeatures) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => Navigator.push(context, CoachScreen.route()),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purpleAccent.withOpacity(0.15),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.purpleAccent.withOpacity(0.4), width: 1),
+                                    ),
+                                    child: const Icon(Icons.auto_awesome, color: Colors.purpleAccent, size: 28),
+                                  ),
+                                ),
+                              ]
+                            ],
                           ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // --- 🔥 РЕКЛАМНЫЙ БАННЕР (ПО ЦЕНТРУ) ---
-                    if (showAds && _isBannerReady && _bannerAd != null) ...[
-                      Container(
-                        width: double.infinity,
-                        height: _bannerAd!.size.height.toDouble(),
-                        alignment: Alignment.center,
-                        child: AdWidget(ad: _bannerAd!),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
+
+                      // --- 🔥 РЕКЛАМНЫЙ БАННЕР ---
+                      if (showAds && _isBannerReady && _bannerAd != null) ...[
+                        Container(
+                          width: double.infinity,
+                          height: _bannerAd!.size.height.toDouble(),
+                          alignment: Alignment.center,
+                          child: AdWidget(ad: _bannerAd!),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // --- 1. TIMER ---
+                      FastingTimerCard(
+                        onStartFasting: showAds ? _showInterstitialAd : null,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // --- 2. ИНСАЙТ ---
+                      if (showProFeatures)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: InsightCard(isPro: proState.isPro),
+                        ),
+
+                      // --- 3. STATS ---
+                      const StatsRow(),
+
+                      const SizedBox(height: 16),
+
+                      // --- 4. WATER & WEIGHT ---
+                      const WaterWeightRow(),
+
+                      const SizedBox(height: 16),
+
+                      // --- PRO BANNER ---
+                      if (showProBanner)
+                        GlassCard(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
+                          child: Row(children: [
+                            Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle),
+                                child: const Icon(Icons.star, color: Colors.amber)),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))
+                              ]),
+                            ),
+                            Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))
+                          ]),
+                        ),
                     ],
-
-                    // --- 1. TIMER ---
-                    FastingTimerCard(
-                      // Если реклама включена, передаем функцию показа
-                      onStartFasting: showAds ? _showInterstitialAd : null,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // --- 2. ИНСАЙТ (Скрыт на Android) ---
-                    if (showProFeatures)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: InsightCard(isPro: proState.isPro),
-                      ),
-
-                    // --- 3. STATS ---
-                    const StatsRow(),
-
-                    const SizedBox(height: 16),
-
-                    // --- 4. WATER & WEIGHT ---
-                    const WaterWeightRow(),
-
-                    const SizedBox(height: 16),
-
-                    // --- PRO BANNER (Только на iOS Free) ---
-                    if (showProBanner)
-                      GlassCard(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
-                        child: Row(children: [
-                          Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle),
-                              child: const Icon(Icons.star, color: Colors.amber)),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))
-                            ]),
-                          ),
-                          Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))
-                        ]),
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),

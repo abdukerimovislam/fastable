@@ -684,7 +684,61 @@
                                                              "planExpert": "Experto (OMAD)",
                                                              "labelRecommended": "RECOMENDADO",
                                                              "permHealthConnect": "Health Connect",
-                                                             "permHealthConnectDesc": "Sincroniza peso y pasos con Google Fit"
+                                                             "permHealthConnectDesc": "Sincroniza peso y pasos con Google Fit",
+                                                             "proTitle": "Desbloquear Fastable Pro",
+                                                               "welcomePro": "¡Bienvenido a Pro! 🚀",
+                                                               "errorPro": "La compra ha fallado. Por favor, inténtalo de nuevo.",
+                                                               "loadingOffers": "Cargando ofertas...",
+                                                               "restorePurchases": "Restaurar compras",
+                                                               "continueAction": "Continuar",
+                                                               "bestValue": "MEJOR OFERTA",
+                                                               "unlockAll": "Desbloquear todas las funciones",
+                                                               "proSubtitle": "Acceso ilimitado al AI Coach y a las recetas",
+                                                               "featureCoach": "AI Coach Fasty",
+                                                               "featureCoachDesc": "Consejos personalizados y motivación 24/7",
+                                                               "featureRecipes": "Recetas saludables",
+                                                               "featureRecipesDesc": "Comidas keto, bajas en carbohidratos y aptas para el ayuno",
+                                                               "featureNoAds": "Sin anuncios",
+                                                               "featureNoAdsDesc": "Concéntrate en tus objetivos sin distracciones",
+                                                               "planMonthly": "Mensual",
+                                                               "planAnnual": "Anual",
+                                                               "planLifetime": "De por vida",
+                                                               "savePercent": "AHORRA {percent}%",
+                                                               "@savePercent": {
+                                                                 "placeholders": {
+                                                                   "percent": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "medicalDisclaimerTitle": "Aviso Médico y Fuentes",
+                                                               "medicalDisclaimerHeading": "Aviso Médico",
+                                                               "medicalDisclaimerBody": "Fastable está diseñado para ayudarte a registrar tu ayuno intermitente y brindarte asesoramiento con IA basado en conocimientos generales. NO es un dispositivo médico. La información proporcionada tiene fines educativos únicamente y no debe reemplazar el consejo médico profesional.\n\nPor favor, consulta a un médico antes de comenzar cualquier régimen de ayuno, especialmente si estás embarazada, en periodo de lactancia, tienes diabetes o cualquier otra condición médica.",
+                                                               "scientificSourcesHeading": "Fuentes Científicas y Citas",
+                                                               "sourceJohnsHopkins": "Medicina Johns Hopkins",
+                                                               "sourceJohnsHopkinsDesc": "Ayuno intermitente: ¿Qué es y cómo funciona?",
+                                                               "sourceMayoClinic": "Clínica Mayo",
+                                                               "sourceMayoClinicDesc": "Dieta de ayuno: ¿Puede mejorar la salud de mi corazón?",
+                                                               "sourceHarvard": "Escuela de Medicina de Harvard",
+                                                               "sourceHarvardDesc": "Ayuno intermitente: Actualización sorprendente",
+                                                               "legalAgreementPrefix": "Al continuar, aceptas los ",
+                                                               "legalTermsOfUse": "Términos de uso (EULA)",
+                                                               "legalAgreementAnd": " estándar de Apple y nuestra ",
+                                                               "legalPrivacyPolicy": "Política de privacidad",
+                                                               "comingSoonTitle": "¡Próximamente!",
+                                                               "comingSoonDesc": "Estamos trabajando duro para preparar contenido increíble para ti. ¡Mantente al tanto!",
+                                                               "statusNoArticles": "No se encontraron artículos",
+                                                               "statusNoRecipes": "No se encontraron recetas",
+                                                               "msgComingSoon": "¡Esta función estará disponible pronto!",
+                                                               "aboutAndLegal": "Acerca de y Legal",
+                                                               "settingsMedicalDisclaimer": "Aviso Médico y Fuentes",
+                                                               "settingsTermsOfUse": "Términos de uso (EULA)",
+                                                               "deleteAccountAndData": "Eliminar cuenta y datos",
+                                                               "deleteAccountTitle": "¿Eliminar cuenta?",
+                                                               "deleteAccountContent": "Esta acción es irreversible. Todo tu historial de ayuno y datos locales serán eliminados permanentemente.",
+                                                               "cancelButton": "Cancelar",
+                                                               "deleteButton": "Eliminar",
+                                                               "planExtended": "Prolongado"
 
 
 

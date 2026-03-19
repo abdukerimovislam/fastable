@@ -666,7 +666,61 @@
                                                        "planExpert": "Expert (OMAD)",
                                                        "labelRecommended": "RECOMMENDED",
                                                        "permHealthConnect": "Health Connect",
-                                                       "permHealthConnectDesc": "Sync weight & steps with Google Fit"
+                                                       "permHealthConnectDesc": "Sync weight & steps with Google Fit",
+                                                       "proTitle": "Unlock Fastable Pro",
+                                                       "welcomePro": "Welcome to Pro! 🚀",
+                                                       "errorPro": "Purchase failed. Please try again.",
+                                                       "loadingOffers": "Loading offers...",
+                                                       "restorePurchases": "Restore Purchases",
+                                                       "continueAction": "Continue",
+                                                       "bestValue": "BEST VALUE",
+                                                       "unlockAll": "Unlock All Features",
+                                                       "proSubtitle": "Get unlimited access to AI Coach & Recipes",
+                                                       "featureCoach": "AI Coach Fasty",
+                                                       "featureCoachDesc": "Personalized advice & motivation 24/7",
+                                                       "featureRecipes": "Healthy Recipes",
+                                                       "featureRecipesDesc": "Keto, Low-Carb & Fasting friendly meals",
+                                                       "featureNoAds": "Ad-Free Experience",
+                                                       "featureNoAdsDesc": "Focus on your goals without distractions",
+                                                       "planMonthly": "Monthly",
+                                                       "planAnnual": "Annual",
+                                                       "planLifetime": "Lifetime",
+                                                       "savePercent": "SAVE {percent}%",
+                                                       "@savePercent": {
+                                                         "placeholders": {
+                                                           "percent": {
+                                                             "type": "String"
+                                                           }
+                                                         }
+                                                       },
+                                                       "medicalDisclaimerTitle": "Medical Disclaimer & Sources",
+                                                       "medicalDisclaimerHeading": "Medical Disclaimer",
+                                                       "medicalDisclaimerBody": "Fastable is designed to help you track your intermittent fasting and provide AI coaching based on general knowledge. It is NOT a medical device. The information provided is for educational purposes only and should not replace professional medical advice.\n\nPlease consult a doctor before starting any fasting regimen, especially if you are pregnant, nursing, diabetic, or have any other medical conditions.",
+                                                       "scientificSourcesHeading": "Scientific Sources & Citations",
+                                                       "sourceJohnsHopkins": "Johns Hopkins Medicine",
+                                                       "sourceJohnsHopkinsDesc": "Intermittent Fasting: What is it, and how does it work?",
+                                                       "sourceMayoClinic": "Mayo Clinic",
+                                                       "sourceMayoClinicDesc": "Fasting diet: Can it improve my heart health?",
+                                                       "sourceHarvard": "Harvard Medical School",
+                                                       "sourceHarvardDesc": "Intermittent fasting: Surprising update",
+                                                       "legalAgreementPrefix": "By continuing, you agree to Apple's standard ",
+                                                       "legalTermsOfUse": "Terms of Use (EULA)",
+                                                       "legalAgreementAnd": " and our ",
+                                                       "legalPrivacyPolicy": "Privacy Policy",
+                                                       "comingSoonTitle": "Coming Soon!",
+                                                       "comingSoonDesc": "We are working hard to prepare amazing content for you. Stay tuned!",
+                                                       "statusNoArticles": "No articles found",
+                                                       "statusNoRecipes": "No recipes found",
+                                                       "msgComingSoon": "This feature is coming soon!",
+                                                       "aboutAndLegal": "About & Legal",
+                                                       "settingsMedicalDisclaimer": "Medical Disclaimer & Sources",
+                                                       "settingsTermsOfUse": "Terms of Use (EULA)",
+                                                       "deleteAccountAndData": "Delete Account & Data",
+                                                       "deleteAccountTitle": "Delete Account?",
+                                                       "deleteAccountContent": "This action is irreversible. All your fasting history and local data will be permanently deleted.",
+                                                       "cancelButton": "Cancel",
+                                                       "deleteButton": "Delete",
+                                                       "planExtended": "Extended"
 
 
 
