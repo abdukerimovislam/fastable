@@ -45,6 +45,13 @@ post_install do |installer|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['SWIFT_VERSION'] = '5.0'
+
+      # 🔥 ИСПРАВЛЕНИЕ ДЛЯ APPLE REJECT (Guideline 2.1 ATT)
+      # Включаем макрос для пакета permission_handler, чтобы он мог показывать окно трекинга
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_APP_TRACKING_TRANSPARENCY=1',
+      ]
     end
 
     # ✅ Только для health: заставляем CocoaPods собрать как модуль и сгенерить -Swift.h
