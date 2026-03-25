@@ -58,6 +58,29 @@ class UpdateGender extends WeightEvent {
   List<Object?> get props => [gender];
 }
 
+// --- СОБЫТИЯ ЗАМЕРОВ ТЕЛА ---
+
+class UpdateChest extends WeightEvent {
+  final double chestCm;
+  const UpdateChest(this.chestCm);
+  @override
+  List<Object?> get props => [chestCm];
+}
+
+class UpdateWaist extends WeightEvent {
+  final double waistCm;
+  const UpdateWaist(this.waistCm);
+  @override
+  List<Object?> get props => [waistCm];
+}
+
+class UpdateHips extends WeightEvent {
+  final double hipsCm;
+  const UpdateHips(this.hipsCm);
+  @override
+  List<Object?> get props => [hipsCm];
+}
+
 /// Обновление уровня активности
 class UpdateActivityLevel extends WeightEvent {
   final ActivityLevel level;
@@ -65,4 +88,6 @@ class UpdateActivityLevel extends WeightEvent {
 
   @override
   List<Object?> get props => [level];
+
+
 }

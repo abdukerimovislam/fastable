@@ -3266,6 +3266,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Extended'**
   String get planExtended;
+
+  /// No description provided for @zoneSugarRises.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Sugar Rises'**
+  String get zoneSugarRises;
+
+  /// No description provided for @zoneSugarRisesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body is processing your last meal and storing energy.'**
+  String get zoneSugarRisesDesc;
+
+  /// No description provided for @zoneSugarDrops.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Sugar Drops'**
+  String get zoneSugarDrops;
+
+  /// No description provided for @zoneSugarDropsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Digestion ends. Blood sugar levels return to normal.'**
+  String get zoneSugarDropsDesc;
+
+  /// No description provided for @zoneFatBurning.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat Burning'**
+  String get zoneFatBurning;
+
+  /// No description provided for @zoneFatBurningDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body starts burning stored fat for energy.'**
+  String get zoneFatBurningDesc;
+
+  /// No description provided for @zoneKetosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Ketosis'**
+  String get zoneKetosis;
+
+  /// No description provided for @zoneKetosisDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat burning accelerates. Mental clarity increases.'**
+  String get zoneKetosisDesc;
+
+  /// No description provided for @zoneAutophagy.
+  ///
+  /// In en, this message translates to:
+  /// **'Autophagy'**
+  String get zoneAutophagy;
+
+  /// No description provided for @zoneAutophagyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cellular repair and recycling begins. Anti-aging effects.'**
+  String get zoneAutophagyDesc;
+
+  /// No description provided for @zoneGrowthHormone.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth Hormone'**
+  String get zoneGrowthHormone;
+
+  /// No description provided for @zoneGrowthHormoneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak fat burning, tissue repair, and muscle preservation.'**
+  String get zoneGrowthHormoneDesc;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

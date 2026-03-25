@@ -720,7 +720,19 @@
                                                        "deleteAccountContent": "This action is irreversible. All your fasting history and local data will be permanently deleted.",
                                                        "cancelButton": "Cancel",
                                                        "deleteButton": "Delete",
-                                                       "planExtended": "Extended"
+                                                       "planExtended": "Extended",
+  "zoneSugarRises": "Blood Sugar Rises",
+  "zoneSugarRisesDesc": "Your body is processing your last meal and storing energy.",
+  "zoneSugarDrops": "Blood Sugar Drops",
+  "zoneSugarDropsDesc": "Digestion ends. Blood sugar levels return to normal.",
+  "zoneFatBurning": "Fat Burning",
+  "zoneFatBurningDesc": "Your body starts burning stored fat for energy.",
+  "zoneKetosis": "Ketosis",
+  "zoneKetosisDesc": "Fat burning accelerates. Mental clarity increases.",
+  "zoneAutophagy": "Autophagy",
+  "zoneAutophagyDesc": "Cellular repair and recycling begins. Anti-aging effects.",
+  "zoneGrowthHormone": "Growth Hormone",
+  "zoneGrowthHormoneDesc": "Peak fat burning, tissue repair, and muscle preservation."
 
 
 

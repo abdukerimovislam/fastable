@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,23 +9,22 @@ import 'package:fastable/bloc/fasting/fasting_bloc.dart';
 import 'package:fastable/bloc/fasting/fasting_event.dart';
 import 'package:fastable/bloc/fasting/fasting_state.dart';
 import 'package:fastable/bloc/weight/weight_bloc.dart';
-import 'package:fastable/bloc/weight/weight_state.dart';
+import 'package:fastable/bloc/weight/weight_event.dart';
 
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/gradient_timer_blob.dart';
 import 'package:fastable/widgets/body_visualizer.dart';
 import 'package:fastable/widgets/end_fast_dialog.dart';
-// 🔥 ИМПОРТ ВАШЕГО ВИДЖЕТА
 import 'package:fastable/widgets/fasting_stage_widget.dart';
 import 'package:fastable/utils/time_picker_sheet.dart';
+import 'package:fastable/utils/roulette_sheet.dart';
+import 'package:fastable/utils/log_mood_sheet.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/models/fasting_plan.dart';
-import 'package:fastable/screens/plan_selection_screen.dart';
+import 'package:fastable/models/fasting_stage.dart';
 
 import '../../models/fasting_record.dart';
-
-// Если модель FastingRecord нужна, оставьте этот импорт, если нет - можно убрать
-// import '../../models/fasting_record.dart';
+import '../plan_selection_screen.dart';
 
 class FastingTimerCard extends StatefulWidget {
   final VoidCallback? onStartFasting;
@@ -43,29 +41,41 @@ class FastingTimerCard extends StatefulWidget {
 class _FastingTimerCardState extends State<FastingTimerCard> {
   bool _isBodyView = false;
 
-  // --- ACTIONS ---
+  // --- INTENT-BASED ACTIONS (СТАРТ) ---
+  void _startFastNow(BuildContext context) {
+    getIt<HapticService>().mediumImpact();
+    if (widget.onStartFasting != null) widget.onStartFasting!();
+    context.read<FastingBloc>().add(StartFasting(startTime: DateTime.now()));
+  }
 
-  void _onStartFastingPressed(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-
-    if (widget.onStartFasting != null) {
-      widget.onStartFasting!();
-    }
-
-    final DateTime? pickedTime = await showTimePickerSheet(
+  void _logStartEarlier(BuildContext context) async {
+    final pickedTime = await showTimePickerSheet(
       context: context,
-      title: l10n.dialogStartTitle,
-      initialTime: DateTime.now(),
+      title: "When did you start?",
+      initialTime: DateTime.now().subtract(const Duration(hours: 12)),
     );
 
     if (pickedTime != null && mounted) {
+      if (pickedTime.isAfter(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cannot start in the future!"))
+        );
+        return;
+      }
       context.read<FastingBloc>().add(StartFasting(startTime: pickedTime));
     }
   }
 
-  void _onEndFastingPressed(BuildContext context, FastingState state) async {
+  // --- INTENT-BASED ACTIONS (КОНЕЦ ГОЛОДАНИЯ) ---
+  void _endFast(BuildContext context, FastingState state, {DateTime? customEndTime}) async {
     getIt<HapticService>().mediumImpact();
-    final l10n = AppLocalizations.of(context)!;
+    final endTimeToUse = customEndTime ?? DateTime.now();
+    if (state.startTime != null && endTimeToUse.isBefore(state.startTime!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("End time cannot be before start time!"))
+      );
+      return;
+    }
 
     final FastingMood? result = await showModalBottomSheet<FastingMood>(
       context: context,
@@ -75,89 +85,55 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
     );
 
     if (result != null && mounted) {
-      context.read<FastingBloc>().add(EndFasting(endTime: DateTime.now(), mood: result));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.fastingSaved), backgroundColor: Colors.green),
-      );
+      context.read<FastingBloc>().add(EndFasting(endTime: endTimeToUse, mood: result));
     }
   }
 
-  void _onStopEatingPressed(BuildContext context) {
-    getIt<HapticService>().mediumImpact();
-    final l10n = AppLocalizations.of(context)!;
+  void _logEndEarlier(BuildContext context, FastingState state) async {
+    final pickedTime = await showTimePickerSheet(
+      context: context,
+      title: "When did you break your fast?",
+      initialTime: DateTime.now(),
+    );
+    if (pickedTime != null && mounted) {
+      _endFast(context, state, customEndTime: pickedTime);
+    }
+  }
 
+  // --- INTENT-BASED ACTIONS (КОНЕЦ ОКНА ЕДЫ) ---
+  void _endEatingNow(BuildContext context) {
+    getIt<HapticService>().mediumImpact();
+    context.read<FastingBloc>().add(EndEatingWindow(endTime: DateTime.now()));
+  }
+
+  void _logEatingEndEarlier(BuildContext context) async {
+    final pickedTime = await showTimePickerSheet(
+      context: context,
+      title: "When did you stop eating?",
+      initialTime: DateTime.now(),
+    );
+    if (pickedTime != null && mounted) {
+      context.read<FastingBloc>().add(EndEatingWindow(endTime: pickedTime));
+    }
+  }
+
+  // --- UI HELPERS ---
+  void _showStageDetails(BuildContext context, Duration elapsed) {
+    getIt<HapticService>().selectionClick();
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E).withOpacity(0.95),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.flag_rounded, color: Colors.orangeAccent, size: 40),
-                const SizedBox(height: 20),
-                Text(l10n.endCyclePrompt, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 30),
-                GlassCard(
-                  onTap: () {
-                    context.read<FastingBloc>().add(EndEatingWindow());
-                    Navigator.pop(ctx);
-                  },
-                  color: const Color(0xFFFF512F).withOpacity(0.8),
-                  child: Center(child: Text(l10n.endCycle, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
-                ),
-                const SizedBox(height: 16),
-                GlassCard(
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    final DateTime? pickedTime = await showTimePickerSheet(
-                        context: context,
-                        title: l10n.whenStopEating,
-                        initialTime: DateTime.now()
-                    );
-                    if (pickedTime != null && mounted) {
-                      context.read<FastingBloc>().add(EndEatingWindow(endTime: pickedTime));
-                    }
-                  },
-                  color: Colors.white.withOpacity(0.1),
-                  child: Center(child: Text(l10n.editTime, style: const TextStyle(color: Colors.white, fontSize: 16))),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // 🔥 НОВАЯ ФУНКЦИЯ: Открывает FastingStageWidget с правильным закрытием
-  void _showStageDetails(BuildContext context, Duration elapsed) {
-    getIt<HapticService>().selectionClick();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent, // Прозрачный фон для BottomSheet
-      isScrollControlled: true, // Чтобы можно было центрировать
       builder: (ctx) => GestureDetector(
-        // 1. ЛОВИМ НАЖАТИЕ НА ФОН -> ЗАКРЫВАЕМ
         onTap: () => Navigator.of(context).pop(),
-        behavior: HitTestBehavior.opaque, // Ловит нажатия даже на прозрачных местах
+        behavior: HitTestBehavior.opaque,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5), // Блюр фона
-          child: Center( // Центрируем контент
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
-              // 2. БЛОКИРУЕМ НАЖАТИЕ НА КАРТОЧКУ
               child: GestureDetector(
-                onTap: () {}, // "Глотаем" нажатие, чтобы не закрывалось при клике на виджет
+                onTap: () {},
                 child: FastingStageWidget(elapsedDuration: elapsed),
               ),
             ),
@@ -167,8 +143,9 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
     );
   }
 
-  // --- UI ---
+  String _formatDuration(Duration d) => "${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
 
+  // --- UI ---
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -179,68 +156,88 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
         final height = context.select((WeightBloc b) => b.state.heightCm);
 
         final isFasting = state.phase == FastingPhase.fasting;
-        final Color stateColor = _getPhaseColor(state);
+        final currentStage = isFasting ? FastingStage.getCurrentStage(state.elapsed.inMinutes / 60.0) : FastingStage.allStages[0];
 
-        String stateText;
-        if (isFasting) stateText = l10n.fastingPhase;
-        else if (state.phase == FastingPhase.eating) stateText = l10n.eatingWindow;
-        else stateText = l10n.readyToFast;
+        final Color stateColor = state.phase == FastingPhase.eating
+            ? const Color(0xFF84FAB0)
+            : (state.phase == FastingPhase.stopped ? Colors.blueAccent : currentStage.color);
 
-        final timeLeft = (state.phase == FastingPhase.stopped) ? state.goalDuration : state.remaining;
-        final timeString = _formatDuration(timeLeft);
+        final IconData stageIcon = state.phase == FastingPhase.eating ? Icons.restaurant : currentStage.icon;
 
-        final stageInfo = _getCurrentStageDetail(l10n, state);
-        final String detailText = isFasting ? stageInfo['title']! : "";
-        final IconData stageIcon = _getPhaseIcon(state);
+        String stateText = isFasting ? l10n.fastingPhase : (state.phase == FastingPhase.eating ? l10n.eatingWindow : "Resting Phase");
 
-        VoidCallback onAction;
-        String btnLabel;
+        Duration displayTime;
+        String timeSubtext;
+        Color subtextColor = Colors.white70;
+        bool isOvertime = false;
+        Color timeColor = Colors.white;
 
         if (state.phase == FastingPhase.stopped) {
-          onAction = () => _onStartFastingPressed(context);
-          btnLabel = l10n.startFast;
-        } else if (isFasting) {
-          onAction = () => _onEndFastingPressed(context, state);
-          btnLabel = l10n.endFast;
+          displayTime = state.goalDuration;
+          timeSubtext = "Target Goal";
         } else {
-          onAction = () => _onStopEatingPressed(context);
-          btnLabel = l10n.endCycle;
+          if (state.elapsed >= state.goalDuration) {
+            isOvertime = true;
+            displayTime = state.elapsed;
+
+            if (isFasting) {
+              timeSubtext = "🔥 Goal Reached! (+ Extra)";
+              subtextColor = Colors.amber;
+              timeColor = Colors.amberAccent;
+            } else {
+              timeSubtext = "Window extended";
+              subtextColor = Colors.white54;
+              timeColor = Colors.white.withOpacity(0.9);
+            }
+          } else {
+            displayTime = state.goalDuration - state.elapsed;
+            timeSubtext = state.phase == FastingPhase.eating ? "Remaining in window" : "Remaining";
+          }
         }
 
-        String planName;
-        if (state.planIndex == FastingState.customPlanIndex) {
-          planName = "${l10n.customPlan} (${state.goalDuration.inHours}h)";
-        } else {
-          final currentPlan = FastingPlan.defaultPlans[state.planIndex];
-          planName = "${currentPlan.fastingDuration.inHours}:${currentPlan.eatingDuration.inHours}";
-        }
+        final timeString = _formatDuration(displayTime);
+        final double blobPercent = (state.phase == FastingPhase.stopped) ? 0.0 : (state.elapsed.inSeconds / state.goalDuration.inSeconds).clamp(0.0, 1.0);
+
+        String planName = state.planIndex == FastingState.customPlanIndex
+            ? "${l10n.customPlan} (${state.goalDuration.inHours}h)"
+            : "${FastingPlan.defaultPlans[state.planIndex].fastingDuration.inHours}:${FastingPlan.defaultPlans[state.planIndex].eatingDuration.inHours}";
 
         return GlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             children: [
-              // --- HEADER ---
+              // --- 1. ОРГАНИЗОВАННЫЙ HEADER ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
-                        if (isFasting && !_isBodyView)
+                        Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                        if (isFasting && !_isBodyView && !isOvertime)
                           Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Row(children: [
-                              Flexible(child: Text(detailText, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                              const SizedBox(width: 4),
-                              Icon(Icons.info_outline, color: Colors.white.withOpacity(0.4), size: 14)
-                            ]),
+                            padding: const EdgeInsets.only(top: 6),
+                            child: GestureDetector(
+                              onTap: () => _showStageDetails(context, state.elapsed),
+                              child: Row(
+                                children: [
+                                  Icon(stageIcon, color: stateColor, size: 14),
+                                  const SizedBox(width: 6),
+                                  Flexible(child: Text(currentStage.getTitle(l10n), style: TextStyle(color: stateColor, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.info_outline, color: stateColor.withOpacity(0.5), size: 14),
+                                ],
+                              ),
+                            ),
                           ),
                       ],
                     ),
                   ),
                   Row(
                     children: [
+                      // Кнопка смены вида 3D
                       GestureDetector(
                         onTap: () {
                           getIt<HapticService>().selectionClick();
@@ -248,16 +245,16 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                         },
                         child: Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle, border: Border.all(color: _isBodyView ? stateColor : Colors.white.withOpacity(0.2))),
-                          child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white, size: 18),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle, border: Border.all(color: _isBodyView ? stateColor.withOpacity(0.5) : Colors.white.withOpacity(0.1))),
+                          child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white70, size: 20),
                         ),
                       ),
                       const SizedBox(width: 8),
+                      // Кнопка смены плана
                       GestureDetector(
                         onTap: () async {
                           getIt<HapticService>().lightImpact();
                           final bool? result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanSelectionScreen()));
-
                           if (result == true && mounted) {
                             final prefs = await SharedPreferences.getInstance();
                             final newIdx = prefs.getInt('fast_plan_index') ?? 0;
@@ -267,12 +264,12 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.2))),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.1))),
                           child: Row(children: [
-                            Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                            Text(planName, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 13)),
                             const SizedBox(width: 4),
-                            const Icon(Icons.edit, color: Colors.white70, size: 12)
+                            const Icon(Icons.edit, color: Colors.white54, size: 14)
                           ]),
                         ),
                       ),
@@ -280,59 +277,145 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
 
-              // --- MAIN CONTENT (TIMER OR BODY) ---
+              // --- 2. ЦЕНТРАЛЬНЫЙ КОНТЕНТ ---
               SizedBox(
-                height: 300,
+                height: 280,
                 width: double.infinity,
                 child: _isBodyView
-                    ? Center(child: BodyVisualizer(weight: weight, height: height, phaseColor: stateColor, isFasting: isFasting))
+                    ? Center(
+                  child: BodyVisualizer(
+                    weight: weight, height: height, phaseColor: stateColor, isFasting: isFasting,
+                    chestCm: context.select((WeightBloc b) => b.state.chestCm),
+                    waistCm: context.select((WeightBloc b) => b.state.waistCm),
+                    hipsCm: context.select((WeightBloc b) => b.state.hipsCm),
+                    onChestTap: () {
+                      showRouletteSheet<double>(
+                        context: context, title: "Chest Size (cm)", items: List.generate(150, (i) => 50.0 + i),
+                        initialItem: (context.read<WeightBloc>().state.chestCm ?? 90.0).clamp(50.0, 200.0), textMapper: (val) => "${val.toInt()} cm",
+                        onSave: (val) => context.read<WeightBloc>().add(UpdateChest(val)),
+                      );
+                    },
+                    onWaistTap: () {
+                      showRouletteSheet<double>(
+                        context: context, title: "Waist Size (cm)", items: List.generate(150, (i) => 40.0 + i),
+                        initialItem: (context.read<WeightBloc>().state.waistCm ?? 70.0).clamp(40.0, 190.0), textMapper: (val) => "${val.toInt()} cm",
+                        onSave: (val) => context.read<WeightBloc>().add(UpdateWaist(val)),
+                      );
+                    },
+                    onHipsTap: () {
+                      showRouletteSheet<double>(
+                        context: context, title: "Hips Size (cm)", items: List.generate(150, (i) => 50.0 + i),
+                        initialItem: (context.read<WeightBloc>().state.hipsCm ?? 95.0).clamp(50.0, 200.0), textMapper: (val) => "${val.toInt()} cm",
+                        onSave: (val) => context.read<WeightBloc>().add(UpdateHips(val)),
+                      );
+                    },
+                  ),
+                )
                     : SizedBox(
-                  width: 240, height: 240,
+                  width: 250, height: 250,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 800),
                     child: GradientTimerBlob(
                       key: ValueKey<bool>(isFasting),
-                      percent: (state.phase == FastingPhase.stopped) ? 0.0 : state.progress,
+                      percent: blobPercent,
                       isFasting: isFasting,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: Text(timeString, style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w700, color: Colors.white, fontFeatures: [FontFeature.tabularFigures()])))),
-                            const SizedBox(height: 8),
-                            if (isFasting)
-                            // 🔥 ТУТ МЫ ДОБАВИЛИ ОБРАБОТЧИК НАЖАТИЯ НА ИНДИКАТОР СТАДИИ
-                              GestureDetector(
-                                onTap: () => _showStageDetails(context, state.elapsed),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(color: stateColor.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: stateColor.withOpacity(0.5))),
-                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                    Icon(stageIcon, color: stateColor, size: 14),
-                                    const SizedBox(width: 6),
-                                    Flexible(child: Text(detailText, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis))
-                                  ]),
-                                ),
+                      colors: [stateColor.withOpacity(0.5), stateColor],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                              child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                      timeString,
+                                      style: TextStyle(
+                                        fontSize: 52, fontWeight: FontWeight.w900, color: timeColor, letterSpacing: -1.0,
+                                        fontFeatures: const [FontFeature.tabularFigures()],
+                                        shadows: const [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
+                                      )
+                                  )
                               )
-                            else
-                              Text(l10n.targetGoal, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(timeSubtext, style: TextStyle(color: subtextColor, fontSize: 14, fontWeight: isOvertime ? FontWeight.bold : FontWeight.w600)),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
 
-              // --- MAIN BUTTON ---
-              GlassCard(
-                onTap: onAction,
-                color: stateColor.withOpacity(0.8),
-                child: Center(child: Text(btnLabel, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
+              // --- 3. БЛОК ДЕЙСТВИЙ И КНОПОК ---
+
+              // Кнопка дневника (Широкая, с текстом)
+              if (isFasting) ...[
+                GestureDetector(
+                  onTap: () => showLogMoodSheet(context),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.edit_note_rounded, color: Colors.white70, size: 20),
+                        const SizedBox(width: 8),
+                        Text("Log Mood & Symptoms", style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 15, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Главная массивная кнопка действия
+              GestureDetector(
+                onTap: () {
+                  if (state.phase == FastingPhase.stopped) _startFastNow(context);
+                  else if (isFasting) _endFast(context, state);
+                  else _endEatingNow(context);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  decoration: BoxDecoration(
+                      color: stateColor.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                  ),
+                  child: Center(
+                      child: Text(
+                          state.phase == FastingPhase.stopped ? "START FAST NOW" : (isFasting ? "END FAST NOW" : "START NEXT FAST"),
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)
+                      )
+                  ),
+                ),
+              ),
+
+              // Ретроактивная текстовая кнопка в самом низу
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () {
+                  if (state.phase == FastingPhase.stopped) _logStartEarlier(context);
+                  else if (isFasting) _logEndEarlier(context, state);
+                  else _logEatingEndEarlier(context);
+                },
+                style: TextButton.styleFrom(
+                    foregroundColor: Colors.white54,
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
+                ),
+                child: Text(
+                  state.phase == FastingPhase.stopped ? "Log start earlier" : (isFasting ? "Log end earlier" : "Log eating end earlier"),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
               ),
             ],
           ),
@@ -340,10 +423,4 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
       },
     );
   }
-
-  // Helpers
-  String _formatDuration(Duration d) => "${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
-  Color _getPhaseColor(FastingState state) { if (state.phase == FastingPhase.eating) return const Color(0xFF84FAB0); if (state.phase == FastingPhase.stopped) return Colors.blueAccent; final h = state.elapsed.inHours; if (h < 12) return Colors.blueAccent; if (h < 16) return Colors.orangeAccent; if (h < 18) return Colors.purpleAccent; return const Color(0xFFFFD700); }
-  IconData _getPhaseIcon(FastingState state) { if (state.phase == FastingPhase.eating) return Icons.restaurant; final h = state.elapsed.inHours; if (h < 12) return Icons.bloodtype; if (h < 16) return Icons.local_fire_department; if (h < 18) return Icons.bolt; return Icons.auto_awesome; }
-  Map<String, String> _getCurrentStageDetail(AppLocalizations l10n, FastingState state) { final h = state.elapsed.inHours; if (state.phase == FastingPhase.eating) return {"title": l10n.eatingWindow, "desc": l10n.descEatingWindow}; if (h < 4) return {"title": l10n.stage0_4, "desc": l10n.stage0_4_desc}; if (h < 8) return {"title": l10n.stage4_8, "desc": l10n.stage4_8_desc}; if (h < 12) return {"title": l10n.stage8_12, "desc": l10n.stage8_12_desc}; if (h < 16) return {"title": l10n.stage12_16, "desc": l10n.stage12_16_desc}; if (h < 18) return {"title": l10n.stage16_18, "desc": l10n.stage16_18_desc}; if (h < 24) return {"title": l10n.stage18_24, "desc": l10n.stage18_24_desc}; return {"title": l10n.stage24_plus, "desc": l10n.stage24_plus_desc}; }
 }

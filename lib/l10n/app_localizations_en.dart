@@ -1619,4 +1619,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planExtended => 'Extended';
+
+  @override
+  String get zoneSugarRises => 'Blood Sugar Rises';
+
+  @override
+  String get zoneSugarRisesDesc => 'Your body is processing your last meal and storing energy.';
+
+  @override
+  String get zoneSugarDrops => 'Blood Sugar Drops';
+
+  @override
+  String get zoneSugarDropsDesc => 'Digestion ends. Blood sugar levels return to normal.';
+
+  @override
+  String get zoneFatBurning => 'Fat Burning';
+
+  @override
+  String get zoneFatBurningDesc => 'Your body starts burning stored fat for energy.';
+
+  @override
+  String get zoneKetosis => 'Ketosis';
+
+  @override
+  String get zoneKetosisDesc => 'Fat burning accelerates. Mental clarity increases.';
+
+  @override
+  String get zoneAutophagy => 'Autophagy';
+
+  @override
+  String get zoneAutophagyDesc => 'Cellular repair and recycling begins. Anti-aging effects.';
+
+  @override
+  String get zoneGrowthHormone => 'Growth Hormone';
+
+  @override
+  String get zoneGrowthHormoneDesc => 'Peak fat burning, tissue repair, and muscle preservation.';
 }

@@ -1,81 +1,117 @@
-import 'package:flutter/material.dart'; // Нам нужен Material для IconData и Color
+import 'package:flutter/material.dart';
+import 'package:fastable/l10n/app_localizations.dart';
+
+enum FastingZone {
+  sugarRises,   // 0 - 2 ч
+  sugarDrops,   // 2 - 8 ч
+  fatBurning,   // 8 - 14 ч
+  ketosis,      // 14 - 16 ч
+  autophagy,    // 16 - 24 ч
+  growthHormone // 24+ ч
+}
 
 class FastingStage {
+  final FastingZone zone;
   final int startHour;
-  final String titleKey;
-  final String descKey;
-  final IconData icon;
+  final int? endHour; // null значит бесконечность (24+ часов)
   final Color color;
+  final IconData icon;
 
   const FastingStage({
+    required this.zone,
     required this.startHour,
-    required this.titleKey,
-    required this.descKey,
-    required this.icon,
+    this.endHour,
     required this.color,
+    required this.icon,
   });
 
-  // Теперь мы определим список всех наших стадий
-  // Он будет жить прямо в этой модели для легкого доступа
-  static final List<FastingStage> allStages = [
-    const FastingStage(
+  // Получить название фазы из локализации
+  String getTitle(AppLocalizations l10n) {
+    switch (zone) {
+      case FastingZone.sugarRises: return l10n.zoneSugarRises ?? "Blood Sugar Rises";
+      case FastingZone.sugarDrops: return l10n.zoneSugarDrops ?? "Blood Sugar Drops";
+      case FastingZone.fatBurning: return l10n.zoneFatBurning ?? "Fat Burning";
+      case FastingZone.ketosis: return l10n.zoneKetosis ?? "Ketosis";
+      case FastingZone.autophagy: return l10n.zoneAutophagy ?? "Autophagy";
+      case FastingZone.growthHormone: return l10n.zoneGrowthHormone ?? "Growth Hormone";
+    }
+  }
+
+  // Получить описание фазы
+  String getDescription(AppLocalizations l10n) {
+    switch (zone) {
+      case FastingZone.sugarRises: return l10n.zoneSugarRisesDesc ?? "Your body is processing your last meal.";
+      case FastingZone.sugarDrops: return l10n.zoneSugarDropsDesc ?? "Blood sugar normalizes, digestion ends.";
+      case FastingZone.fatBurning: return l10n.zoneFatBurningDesc ?? "Your body starts burning stored fat for energy.";
+      case FastingZone.ketosis: return l10n.zoneKetosisDesc ?? "Fat burning accelerates. Mental clarity increases.";
+      case FastingZone.autophagy: return l10n.zoneAutophagyDesc ?? "Cellular recycling begins. Anti-aging effects.";
+      case FastingZone.growthHormone: return l10n.zoneGrowthHormoneDesc ?? "Peak fat burning and muscle preservation.";
+    }
+  }
+
+  // Рассчитать текущую стадию на основе прошедших часов
+  static FastingStage getCurrentStage(double elapsedHours) {
+    if (elapsedHours < 2) return allStages[0];
+    if (elapsedHours < 8) return allStages[1];
+    if (elapsedHours < 14) return allStages[2];
+    if (elapsedHours < 16) return allStages[3];
+    if (elapsedHours < 24) return allStages[4];
+    return allStages[5];
+  }
+
+  // Рассчитать прогресс ВНУТРИ текущей стадии (от 0.0 до 1.0)
+  static double getStageProgress(double elapsedHours) {
+    final stage = getCurrentStage(elapsedHours);
+    if (stage.endHour == null) return 1.0; // Для последней стадии всегда 100% или можно сделать бесконечный рост
+
+    final stageDuration = stage.endHour! - stage.startHour;
+    final hoursInCurrentStage = elapsedHours - stage.startHour;
+    return (hoursInCurrentStage / stageDuration).clamp(0.0, 1.0);
+  }
+
+  // Все стадии
+  static const List<FastingStage> allStages = [
+    FastingStage(
+      zone: FastingZone.sugarRises,
       startHour: 0,
-      titleKey: "stageAnabolicTitle",
-      descKey: "stageAnabolicDesc",
+      endHour: 2,
+      color: Color(0xFF64B5F6), // Голубой
       icon: Icons.restaurant,
-      color: Colors.blueAccent,
     ),
-    const FastingStage(
-      startHour: 4,
-      titleKey: "stageCatabolicTitle",
-      descKey: "stageCatabolicDesc",
-      icon: Icons.directions_run,
-      color: Colors.green,
+    FastingStage(
+      zone: FastingZone.sugarDrops,
+      startHour: 2,
+      endHour: 8,
+      color: Color(0xFF4DD0E1), // Светло-синий
+      icon: Icons.water_drop,
     ),
-    const FastingStage(
-      startHour: 12,
-      titleKey: "stageKetosisTitle",
-      descKey: "stageKetosisDesc",
+    FastingStage(
+      zone: FastingZone.fatBurning,
+      startHour: 8,
+      endHour: 14,
+      color: Color(0xFFFFB74D), // Оранжевый
       icon: Icons.local_fire_department,
-      color: Colors.orange,
     ),
-    const FastingStage(
+    FastingStage(
+      zone: FastingZone.ketosis,
+      startHour: 14,
+      endHour: 16,
+      color: Color(0xFFE57373), // Красно-оранжевый
+      icon: Icons.psychology,
+    ),
+    FastingStage(
+      zone: FastingZone.autophagy,
       startHour: 16,
-      titleKey: "stageAutophagyTitle",
-      descKey: "stageAutophagyDesc",
-      icon: Icons.recycling,
-      color: Colors.purpleAccent,
+      endHour: 24,
+      color: Color(0xFFBA68C8), // Пурпурный
+      icon: Icons.autorenew,
     ),
-    const FastingStage(
+    FastingStage(
+      zone: FastingZone.growthHormone,
       startHour: 24,
-      titleKey: "stagePeakAutophagyTitle",
-      descKey: "stagePeakAutophagyDesc",
-      icon: Icons.star,
-      color: Colors.redAccent,
+      endHour: null,
+      color: Color(0xFFFFD54F), // Золотой
+      icon: Icons.fitness_center,
     ),
   ];
-
-  // Вспомогательная функция, которая находит текущую стадию
-  // на основе прошедших часов.
-  static FastingStage getStageForHours(int hours) {
-    // Идем по списку в обратном порядке, чтобы найти
-    // первую стадию, час начала которой меньше или равен прошедшим часам.
-    for (var i = allStages.length - 1; i >= 0; i--) {
-      if (hours >= allStages[i].startHour) {
-        return allStages[i];
-      }
-    }
-    // По умолчанию возвращаем первую стадию
-    return allStages[0];
-  }
-
-  // Находит следующую стадию
-  static FastingStage? getNextStage(FastingStage currentStage) {
-    final currentIndex = allStages.indexOf(currentStage);
-    if (currentIndex < allStages.length - 1) {
-      return allStages[currentIndex + 1];
-    }
-    // Если это последняя стадия, следующей нет
-    return null;
-  }
 }

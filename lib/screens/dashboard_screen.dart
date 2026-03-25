@@ -15,12 +15,14 @@ import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/screens/coach_screen.dart';
 import 'package:fastable/screens/medical_disclaimer_screen.dart';
-import 'package:fastable/screens/profile_screen.dart'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт экрана профиля
+import 'package:fastable/screens/profile_screen.dart';
 
 import 'package:fastable/screens/dashboard_widgets/fasting_timer_card.dart';
 import 'package:fastable/screens/dashboard_widgets/water_weight_row.dart';
 import 'package:fastable/screens/dashboard_widgets/stats_row.dart';
 import 'package:fastable/screens/dashboard_widgets/insight_card.dart';
+
+import 'dashboard_widgets/health_metric_row.dart'; // 🔥 ИСПРАВЛЕНИЕ: ДОБАВЛЕН ИМПОРТ
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -58,6 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     }
 
+    // Реклама грузится только если нет PRO (всегда на Android)
     final isPro = context.read<ProBloc>().state.isPro;
     if (Platform.isAndroid || !isPro) {
       _loadAds();
@@ -173,6 +176,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // --- HEADER ---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -185,19 +189,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           Row(
                             children: [
-                              // 🔥 ИСПРАВЛЕНИЕ: Кнопка Профиля (левее всех)
                               IconButton(
                                 icon: const Icon(Icons.account_circle_outlined, color: Colors.white, size: 28),
                                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
                               ),
-
-                              // Кнопка дисклеймера
                               IconButton(
                                 icon: const Icon(Icons.info_outline, color: Colors.white54, size: 28),
                                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalDisclaimerScreen())),
                               ),
-
-                              // Кнопка ИИ-коуча
                               if (showProFeatures) ...[
                                 const SizedBox(width: 8),
                                 GestureDetector(
@@ -220,6 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       const SizedBox(height: 16),
 
+                      // --- РЕКЛАМА БАННЕР ---
                       if (showAds && _isBannerReady && _bannerAd != null) ...[
                         Container(
                           width: double.infinity,
@@ -230,23 +230,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 16),
                       ],
 
+                      // --- ТАЙМЕР ГОЛОДАНИЯ ---
                       FastingTimerCard(
                         onStartFasting: showAds ? _showInterstitialAd : null,
                       ),
-
                       const SizedBox(height: 16),
 
+                      // --- AI INSIGHT CARD ---
                       if (showProFeatures)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: InsightCard(isPro: proState.isPro),
                         ),
 
+                      // --- СТАТИСТИКА (ФАЗА, СТРИК, ИМТ) ---
                       const StatsRow(),
+                      const SizedBox(height: 12),
+
+                      // --- 🔥 НОВАЯ ПАНЕЛЬ (СОН И ЦИКЛ) ---
+                      const HealthMetricsRow(),
                       const SizedBox(height: 16),
+
+                      // --- ВОДА И ВЕС ---
                       const WaterWeightRow(),
                       const SizedBox(height: 16),
 
+                      // --- PRO БАННЕР ---
                       if (showProBanner)
                         GlassCard(
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),

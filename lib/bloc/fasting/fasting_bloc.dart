@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart'; // Для debugPrint
-import 'package:flutter/widgets.dart';    // 🔥 Добавлено для WidgetsBindingObserver и AppLifecycleState
+import 'package:flutter/widgets.dart';    // Для WidgetsBindingObserver и AppLifecycleState
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,24 +15,30 @@ import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/repositories/history_repository.dart';
 import 'package:fastable/models/fasting_record.dart';
 
+// 🔥 ИМПОРТИРУЕМ НАШ НОВЫЙ СЕРВИС
+
+import '../../services/live_activity_services.dart';
+
 @injectable
-// 🔥 ИСПРАВЛЕНИЕ: Добавляем WidgetsBindingObserver для отслеживания сворачивания/разворачивания приложения
 class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingObserver {
   final NotificationService _notificationService;
   final HapticService _hapticService;
   final HistoryRepository _historyRepository;
+  final LiveActivityService _liveActivityService; // 🔥 ДОБАВИЛИ
 
   Timer? _ticker;
   final List<FastingPlan> _plans = FastingPlan.defaultPlans;
 
-  // Храним текущее кастомное значение (в часах), если оно выбрано
   int _customTargetHours = 14;
 
   FastingBloc(
-      this._notificationService, this._hapticService, this._historyRepository)
+      this._notificationService,
+      this._hapticService,
+      this._historyRepository,
+      this._liveActivityService, // 🔥 ДОБАВИЛИ В КОНСТРУКТОР
+      )
       : super(const FastingState()) {
 
-    // 🔥 Регистрируем наш Bloc как наблюдателя за жизненным циклом приложения
     WidgetsBinding.instance.addObserver(this);
 
     on<CheckFastingState>(_onCheckState);
@@ -41,11 +47,10 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     on<EndEatingWindow>(_onEndEatingWindow);
     on<TickTimer>(_onTick);
     on<ChangePlan>(_onChangePlan);
-    on<SetCustomPlan>(_onSetCustomPlan); // 🔥 Обработка кастомного плана
+    on<SetCustomPlan>(_onSetCustomPlan);
     on<ResetFasting>(_onReset);
   }
 
-  // 🔥 ИСПРАВЛЕНИЕ: Мгновенно обновляем таймер, как только пользователь возвращается в приложение
   @override
   void didChangeAppLifecycleState(AppLifecycleState stateLifecycle) {
     if (stateLifecycle == AppLifecycleState.resumed) {
@@ -54,7 +59,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         final diff = now.difference(state.startTime!);
         final elapsed = diff.isNegative ? Duration.zero : diff;
 
-        // Принудительно кидаем ивент тика, чтобы обновить UI мгновенно без задержки в 1 секунду
         add(TickTimer(elapsed));
       }
     }
@@ -65,13 +69,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Читаем индекс плана. Если -1 -> Custom. Иначе -> Preset.
       int planIdx = prefs.getInt('fast_plan_index') ?? 0;
-
-      // Читаем сохраненное кастомное время (если было)
       _customTargetHours = prefs.getInt('custom_target_hours') ?? 14;
 
-      // Если индекс выходит за рамки и не равен -1, сбрасываем на 0
       if (planIdx != FastingState.customPlanIndex && (planIdx < 0 || planIdx >= _plans.length)) {
         planIdx = 0;
       }
@@ -82,10 +82,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
           orElse: () => FastingPhase.stopped);
 
       String? startStr = prefs.getString('cycle_start_time');
-      DateTime? startTime =
-      startStr != null ? DateTime.tryParse(startStr) : null;
+      DateTime? startTime = startStr != null ? DateTime.tryParse(startStr) : null;
 
-      // Определяем цель на основе фазы и плана
       final goal = _getGoalForPhase(phase, planIdx);
 
       if (phase != FastingPhase.stopped && startTime != null) {
@@ -101,8 +99,15 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
           goalDuration: goal,
         ));
         _startTicker();
+
+        // 🔥 ВОССТАНАВЛИВАЕМ LIVE ACTIVITY, ЕСЛИ ПРИЛОЖЕНИЕ БЫЛО УБИТО
+        _liveActivityService.startFastingActivity(
+            startTime: startTime,
+            goalDuration: goal,
+            phaseName: phase == FastingPhase.fasting ? "Fasting" : "Eating"
+        );
+
       } else {
-        // Если таймер остановлен, показываем цель для голодания
         final fastingGoal = planIdx == FastingState.customPlanIndex
             ? Duration(hours: _customTargetHours)
             : _plans[planIdx].fastingDuration;
@@ -112,6 +117,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
           planIndex: planIdx,
           goalDuration: fastingGoal,
         ));
+
+        // 🔥 УБЕДИМСЯ, ЧТО НИЧЕГО НЕ ВИСИТ НА ЛОКСКРИНЕ, ЕСЛИ МЫ ОСТАНОВЛЕНЫ
+        _liveActivityService.stopActivity();
       }
     } catch (e) {
       debugPrint("FastingBloc Error in _onCheckState: $e");
@@ -125,8 +133,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       _hapticService.mediumImpact();
 
       final startDate = event.startTime ?? DateTime.now();
-
-      // Цель берем текущую из стейта (она уже правильная: пресет или кастом)
       final goal = state.goalDuration;
 
       final prefs = await SharedPreferences.getInstance();
@@ -158,6 +164,14 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         isGoalReached: false,
       ));
       _startTicker();
+
+      // 🔥 ЗАПУСКАЕМ LIVE ACTIVITY (DYNAMIC ISLAND)
+      _liveActivityService.startFastingActivity(
+        startTime: startDate,
+        goalDuration: goal,
+        phaseName: "Fasting",
+      );
+
     } catch (e) {
       debugPrint("FastingBloc Error in _onStartFasting: $e");
     }
@@ -167,35 +181,59 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       EndFasting event, Emitter<FastingState> emit) async {
     try {
       _ticker?.cancel();
-      _hapticService.success();
 
-      final endDate = event.endTime ?? DateTime.now();
+      final now = DateTime.now();
+      DateTime endDate = event.endTime ?? now;
+      if (endDate.isAfter(now)) {
+        endDate = now;
+      }
 
       if (state.startTime != null && state.phase == FastingPhase.fasting) {
-        final duration = endDate.difference(state.startTime!);
-
-        // 🔥 ИСПРАВЛЕНИЕ: Защита от случайных нажатий (сохраняем только > 5 минут)
-        if (duration.inMinutes >= 5) {
-          try {
-            final record = FastingRecord(
-              startTime: state.startTime!,
-              endTime: endDate,
-              duration: duration,
-              mood: event.mood,
-            );
-            await _historyRepository.addRecord(record);
-          } catch (e) {
-            debugPrint("History Save Error: $e");
-          }
+        if (endDate.isBefore(state.startTime!)) {
+          debugPrint("❌ Guardrail: End time is before Start time. Aborting save.");
         } else {
-          debugPrint("⏳ Fasting too short (< 5 min), discarded to protect stats.");
+          final duration = endDate.difference(state.startTime!);
+
+          if (duration.inMinutes >= 5) {
+            _hapticService.success();
+            try {
+              final prefs = await SharedPreferences.getInstance();
+              final savedMoodStr = prefs.getString('current_fast_mood');
+              FastingMood? loggedMood;
+              if (savedMoodStr != null) {
+                try {
+                  loggedMood = FastingMood.values.firstWhere((e) => e.name == savedMoodStr);
+                } catch (_) {}
+              }
+
+              final savedSymptoms = prefs.getStringList('current_fast_symptoms') ?? [];
+              String? finalNote;
+              if (savedSymptoms.isNotEmpty) {
+                finalNote = "Symptoms: ${savedSymptoms.join(', ')}";
+              }
+
+              await prefs.remove('current_fast_mood');
+              await prefs.remove('current_fast_symptoms');
+
+              final record = FastingRecord(
+                startTime: state.startTime!,
+                endTime: endDate,
+                duration: duration,
+                mood: event.mood ?? loggedMood,
+                note: finalNote,
+              );
+              await _historyRepository.addRecord(record);
+            } catch (e) {
+              debugPrint("History Save Error: $e");
+            }
+          } else {
+            debugPrint("⏳ Guardrail: Fasting too short (< 5 min), discarded.");
+          }
         }
       }
 
-      // Переход к окну еды
-      // Если план кастомный, окно еды рассчитываем как (24 - часы голода)
       final eatGoal = state.planIndex == FastingState.customPlanIndex
-          ? Duration(hours: (24 - _customTargetHours).clamp(1, 23)) // Минимум 1 час еды
+          ? Duration(hours: (24 - _customTargetHours).clamp(1, 23))
           : _plans[state.planIndex].eatingDuration;
 
       final prefs = await SharedPreferences.getInstance();
@@ -215,8 +253,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         debugPrint("Notification Error: $e");
       }
 
-      final now = DateTime.now();
-      final diff = now.difference(endDate);
+      final diff = DateTime.now().difference(endDate);
       final elapsed = diff.isNegative ? Duration.zero : diff;
 
       emit(state.copyWith(
@@ -227,6 +264,15 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         isGoalReached: false,
       ));
       _startTicker();
+
+      // 🔥 ПЕРЕКЛЮЧАЕМ LIVE ACTIVITY НА "ОКНО ЕДЫ"
+      await _liveActivityService.stopActivity(); // Сначала убиваем старую
+      _liveActivityService.startFastingActivity(
+        startTime: endDate,
+        goalDuration: eatGoal,
+        phaseName: "Eating",
+      );
+
     } catch (e) {
       debugPrint("FastingBloc Error in _onEndFasting: $e");
     }
@@ -246,9 +292,11 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       await prefs.remove('app_state');
       await prefs.remove('cycle_start_time');
 
+      await prefs.remove('current_fast_mood');
+      await prefs.remove('current_fast_symptoms');
+
       await _notificationService.cancelFastingNotifications();
 
-      // При сбросе возвращаем цель голодания (пресет или кастом)
       final resetGoal = state.planIndex == FastingState.customPlanIndex
           ? Duration(hours: _customTargetHours)
           : _plans[state.planIndex].fastingDuration;
@@ -260,6 +308,10 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         isGoalReached: false,
         goalDuration: resetGoal,
       ));
+
+      // 🔥 ПОЛНОСТЬЮ УБИРАЕМ ТАЙМЕР С ЛОКСКРИНА (DYNAMIC ISLAND)
+      _liveActivityService.stopActivity();
+
     } catch (e) {
       debugPrint("FastingBloc Error in _onReset: $e");
     }
@@ -270,8 +322,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('fast_plan_index', event.planIndex);
 
-    // Если меняем план во время таймера, обновляем цель
-    // Если таймер остановлен, тоже обновляем, чтобы UI показал новое время
     Duration newGoal;
 
     if (state.phase == FastingPhase.eating) {
@@ -286,22 +336,17 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     ));
   }
 
-  // 🔥 ОБРАБОТКА КАСТОМНОГО ПЛАНА
   Future<void> _onSetCustomPlan(
       SetCustomPlan event, Emitter<FastingState> emit) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Сохраняем -1 как индекс плана (означает Custom)
     await prefs.setInt('fast_plan_index', FastingState.customPlanIndex);
-    // Сохраняем само значение часов
     await prefs.setInt('custom_target_hours', event.targetHours);
 
     _customTargetHours = event.targetHours;
 
     final newGoal = Duration(hours: event.targetHours);
 
-    // Если мы в фазе голодания или стоп, обновляем цель
-    // Если мы едим, пересчитываем окно еды (24 - цель)
     if (state.phase == FastingPhase.eating) {
       final eatGoal = Duration(hours: (24 - event.targetHours).clamp(1, 23));
       emit(state.copyWith(
@@ -319,6 +364,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
   void _onTick(TickTimer event, Emitter<FastingState> emit) {
     bool reached = event.elapsed >= state.goalDuration;
     emit(state.copyWith(elapsed: event.elapsed, isGoalReached: reached));
+
+    // Опционально: можно обновлять прогресс в LiveActivity, но iOS сама умеет
+    // считать таймер, если мы передали ей startTime и endTime!
   }
 
   void _startTicker() {
@@ -335,15 +383,12 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
 
   @override
   Future<void> close() {
-    // 🔥 Обязательно отписываемся от наблюдения при уничтожении Bloc, чтобы избежать утечек памяти
     WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
     return super.close();
   }
 
-  // Вспомогательный метод для определения цели при старте/проверке
   Duration _getGoalForPhase(FastingPhase phase, int planIdx) {
-    // Если план кастомный (-1)
     if (planIdx == FastingState.customPlanIndex) {
       if (phase == FastingPhase.eating) {
         return Duration(hours: (24 - _customTargetHours).clamp(1, 23));
@@ -352,7 +397,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       }
     }
 
-    // Если план стандартный
     return phase == FastingPhase.eating
         ? _plans[planIdx].eatingDuration
         : _plans[planIdx].fastingDuration;

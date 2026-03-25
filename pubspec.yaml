@@ -2,7 +2,7 @@ name: fastable
 description: "Fastable - Modern Fasting Tracker App"
 publish_to: 'none'
 
-version: 1.0.0+4
+version: 1.0.0+6
 
 environment:
   sdk: ^3.10.4
@@ -39,7 +39,7 @@ dependencies:
   flutter_staggered_animations: ^1.1.1
   google_mobile_ads: ^5.1.0
   flutter_launcher_icons: ^0.13.1
-  flutter_native_splash: ^2.4.0
+
   glassmorphism: ^3.0.0         # For glass cards
 
   # --- FEATURES ---
@@ -63,6 +63,7 @@ dependencies:
   purchases_ui_flutter: ^9.11.0
   upgrader: ^12.5.0
   flutter_timezone: ^5.0.2
+  live_activities: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -91,13 +92,3 @@ flutter_launcher_icons:
   adaptive_icon_background: "#121212"
   adaptive_icon_foreground: "assets/icon/icon.png"
 
-flutter_native_splash:
-  color: "#121212"
-  image: "assets/icon/icon.png"
-  branding: "assets/icon/icon.png"
-  color_dark: "#121212"
-  image_dark: "assets/icon/icon.png"
-  android_12:
-    image: "assets/icon/icon.png"
-    color: "#121212"
-  fullscreen: true

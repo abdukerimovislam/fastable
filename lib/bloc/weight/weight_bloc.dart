@@ -24,6 +24,11 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
     on<UpdateAge>(_onUpdateAge);
     on<UpdateGender>(_onUpdateGender);
     on<UpdateActivityLevel>(_onUpdateActivity);
+
+    // 🔥 ДОБАВЛЕНЫ ОБРАБОТЧИКИ ЗАМЕРОВ ТЕЛА
+    on<UpdateChest>(_onUpdateChest);
+    on<UpdateWaist>(_onUpdateWaist);
+    on<UpdateHips>(_onUpdateHips);
   }
 
   Future<void> _onLoadData(LoadWeightData event, Emitter<WeightState> emit) async {
@@ -41,6 +46,11 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
 
       final activityIdx = prefs.getInt('user_activity') ?? 1;
       final activity = ActivityLevel.values.asMap()[activityIdx] ?? ActivityLevel.moderate;
+
+      // 🔥 ЗАГРУЖАЕМ ЗАМЕРЫ (Если их нет, вернется null)
+      final chest = prefs.getDouble('user_chest');
+      final waist = prefs.getDouble('user_waist');
+      final hips = prefs.getDouble('user_hips');
 
       List<WeightEntry> history = [];
       try {
@@ -61,8 +71,7 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
             currentWeight = healthWeight;
             await prefs.setDouble('user_weight', currentWeight);
 
-            // 🔥 ИСПРАВЛЕНИЕ: Обязательно сохраняем вес в наш Репозиторий,
-            // иначе графики сломаются и не покажут новую точку!
+            // Обязательно сохраняем вес в наш Репозиторий
             await _repository.addWeightEntry(WeightEntry(date: DateTime.now(), weight: currentWeight));
 
             // 2. Перезапрашиваем историю, чтобы UI перерисовался корректно
@@ -82,6 +91,10 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
         gender: gender,
         activityLevel: activity,
         history: history,
+        // 🔥 ПЕРЕДАЕМ ЗАМЕРЫ В СТЕЙТ (Используем функции-генераторы, как прописано в copyWith)
+        chestCm: () => chest,
+        waistCm: () => waist,
+        hipsCm: () => hips,
       ));
     } catch (e) {
       emit(state.copyWith(status: WeightStatus.failure));
@@ -138,5 +151,25 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('user_activity', event.level.index);
     emit(state.copyWith(activityLevel: event.level));
+  }
+
+  // --- 🔥 МЕТОДЫ СОХРАНЕНИЯ ЗАМЕРОВ ---
+
+  Future<void> _onUpdateChest(UpdateChest event, Emitter<WeightState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_chest', event.chestCm);
+    emit(state.copyWith(chestCm: () => event.chestCm));
+  }
+
+  Future<void> _onUpdateWaist(UpdateWaist event, Emitter<WeightState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_waist', event.waistCm);
+    emit(state.copyWith(waistCm: () => event.waistCm));
+  }
+
+  Future<void> _onUpdateHips(UpdateHips event, Emitter<WeightState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_hips', event.hipsCm);
+    emit(state.copyWith(hipsCm: () => event.hipsCm));
   }
 }

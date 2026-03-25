@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../models/drink_record.dart'; // 🔥 ИМПОРТ МОДЕЛИ
 
 abstract class WaterEvent extends Equatable {
   const WaterEvent();
@@ -7,8 +8,19 @@ abstract class WaterEvent extends Equatable {
 }
 
 class LoadWaterData extends WaterEvent {}
-class AddWaterCup extends WaterEvent {}
-class RemoveWaterCup extends WaterEvent {}
+
+// 🔥 ИЗМЕНЕННОЕ СОБЫТИЕ: Теперь передаем тип напитка и объем
+class AddDrink extends WaterEvent {
+  final DrinkType type;
+  final int volumeMl;
+
+  const AddDrink({required this.type, required this.volumeMl});
+
+  @override
+  List<Object?> get props => [type, volumeMl];
+}
+
+class RemoveLastDrink extends WaterEvent {}
 
 class UpdateWaterGoal extends WaterEvent {
   final int newGoal;
@@ -16,8 +28,6 @@ class UpdateWaterGoal extends WaterEvent {
   @override
   List<Object?> get props => [newGoal];
 }
-
-// --- НОВЫЕ СОБЫТИЯ ---
 
 class ToggleAutoGoal extends WaterEvent {
   final bool isEnabled;

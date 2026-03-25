@@ -110,6 +110,52 @@ class NotificationService {
 
   // --- SMART & CARING NOTIFICATIONS (FASTING) ---
 
+  // --- 🔥 МЕТОД ДЛЯ ПЕРЕВОДА УВЕДОМЛЕНИЙ ПРИ СМЕНЕ ЯЗЫКА ---
+  Future<void> rescheduleAll(AppLocalizations l10n) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 1. Отменяем всё старое
+    await cancelAllFastingNotifications();
+    await cancelDailyInsight();
+
+    // 2. Восстанавливаем Daily Insight
+    await scheduleDailyInsight(l10n);
+
+    // 3. Восстанавливаем таймеры голодания/окна еды (если они активны)
+    String stateStr = prefs.getString('app_state') ?? 'stopped';
+    String? startStr = prefs.getString('cycle_start_time');
+
+    if (stateStr != 'stopped' && startStr != null) {
+      DateTime startTime = DateTime.tryParse(startStr) ?? DateTime.now();
+
+      // Нужно понять, какая сейчас цель (в часах)
+      int planIdx = prefs.getInt('fast_plan_index') ?? 0;
+      int customHours = prefs.getInt('custom_target_hours') ?? 14;
+
+      Duration goal;
+      if (planIdx == -1) { // -1 это Custom Plan
+        goal = stateStr == 'fasting'
+            ? Duration(hours: customHours)
+            : Duration(hours: (24 - customHours).clamp(1, 23));
+      } else {
+        // Для дефолтных планов (0: 14/10, 1: 16/8, etc)
+        // Это немного костыльно читать так без Bloc, но для сервиса сойдет
+        List<int> fastHours = [14, 16, 18, 20, 24]; // Массив из FastingPlan.defaultPlans
+        int fastH = (planIdx >= 0 && planIdx < fastHours.length) ? fastHours[planIdx] : 16;
+        goal = stateStr == 'fasting'
+            ? Duration(hours: fastH)
+            : Duration(hours: 24 - fastH);
+      }
+
+      // Планируем заново с новым языком!
+      if (stateStr == 'fasting') {
+        await scheduleFastingNotifications(startTime: startTime, duration: goal, l10n: l10n);
+      } else if (stateStr == 'eating') {
+        await scheduleEatingNotifications(startTime: startTime, duration: goal, l10n: l10n);
+      }
+    }
+  }
+
   Future<void> scheduleFastingNotifications({
     required DateTime startTime,
     required Duration duration,

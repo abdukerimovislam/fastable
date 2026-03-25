@@ -65,26 +65,37 @@ class _HistoryScreenState extends State<HistoryScreen> {
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
+                  // --- ЗАГОЛОВОК ---
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     sliver: SliverToBoxAdapter(
-                      child: Text(
-                        l10n.navHistory,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            l10n.navHistory,
+                            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.analytics_rounded, color: Colors.white54, size: 22),
+                          )
+                        ],
                       ),
                     ),
                   ),
 
+                  // --- КАЛЕНДАРЬ ---
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverToBoxAdapter(
                       child: GlassCard(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+                        borderRadius: BorderRadius.circular(24),
                         child: _ModernCalendar(
                           selectedDate: _selectedDate,
                           fastingDays: fastingDatesSet,
@@ -95,18 +106,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
 
+                  // --- ГРАФИК КОНСИСТЕНТНОСТИ ---
                   SliverPadding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                     sliver: SliverToBoxAdapter(
                       child: GlassCard(
                         padding: const EdgeInsets.all(20),
+                        borderRadius: BorderRadius.circular(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(l10n.lblConsistency, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(height: 20),
+                            Row(
+                              children: [
+                                const Icon(Icons.bar_chart_rounded, color: Color(0xFF43C6AC), size: 20),
+                                const SizedBox(width: 8),
+                                Text(l10n.lblConsistency, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
                             SizedBox(
-                              height: 100,
+                              height: 140,
                               child: BarChart(_buildWeeklyChartData(state.records, l10n)),
                             ),
                           ],
@@ -115,26 +134,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
 
+                  // --- ЗАГОЛОВОК СПИСКА ---
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
                     sliver: SliverToBoxAdapter(
-                      child: Text(
-                        DateFormat('EEEE, d MMMM', l10n.localeName).format(_selectedDate).toUpperCase(),
-                        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            DateFormat('EEEE, d MMMM', l10n.localeName).format(_selectedDate).toUpperCase(),
+                            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                          ),
+                          const Spacer(),
+                          Text(
+                            "${filteredRecords.length} sessions",
+                            style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12, fontWeight: FontWeight.w600),
+                          )
+                        ],
                       ),
                     ),
                   ),
 
+                  // --- СПИСОК ИЛИ ЗАГЛУШКА ---
                   if (filteredRecords.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 40, bottom: 40),
+                        padding: const EdgeInsets.only(top: 30, bottom: 60),
                         child: Center(
                           child: Column(
                             children: [
-                              Icon(Icons.calendar_view_day_rounded, color: Colors.white.withOpacity(0.1), size: 48),
-                              const SizedBox(height: 12),
-                              Text(l10n.lblNoRecordsForDay, style: TextStyle(color: Colors.white.withOpacity(0.3))),
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.03), shape: BoxShape.circle),
+                                child: Icon(Icons.calendar_view_day_rounded, color: Colors.white.withOpacity(0.1), size: 40),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(l10n.lblNoRecordsForDay, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 15, fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ),
@@ -154,10 +188,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
 
-                  // 🔥 ИСПРАВЛЕНИЕ: Динамический отступ для Sliver
-                  SliverPadding(
-                    padding: EdgeInsets.only(bottom: 100 + MediaQuery.of(context).padding.bottom),
-                  ),
+                  SliverPadding(padding: EdgeInsets.only(bottom: 120 + MediaQuery.of(context).padding.bottom)),
                 ],
               );
             },
@@ -167,9 +198,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  // --- ГРАФИК ---
   BarChartData _buildWeeklyChartData(List<FastingRecord> records, AppLocalizations l10n) {
-    Map<int, double> last7Days = {};
-    for (int i = 0; i < 7; i++) last7Days[i] = 0;
+    Map<int, double> last7DaysDuration = {for (int i = 0; i < 7; i++) i: 0};
+    Map<int, List<FastingRecord>> last7DaysRecords = {for (int i = 0; i < 7; i++) i: []};
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -178,13 +211,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final diff = today.difference(recordDate).inDays;
       if (diff < 7 && diff >= 0) {
         int index = 6 - diff;
-        last7Days[index] = (last7Days[index] ?? 0) + record.duration.inMinutes / 60.0;
+        last7DaysDuration[index] = (last7DaysDuration[index] ?? 0) + record.duration.inMinutes / 60.0;
+        last7DaysRecords[index]!.add(record);
       }
     }
 
     List<BarChartGroupData> barGroups = [];
     for (int i = 0; i < 7; i++) {
-      double value = last7Days[i] ?? 0;
+      double value = last7DaysDuration[i] ?? 0;
       double displayValue = value > 24 ? 24 : value;
       barGroups.add(BarChartGroupData(
         x: i,
@@ -194,11 +228,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
             gradient: LinearGradient(
               colors: value >= 16
                   ? [const Color(0xFF43C6AC), const Color(0xFF191654)]
-                  : [Colors.blueAccent, Colors.purpleAccent],
+                  : [Colors.blueAccent.withOpacity(0.8), Colors.purpleAccent.withOpacity(0.6)],
               begin: Alignment.topCenter, end: Alignment.bottomCenter,
             ),
-            width: 12, borderRadius: BorderRadius.circular(6),
-            backDrawRodData: BackgroundBarChartRodData(show: true, toY: 16, color: Colors.white.withOpacity(0.05)),
+            width: 14,
+            borderRadius: BorderRadius.circular(7),
+            backDrawRodData: BackgroundBarChartRodData(show: true, toY: 16, color: Colors.white.withOpacity(0.04)),
           ),
         ],
       ));
@@ -209,8 +244,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
       maxY: 24,
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-          tooltipBgColor: const Color(0xFF1E1E1E),
-          getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem("${rod.toY.toStringAsFixed(1)}h", const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          tooltipBgColor: const Color(0xFF2A2A2A),
+          tooltipRoundedRadius: 12,
+          tooltipPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            final dayRecords = last7DaysRecords[group.x.toInt()]!;
+
+            List<String> notes = [];
+            String moodEmojis = "";
+
+            for(var r in dayRecords) {
+              if (r.mood != null) moodEmojis += _getMoodEmoji(r.mood);
+              if (r.note != null && r.note!.isNotEmpty) {
+                notes.add(r.note!.replaceAll("Symptoms: ", ""));
+              }
+            }
+
+            return BarTooltipItem(
+                "${rod.toY.toStringAsFixed(1)}h\n",
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
+                children: [
+                  if (moodEmojis.isNotEmpty)
+                    TextSpan(text: "$moodEmojis\n", style: const TextStyle(fontSize: 16)),
+                  if (notes.isNotEmpty)
+                    TextSpan(
+                        text: notes.join(", "),
+                        style: const TextStyle(color: Color(0xFF43C6AC), fontSize: 11, fontWeight: FontWeight.w600)
+                    )
+                ]
+            );
+          },
         ),
       ),
       titlesData: FlTitlesData(
@@ -220,9 +283,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (value, meta) {
           final date = now.subtract(Duration(days: 6 - value.toInt()));
+          final isToday = value.toInt() == 6;
           return Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(DateFormat('E', l10n.localeName).format(date), style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)),
+            padding: const EdgeInsets.only(top: 10.0),
+            child: Text(
+                DateFormat('E', l10n.localeName).format(date),
+                style: TextStyle(
+                    color: isToday ? const Color(0xFF43C6AC) : Colors.white.withOpacity(0.4),
+                    fontSize: 12,
+                    fontWeight: isToday ? FontWeight.w900 : FontWeight.w600
+                )
+            ),
           );
         })),
       ),
@@ -232,57 +303,95 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  // --- КАРТОЧКА ИСТОРИИ ---
   Widget _buildHistoryItem(BuildContext context, FastingRecord record, HapticService haptic, AppLocalizations l10n) {
     final duration = record.duration;
     final timeFormat = DateFormat('HH:mm');
     final type = _getFastingType(duration.inHours, l10n);
 
+    final hasSymptoms = record.note != null && record.note!.isNotEmpty;
+    final symptomsText = hasSymptoms ? record.note!.replaceAll("Symptoms: ", "") : "";
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Dismissible(
         key: ValueKey(record.startTime.toIso8601String()),
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 24),
-          decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-          child: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 28),
+          decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
+          child: const Icon(Icons.delete_sweep_rounded, color: Colors.redAccent, size: 28),
         ),
         onDismissed: (_) {
           haptic.mediumImpact();
           context.read<HistoryBloc>().add(DeleteRecordEvent(record));
         },
         child: GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Container(width: 4, decoration: BoxDecoration(color: _getStatusColor(duration.inHours), borderRadius: BorderRadius.circular(2))),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+          padding: const EdgeInsets.all(16),
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Container(width: 4, decoration: BoxDecoration(color: _getStatusColor(duration.inHours), borderRadius: BorderRadius.circular(4))),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("${duration.inHours}h ${duration.inMinutes % 60}m", style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                            child: Text(type, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.w600)),
+                          Row(
+                            children: [
+                              Text("${duration.inHours}h ${duration.inMinutes % 60}m", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                              const SizedBox(width: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
+                                child: Text(type, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 6),
+                          Text("${timeFormat.format(record.startTime)} — ${timeFormat.format(record.endTime)}", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13, fontWeight: FontWeight.w500)),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Text("${timeFormat.format(record.startTime)} — ${timeFormat.format(record.endTime)}", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13)),
+                    ),
+                    if (record.mood != null)
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                        child: Text(_getMoodEmoji(record.mood), style: const TextStyle(fontSize: 20)),
+                      )
+                    else
+                      Icon(Icons.check_circle_rounded, color: Colors.white.withOpacity(0.05), size: 28),
+                  ],
+                ),
+              ),
+              if (hasSymptoms) ...[
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF43C6AC).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF43C6AC).withOpacity(0.1)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFF43C6AC), size: 16),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(symptomsText, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w500, height: 1.4)),
+                      ),
                     ],
                   ),
                 ),
-                if (record.mood != null) Text(_getMoodEmoji(record.mood), style: const TextStyle(fontSize: 22))
-                else Icon(Icons.check_circle, color: Colors.white.withOpacity(0.1), size: 24),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -307,15 +416,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String _getMoodEmoji(FastingMood? mood) {
     switch (mood) {
       case FastingMood.terrible: return "😫";
-      case FastingMood.bad: return "😐";
-      case FastingMood.neutral: return "🙂";
-      case FastingMood.good: return "😁";
-      case FastingMood.great: return "🔥";
+      case FastingMood.bad: return "😕";
+      case FastingMood.neutral: return "😐";
+      case FastingMood.good: return "🙂";
+      case FastingMood.great: return "🤩";
       default: return "";
     }
   }
 }
 
+// --- ПРЕМИАЛЬНЫЙ КАЛЕНДАРЬ ---
 class _ModernCalendar extends StatefulWidget {
   final DateTime selectedDate;
   final Set<DateTime> fastingDays;
@@ -359,42 +469,49 @@ class _ModernCalendarState extends State<_ModernCalendar> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left, color: Colors.white70),
-                onPressed: () => _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+              Container(
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                child: IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded, color: Colors.white70, size: 24),
+                  onPressed: () => _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+                ),
               ),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Text(
-                  DateFormat('LLLL yyyy', widget.locale).format(_currentMonth).toUpperCase(),
+                  DateFormat('MMMM yyyy', widget.locale).format(_currentMonth),
                   key: ValueKey(_currentMonth),
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 0.5),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right, color: Colors.white70),
-                onPressed: () => _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+              Container(
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                child: IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded, color: Colors.white70, size: 24),
+                  onPressed: () => _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+                ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 20),
 
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: _buildWeekDays(),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
 
+        // 🔥 ИСПРАВЛЕНИЕ: Увеличили высоту с 250 до 360, чтобы все 6 строк (недель) помещались идеально!
         SizedBox(
-          height: 260,
+          height: 360,
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: _onPageChanged,
@@ -422,7 +539,7 @@ class _ModernCalendarState extends State<_ModernCalendar> {
         child: Center(
           child: Text(
             DateFormat('E', widget.locale).format(date).toUpperCase(),
-            style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0),
           ),
         ),
       );
@@ -436,10 +553,10 @@ class _ModernCalendarState extends State<_ModernCalendar> {
 
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
-        mainAxisSpacing: 4,
+        mainAxisSpacing: 6, // Чуть уменьшили для большей компактности
         crossAxisSpacing: 0,
         childAspectRatio: 1.0,
       ),
@@ -467,8 +584,8 @@ class _ModernCalendarState extends State<_ModernCalendar> {
     return Center(
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 38,
-        height: 38,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
@@ -477,9 +594,10 @@ class _ModernCalendarState extends State<_ModernCalendar> {
             end: Alignment.bottomRight,
           )
               : null,
-          color: isSelected ? null : (isToday ? Colors.white.withOpacity(0.1) : Colors.transparent),
+          color: isSelected ? null : (isToday ? Colors.white.withOpacity(0.08) : Colors.transparent),
           shape: BoxShape.circle,
-          border: (isToday && !isSelected) ? Border.all(color: Colors.white.withOpacity(0.3), width: 1) : null,
+          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF43C6AC).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4))] : [],
+          border: (isToday && !isSelected) ? Border.all(color: Colors.white.withOpacity(0.2), width: 1) : null,
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -487,23 +605,23 @@ class _ModernCalendarState extends State<_ModernCalendar> {
             Text(
               "$day",
               style: TextStyle(
-                color: isSelected ? Colors.white : (isToday ? Colors.white : Colors.white70),
-                fontWeight: (isSelected || isToday) ? FontWeight.bold : FontWeight.normal,
-                fontSize: 14,
+                color: isSelected ? Colors.white : (isToday ? Colors.white : Colors.white.withOpacity(0.8)),
+                fontWeight: (isSelected || isToday) ? FontWeight.w800 : FontWeight.w500,
+                fontSize: 15,
               ),
             ),
             if (hasFasting)
               Positioned(
-                bottom: 6,
+                bottom: 4,
                 child: Container(
-                  width: 4,
-                  height: 4,
+                  width: 5,
+                  height: 5,
                   decoration: BoxDecoration(
                       color: isSelected ? Colors.white : const Color(0xFF43C6AC),
                       shape: BoxShape.circle,
                       boxShadow: [
                         if (!isSelected)
-                          BoxShadow(color: const Color(0xFF43C6AC).withOpacity(0.5), blurRadius: 4)
+                          BoxShadow(color: const Color(0xFF43C6AC).withOpacity(0.8), blurRadius: 6, spreadRadius: 1)
                       ]
                   ),
                 ),

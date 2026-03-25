@@ -12,10 +12,15 @@ class WeightState extends Equatable {
   // Основные метрики
   final double currentWeight;
   final double startWeight;
-  final double goalWeight; // В прошлых версиях было targetWeight, оставляем как у тебя
+  final double goalWeight;
   final double heightCm;
 
-  // 2. Новые поля для персонализации
+  // 🔥 НОВЫЕ ПОЛЯ: ЗАМЕРЫ ТЕЛА (в сантиметрах)
+  final double? waistCm; // Талия
+  final double? hipsCm;  // Бедра
+  final double? chestCm; // Грудь (или обхват под грудью)
+
+  // Персонализация
   final int age;
   final Gender gender;
   final ActivityLevel activityLevel;
@@ -29,7 +34,9 @@ class WeightState extends Equatable {
     this.startWeight = 70.0,
     this.goalWeight = 65.0,
     this.heightCm = 175.0,
-    // Дефолтные значения персонализации
+    this.waistCm, // null значит еще не замеряли
+    this.hipsCm,
+    this.chestCm,
     this.age = 25,
     this.gender = Gender.male,
     this.activityLevel = ActivityLevel.moderate,
@@ -38,15 +45,12 @@ class WeightState extends Equatable {
 
   // --- УМНЫЕ РАСЧЕТЫ (Smart Features) ---
 
-  /// 1. BMI (Индекс массы тела)
-  /// Рассчитывается автоматически, чтобы всегда быть актуальным
   double get bmi {
     if (heightCm <= 0) return 0;
     double heightM = heightCm / 100;
     return currentWeight / (heightM * heightM);
   }
 
-  /// Категория BMI (ключ для локализации)
   String get bmiCategoryKey {
     final val = bmi;
     if (val < 18.5) return "bmiUnderweight";
@@ -55,27 +59,27 @@ class WeightState extends Equatable {
     return "bmiObese";
   }
 
-  /// 2. BMR (Базальный метаболизм) - Формула Миффлина-Сан Жеора
-  /// Сколько калорий тело сжигает в полном покое
   double get bmr {
     if (currentWeight <= 0 || heightCm <= 0) return 0;
-
-    // Формула: (10 × weight) + (6.25 × height) - (5 × age) + s
-    // s: +5 для мужчин, -161 для женщин
     double base = (10 * currentWeight) + (6.25 * heightCm) - (5 * age);
     return gender == Gender.male ? (base + 5) : (base - 161);
   }
 
-  /// 3. TDEE (Суточный расход энергии)
-  /// Сколько калорий нужно для поддержания веса с учетом активности
   double get tdee {
     double multiplier;
     switch (activityLevel) {
-      case ActivityLevel.sedentary: multiplier = 1.2; break; // Сидячий
-      case ActivityLevel.moderate: multiplier = 1.55; break; // Умеренный
-      case ActivityLevel.active: multiplier = 1.725; break; // Активный
+      case ActivityLevel.sedentary: multiplier = 1.2; break;
+      case ActivityLevel.moderate: multiplier = 1.55; break;
+      case ActivityLevel.active: multiplier = 1.725; break;
     }
     return bmr * multiplier;
+  }
+
+  // --- ИНДЕКС ТАЛИЯ/РОСТ (Waist-to-Height Ratio - WHtR) ---
+  // Это более точный показатель здоровья, чем BMI!
+  double? get waistToHeightRatio {
+    if (waistCm == null || heightCm <= 0) return null;
+    return waistCm! / heightCm;
   }
 
   WeightState copyWith({
@@ -84,6 +88,10 @@ class WeightState extends Equatable {
     double? startWeight,
     double? goalWeight,
     double? heightCm,
+    // 🔥 Оборачиваем в функции, чтобы можно было явно передать null при сбросе
+    double? Function()? waistCm,
+    double? Function()? hipsCm,
+    double? Function()? chestCm,
     int? age,
     Gender? gender,
     ActivityLevel? activityLevel,
@@ -95,6 +103,9 @@ class WeightState extends Equatable {
       startWeight: startWeight ?? this.startWeight,
       goalWeight: goalWeight ?? this.goalWeight,
       heightCm: heightCm ?? this.heightCm,
+      waistCm: waistCm != null ? waistCm() : this.waistCm,
+      hipsCm: hipsCm != null ? hipsCm() : this.hipsCm,
+      chestCm: chestCm != null ? chestCm() : this.chestCm,
       age: age ?? this.age,
       gender: gender ?? this.gender,
       activityLevel: activityLevel ?? this.activityLevel,
@@ -109,7 +120,9 @@ class WeightState extends Equatable {
     startWeight,
     goalWeight,
     heightCm,
-    // bmi не нужен в props, так как он зависит от weight/height
+    waistCm, // 🔥 Добавили в props
+    hipsCm,
+    chestCm,
     age,
     gender,
     activityLevel,

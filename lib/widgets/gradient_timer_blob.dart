@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 class GradientTimerBlob extends StatefulWidget {
   final double percent;
   final bool isFasting;
+  final List<Color>? colors; // 🔥 ДОБАВЛЕНО: Теперь он может принимать цвета!
   final Widget child;
 
   const GradientTimerBlob({
     super.key,
     required this.percent,
     required this.isFasting,
+    this.colors, // 🔥 ДОБАВЛЕНО
     required this.child,
   });
 
@@ -38,8 +40,9 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    // ЦВЕТА (Solar Energy)
-    final List<Color> colors = widget.isFasting
+    // 🔥 Если цвета передали извне (из FastingTimerCard) — берем их.
+    // Если нет — используем дефолтные градиенты.
+    final List<Color> displayColors = widget.colors ?? (widget.isFasting
         ? [
       const Color(0xFFFF4E50), // Red Orange
       const Color(0xFFF9D423), // Warm Yellow
@@ -47,7 +50,7 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
         : [
       const Color(0xFF43C6AC), // Teal
       const Color(0xFFF8FFAE), // Lime
-    ];
+    ]);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -63,15 +66,15 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
                 shape: BoxShape.circle,
                 gradient: SweepGradient(
                   colors: [
-                    colors.first.withOpacity(0.15),
-                    colors.last.withOpacity(0.15),
-                    colors.first.withOpacity(0.15),
+                    displayColors.first.withOpacity(0.15),
+                    displayColors.last.withOpacity(0.15),
+                    displayColors.first.withOpacity(0.15),
                   ],
                   transform: GradientRotation(_controller.value * 2 * pi),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: colors.first.withOpacity(0.2),
+                    color: displayColors.first.withOpacity(0.2),
                     blurRadius: 40,
                     spreadRadius: 2,
                   )
@@ -86,7 +89,7 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
               child: CustomPaint(
                 painter: _GradientArcPainter(
                   percent: widget.percent,
-                  colors: colors,
+                  colors: displayColors, // Передаем нужные цвета художнику
                   strokeWidth: 16,
                 ),
                 child: Center(
@@ -96,7 +99,6 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Theme.of(context).cardColor.withOpacity(0.9),
-                      // Вместо inset shadow используем border для объема
                       border: Border.all(
                         color: Colors.white.withOpacity(0.05),
                         width: 1,

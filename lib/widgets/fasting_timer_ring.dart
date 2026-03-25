@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:fastable/l10n/app_localizations.dart'; // <-- НУЖЕН ЭТОТ ИМПОРТ
+import 'package:fastable/l10n/app_localizations.dart';
 
 class FastingTimerRing extends StatelessWidget {
   final double percentComplete;
@@ -28,15 +28,22 @@ class FastingTimerRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Получаем l10n для хардкодной строки "Remaining:"
     final l10n = AppLocalizations.of(context)!;
 
     return CircularPercentIndicator(
       radius: 140.0,
-      lineWidth: 15.0,
+      lineWidth: 16.0, // Чуть толще для премиальности
       percent: percentComplete,
-      backgroundColor: backgroundColor,
-      progressColor: progressColor,
+      backgroundColor: backgroundColor.withOpacity(0.05), // Менее заметный фон кольца
+      // 🔥 ГРАДИЕНТ ДЛЯ КОЛЬЦА
+      linearGradient: LinearGradient(
+        colors: [
+          progressColor.withOpacity(0.4),
+          progressColor,
+          progressColor.withOpacity(0.8),
+        ],
+        stops: const [0.0, 0.7, 1.0],
+      ),
       circularStrokeCap: CircularStrokeCap.round,
       animation: true,
       animateFromLastPercent: true,
@@ -74,28 +81,39 @@ class FastingTimerRing extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: primaryTextColor,
+                color: progressColor, // Цвет текста теперь совпадает с кольцом!
+                shadows: [Shadow(color: progressColor.withOpacity(0.5), blurRadius: 10)],
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          // ВРЕМЯ (Светящееся)
           Text(
             timeElapsed,
             style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: primaryTextColor,
+              fontSize: 42, // Крупнее
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 2.0,
+              shadows: [Shadow(color: Colors.white.withOpacity(0.2), blurRadius: 15)],
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
-            "${l10n.remaining}: $timeRemaining", // Используем l10n.remaining
-            // ---
-            style: TextStyle(
-              fontSize: 16,
-              color: secondaryTextColor,
+          const SizedBox(height: 8),
+          // ОСТАЛОСЬ ВРЕМЕНИ
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              "${l10n.remaining}: $timeRemaining",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: secondaryTextColor.withOpacity(0.8),
+              ),
             ),
           ),
         ],
