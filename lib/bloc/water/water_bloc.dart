@@ -49,8 +49,13 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> with WidgetsBindingObserver
         await prefs.setDouble('health_water_last_liters', 0.0);
       } else {
         final String drinksJsonStr = prefs.getString('today_drinks_json') ?? '[]';
-        final List<dynamic> decodedList = jsonDecode(drinksJsonStr);
-        currentDrinks = decodedList.map((item) => DrinkRecord.fromJson(item)).toList();
+        // 🔥 ФИКС: Защита от битого JSON, если приложение крашнулось во время сохранения
+        try {
+          final List<dynamic> decodedList = jsonDecode(drinksJsonStr);
+          currentDrinks = decodedList.map((item) => DrinkRecord.fromJson(item)).toList();
+        } catch (_) {
+          currentDrinks = [];
+        }
       }
 
       int goal = prefs.getInt('water_goal_ml') ?? ((prefs.getInt('water_goal') ?? 8) * 250);
@@ -122,6 +127,9 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> with WidgetsBindingObserver
       final prefs = await SharedPreferences.getInstance();
       final jsonList = updatedList.map((d) => d.toJson()).toList();
       await prefs.setString('today_drinks_json', jsonEncode(jsonList));
+
+      // 🔥 Tech Debt: Undo does not remove records from Apple Health.
+      // Needs HealthKit UUID mapping in the future.
 
     } catch (e) {
       debugPrint("WaterBloc Error in _onRemoveLastDrink: $e");

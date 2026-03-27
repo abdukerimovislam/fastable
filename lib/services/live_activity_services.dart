@@ -1,82 +1,151 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:live_activities/live_activities.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 @lazySingleton
 class LiveActivityService {
   final _liveActivitiesPlugin = LiveActivities();
-  String? _currentActivityId;
+  final _localNotifications = FlutterLocalNotificationsPlugin();
 
-  // Инициализация
+  String? _currentIosActivityId;
+  static const int _androidNotificationId = 888;
+
   Future<void> init() async {
-    if (!Platform.isIOS) return;
-    try {
-      await _liveActivitiesPlugin.init(
-        appGroupId: 'group.your.app.fastable', // ЗАМЕНИ НА СВОЙ APP GROUP ID
-      );
-    } catch (e) {
-      debugPrint("LiveActivityService init error: $e");
+    if (Platform.isIOS) {
+      try {
+        await _liveActivitiesPlugin.init(appGroupId: 'group.your.app.fastable');
+        await _liveActivitiesPlugin.endAllActivities();
+      } catch (e) {
+        debugPrint("LiveActivityService init iOS error: $e");
+      }
+    } else if (Platform.isAndroid) {
+      try {
+        const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+        const initSettings = InitializationSettings(android: androidInit);
+
+        await _localNotifications.initialize(
+          initSettings,
+          // Обработчик нажатий на шторку и кнопки внутри неё
+          onDidReceiveNotificationResponse: (NotificationResponse response) {
+            if (response.actionId == 'end_fast_action') {
+              debugPrint("User tapped END FAST from Android notification!");
+              // Приложение выйдет на передний план, где пользователь
+              // сможет нажать кнопку завершения и выбрать настроение (Mood)
+            }
+          },
+        );
+      } catch (e) {
+        debugPrint("LiveActivityService init Android error: $e");
+      }
     }
   }
 
-  // Запуск таймера на Локскрине и Dynamic Island
   Future<void> startFastingActivity({
     required DateTime startTime,
     required Duration goalDuration,
-    required String phaseName, // "Fasting" или "Eating"
+    required String phaseName,
   }) async {
-    if (!Platform.isIOS) return;
+    final endTime = startTime.add(goalDuration);
 
-    try {
-      final endTime = startTime.add(goalDuration);
+    if (Platform.isIOS) {
+      // --- 🍏 ЛОГИКА ДЛЯ IOS (Dynamic Island) ---
+      try {
+        if (_currentIosActivityId != null) await stopActivity();
 
-      // Собираем данные в один словарь (плагин сам передаст их в нативный код)
-      final Map<String, dynamic> activityData = {
-        'phaseName': phaseName,
-        'startTime': startTime.millisecondsSinceEpoch ~/ 1000, // Unix timestamp (sec)
-        'endTime': endTime.millisecondsSinceEpoch ~/ 1000,
-        'progress': 0.0,
-        'isFasting': phaseName.toLowerCase().contains("fast"),
-      };
+        final Map<String, dynamic> activityData = {
+          'phaseName': phaseName,
+          'startTime': startTime.millisecondsSinceEpoch ~/ 1000,
+          'endTime': endTime.millisecondsSinceEpoch ~/ 1000,
+          'progress': 0.0,
+          'isFasting': phaseName.toLowerCase().contains("fast"),
+        };
+        final String customId = 'fasting_timer_${DateTime.now().millisecondsSinceEpoch}';
+        _currentIosActivityId = await _liveActivitiesPlugin.createActivity(customId, activityData);
+      } catch (e) {
+        debugPrint("LiveActivityService iOS start error: $e");
+      }
 
-      // 🔥 ВОТ ОНО ИСПРАВЛЕНИЕ:
-      // В новых версиях 2.4+ первым аргументом нужно передавать кастомный ID (String).
-      final String customId = 'fasting_timer_${DateTime.now().millisecondsSinceEpoch}';
+    } else if (Platform.isAndroid) {
+      // --- 🤖 ЛОГИКА ДЛЯ ANDROID (Закрепленное уведомление) ---
+      try {
+        final status = await Permission.notification.status;
+        if (!status.isGranted) {
+          final request = await Permission.notification.request();
+          if (!request.isGranted) return;
+        }
 
-      _currentActivityId = await _liveActivitiesPlugin.createActivity(
-        customId,       // Аргумент 1: Уникальный String ID
-        activityData,   // Аргумент 2: Map с данными
-      );
+        // --- ПРОКАЧАННЫЙ ДИЗАЙН УВЕДОМЛЕНИЯ ---
+        final androidDetails = AndroidNotificationDetails(
+          'fasting_timer_channel',
+          'Fasting Timer',
+          channelDescription: 'Ongoing fasting timer',
+          importance: Importance.low,
+          priority: Priority.low,
+          ongoing: true,              // Делаем несмахиваемым
+          autoCancel: false,
+          usesChronometer: true,      // Включаем нативный таймер
+          when: startTime.millisecondsSinceEpoch,
+          showWhen: true,
+          color: const Color(0xFF00FA9A),
+          icon: '@mipmap/ic_launcher',
 
-      debugPrint("✅ Live Activity Started: $_currentActivityId (Custom ID: $customId)");
-    } catch (e) {
-      debugPrint("LiveActivityService start error: $e");
+          // 🔥 НОВЫЕ ФИЧИ СТИЛИЗАЦИИ:
+          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'), // Логотип справа
+          subText: '🔥 Fastable', // Премиальный подзаголовок
+          category: AndroidNotificationCategory.stopwatch, // Хинт для системы
+          onlyAlertOnce: true,
+
+          // 🔥 ИНТЕРАКТИВНАЯ КНОПКА
+          actions: <AndroidNotificationAction>[
+            const AndroidNotificationAction(
+              'end_fast_action',
+              '🏁 END FAST',
+              cancelNotification: false,
+              showsUserInterface: true, // Мгновенно открывает приложение при нажатии
+            ),
+          ],
+        );
+
+        final details = NotificationDetails(android: androidDetails);
+
+        final timeStr = '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
+
+        await _localNotifications.show(
+          _androidNotificationId,
+          '$phaseName Phase', // Заголовок
+          'Goal ends at $timeStr', // Описание
+          details,
+        );
+        debugPrint("✅ Android Ongoing Notification Started!");
+      } catch (e) {
+        debugPrint("LiveActivityService Android start error: $e");
+      }
     }
   }
 
-  // Обновление прогресса
   Future<void> updateProgress(double progress) async {
-    if (!Platform.isIOS || _currentActivityId == null) return;
-    try {
-      // Здесь передаем системный ID, который вернул createActivity, и словарь
-      await _liveActivitiesPlugin.updateActivity(_currentActivityId!, {
-        'progress': progress,
-      });
-    } catch (e) {
-      debugPrint("LiveActivityService update error: $e");
+    if (Platform.isIOS && _currentIosActivityId != null) {
+      try {
+        await _liveActivitiesPlugin.updateActivity(_currentIosActivityId!, {'progress': progress});
+      } catch (e) {}
     }
   }
 
-  // Остановка
   Future<void> stopActivity() async {
-    if (!Platform.isIOS || _currentActivityId == null) return;
-    try {
-      await _liveActivitiesPlugin.endActivity(_currentActivityId!);
-      _currentActivityId = null;
-      debugPrint("⏹ Live Activity Stopped");
-    } catch (e) {
-      debugPrint("LiveActivityService stop error: $e");
+    if (Platform.isIOS && _currentIosActivityId != null) {
+      try {
+        await _liveActivitiesPlugin.endActivity(_currentIosActivityId!);
+        _currentIosActivityId = null;
+        debugPrint("⏹ iOS Live Activity Stopped");
+      } catch (e) {}
+    } else if (Platform.isAndroid) {
+      try {
+        await _localNotifications.cancel(_androidNotificationId); // Убираем шторку
+        debugPrint("⏹ Android Notification Stopped");
+      } catch (e) {}
     }
   }
 }

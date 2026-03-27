@@ -24,7 +24,6 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
   }
 
   Future<void> _onStatsUpdated(StatsUpdated event, Emitter<StatsState> emit) async {
-    // 🔥 ИСПРАВЛЕНИЕ 1: Читаем синхронный кэш, избегая Race Conditions
     final records = _historyRepository.currentRecords;
 
     if (records.isEmpty) {
@@ -63,27 +62,9 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
     if (maxVal < 12) maxVal = 12;
     if (maxVal > 24) maxVal += 4;
 
-    // 🔥 ИСПРАВЛЕНИЕ 2: Используем единый источник правды для текущего стрика
+    // 🔥 ИСПРАВЛЕНИЕ: Берем железобетонные стрики из репозитория
     final currentStreak = _historyRepository.calculateStreak();
-
-    // 🔥 ИСПРАВЛЕНИЕ 3: Честный подсчет Максимального стрика (Longest Streak)
-    int longestStreak = 0;
-    int tempStreak = 0;
-    final uniqueDays = records.map((r) => DateTime(r.endTime.year, r.endTime.month, r.endTime.day)).toSet().toList();
-    uniqueDays.sort((a, b) => b.compareTo(a)); // От новых к старым
-
-    if (uniqueDays.isNotEmpty) {
-      tempStreak = 1;
-      longestStreak = 1;
-      for (int i = 0; i < uniqueDays.length - 1; i++) {
-        if (uniqueDays[i].difference(uniqueDays[i+1]).inDays == 1) {
-          tempStreak++;
-          if (tempStreak > longestStreak) longestStreak = tempStreak;
-        } else {
-          tempStreak = 1;
-        }
-      }
-    }
+    final longestStreak = _historyRepository.calculateLongestStreak();
 
     emit(state.copyWith(
       status: StatsStatus.success,
@@ -92,7 +73,7 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
       averageDuration: avgHours,
       successRate: successRate,
       currentStreak: currentStreak,
-      longestStreak: longestStreak, // Честные данные
+      longestStreak: longestStreak,
       weeklyChartData: chartData,
       maxChartValue: maxVal,
     ));

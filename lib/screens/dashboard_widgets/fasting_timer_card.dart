@@ -41,7 +41,6 @@ class FastingTimerCard extends StatefulWidget {
 class _FastingTimerCardState extends State<FastingTimerCard> {
   bool _isBodyView = false;
 
-  // --- INTENT-BASED ACTIONS (СТАРТ) ---
   void _startFastNow(BuildContext context) {
     getIt<HapticService>().mediumImpact();
     if (widget.onStartFasting != null) widget.onStartFasting!();
@@ -66,10 +65,17 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
     }
   }
 
-  // --- INTENT-BASED ACTIONS (КОНЕЦ ГОЛОДАНИЯ) ---
   void _endFast(BuildContext context, FastingState state, {DateTime? customEndTime}) async {
     getIt<HapticService>().mediumImpact();
     final endTimeToUse = customEndTime ?? DateTime.now();
+
+    if (endTimeToUse.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Cannot end fast in the future!"))
+      );
+      return;
+    }
+
     if (state.startTime != null && endTimeToUse.isBefore(state.startTime!)) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("End time cannot be before start time!"))
@@ -100,12 +106,6 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
     }
   }
 
-  // --- INTENT-BASED ACTIONS (КОНЕЦ ОКНА ЕДЫ) ---
-  void _endEatingNow(BuildContext context) {
-    getIt<HapticService>().mediumImpact();
-    context.read<FastingBloc>().add(EndEatingWindow(endTime: DateTime.now()));
-  }
-
   void _logEatingEndEarlier(BuildContext context) async {
     final pickedTime = await showTimePickerSheet(
       context: context,
@@ -113,11 +113,16 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
       initialTime: DateTime.now(),
     );
     if (pickedTime != null && mounted) {
+      if (pickedTime.isAfter(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cannot log time in the future!"))
+        );
+        return;
+      }
       context.read<FastingBloc>().add(EndEatingWindow(endTime: pickedTime));
     }
   }
 
-  // --- UI HELPERS ---
   void _showStageDetails(BuildContext context, Duration elapsed) {
     getIt<HapticService>().selectionClick();
     showModalBottomSheet(
@@ -145,7 +150,6 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
 
   String _formatDuration(Duration d) => "${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
 
-  // --- UI ---
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -215,20 +219,29 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                        Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                         if (isFasting && !_isBodyView && !isOvertime)
                           Padding(
-                            padding: const EdgeInsets.only(top: 6),
+                            padding: const EdgeInsets.only(top: 8),
                             child: GestureDetector(
                               onTap: () => _showStageDetails(context, state.elapsed),
-                              child: Row(
-                                children: [
-                                  Icon(stageIcon, color: stateColor, size: 14),
-                                  const SizedBox(width: 6),
-                                  Flexible(child: Text(currentStage.getTitle(l10n), style: TextStyle(color: stateColor, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                  const SizedBox(width: 4),
-                                  Icon(Icons.info_outline, color: stateColor.withOpacity(0.5), size: 14),
-                                ],
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: stateColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: stateColor.withOpacity(0.2)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(stageIcon, color: stateColor, size: 14),
+                                    const SizedBox(width: 6),
+                                    Flexible(child: Text(currentStage.getTitle(l10n), style: TextStyle(color: stateColor, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                    const SizedBox(width: 4),
+                                    Icon(Icons.chevron_right_rounded, color: stateColor.withOpacity(0.7), size: 16),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -237,20 +250,24 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                   ),
                   Row(
                     children: [
-                      // Кнопка смены вида 3D
+                      // Кнопка смены вида (3D / Таймер)
                       GestureDetector(
                         onTap: () {
                           getIt<HapticService>().selectionClick();
                           setState(() => _isBodyView = !_isBodyView);
                         },
                         child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle, border: Border.all(color: _isBodyView ? stateColor.withOpacity(0.5) : Colors.white.withOpacity(0.1))),
-                          child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white70, size: 20),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.08),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: _isBodyView ? stateColor.withOpacity(0.6) : Colors.white.withOpacity(0.15))
+                          ),
+                          child: Icon(_isBodyView ? Icons.timer_outlined : Icons.accessibility_new_rounded, color: Colors.white.withOpacity(0.9), size: 20),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // Кнопка смены плана
+                      const SizedBox(width: 10),
+                      // Кнопка выбора плана
                       GestureDetector(
                         onTap: () async {
                           getIt<HapticService>().lightImpact();
@@ -264,12 +281,16 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.1))),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withOpacity(0.15))
+                          ),
                           child: Row(children: [
-                            Text(planName, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 13)),
+                            Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
                             const SizedBox(width: 4),
-                            const Icon(Icons.edit, color: Colors.white54, size: 14)
+                            const Icon(Icons.edit_calendar_rounded, color: Colors.white70, size: 14)
                           ]),
                         ),
                       ),
@@ -348,73 +369,164 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
               ),
               const SizedBox(height: 32),
 
-              // --- 3. БЛОК ДЕЙСТВИЙ И КНОПОК ---
+              // --- 3. БЛОК ДЕЙСТВИЙ ---
 
-              // Кнопка дневника (Широкая, с текстом)
+              // Премиальная кнопка Дневника (Log Mood)
               if (isFasting) ...[
                 GestureDetector(
                   onTap: () => showLogMoodSheet(context),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [Colors.white.withOpacity(0.08), Colors.white.withOpacity(0.02)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.edit_note_rounded, color: Colors.white70, size: 20),
-                        const SizedBox(width: 8),
-                        Text("Log Mood & Symptoms", style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 15, fontWeight: FontWeight.w600)),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.edit_note_rounded, color: Colors.white, size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Text("Log Mood & Symptoms", style: TextStyle(color: Colors.white.withOpacity(0.95), fontSize: 15, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
               ],
 
-              // Главная массивная кнопка действия
-              GestureDetector(
-                onTap: () {
-                  if (state.phase == FastingPhase.stopped) _startFastNow(context);
-                  else if (isFasting) _endFast(context, state);
-                  else _endEatingNow(context);
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                      color: stateColor.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
-                  ),
-                  child: Center(
-                      child: Text(
-                          state.phase == FastingPhase.stopped ? "START FAST NOW" : (isFasting ? "END FAST NOW" : "START NEXT FAST"),
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)
+              // Главные кнопки (Start / Stop / Break)
+              if (isFasting)
+                GestureDetector(
+                  onTap: () => _endFast(context, state),
+                  child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                          color: stateColor.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.flag_rounded, color: Colors.white, size: 20), // Иконка финиша
+                          SizedBox(width: 8),
+                          Text(
+                              "END FAST NOW",
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)
+                          ),
+                        ],
                       )
                   ),
+                )
+              else
+                Row(
+                  children: [
+                    // КНОПКА ПЕРЕРЫВА (TAKE A BREAK)
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          getIt<HapticService>().mediumImpact();
+                          if (state.phase == FastingPhase.stopped) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("You are already on a break. Enjoy your rest! ☕"),
+                                  backgroundColor: Colors.blueAccent,
+                                  behavior: SnackBarBehavior.floating,
+                                )
+                            );
+                          } else {
+                            context.read<FastingBloc>().add(ResetFasting());
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Eating window closed. Enjoy your rest day! 🏖️"),
+                                  backgroundColor: Colors.blueAccent,
+                                  behavior: SnackBarBehavior.floating,
+                                )
+                            );
+                          }
+                        },
+                        child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(color: Colors.white.withOpacity(0.15)),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.coffee_rounded, color: Colors.white70, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                    "TAKE A BREAK",
+                                    style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 0.5)
+                                ),
+                              ],
+                            )
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // КНОПКА НАЧАЛА ГОЛОДАНИЯ (START FAST)
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _startFastNow(context),
+                        child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(
+                                color: stateColor.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(22),
+                                boxShadow: [BoxShadow(color: stateColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.play_arrow_rounded, color: Colors.white, size: 20),
+                                SizedBox(width: 6),
+                                Text(
+                                    "START FAST",
+                                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 0.5)
+                                ),
+                              ],
+                            )
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
 
-              // Ретроактивная текстовая кнопка в самом низу
-              const SizedBox(height: 4),
-              TextButton(
+              const SizedBox(height: 8),
+
+              // Ретроактивная кнопка с иконкой (Log earlier)
+              TextButton.icon(
                 onPressed: () {
                   if (state.phase == FastingPhase.stopped) _logStartEarlier(context);
                   else if (isFasting) _logEndEarlier(context, state);
-                  else _logEatingEndEarlier(context);
+                  else _logStartEarlier(context);
                 },
+                icon: const Icon(Icons.history_rounded, size: 16),
+                label: Text(
+                  state.phase == FastingPhase.stopped ? "Log start earlier" : (isFasting ? "Log end earlier" : "Log fast start earlier"),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
                 style: TextButton.styleFrom(
                     foregroundColor: Colors.white54,
                     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
-                ),
-                child: Text(
-                  state.phase == FastingPhase.stopped ? "Log start earlier" : (isFasting ? "Log end earlier" : "Log eating end earlier"),
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                 ),
               ),
             ],

@@ -14,13 +14,9 @@ class HistoryRepository {
 
   static const String _localKey = 'fasting_history_v2';
 
-  // Контроллер потока
   final _recordsController = StreamController<List<FastingRecord>>.broadcast();
-
-  // Кэш текущих записей
   List<FastingRecord> _currentRecords = [];
 
-  // Конструктор: Загружаем данные один раз при создании репозитория
   HistoryRepository() {
     _loadInitialData();
   }
@@ -137,45 +133,87 @@ class HistoryRepository {
     }
   }
 
-  // --- 5. СТРИК ---
-  // 🔥 ИСПРАВЛЕНИЕ: Интеллектуальный подсчет стрика для длинных голоданий
-  int calculateStreak() {
-    final records = _currentRecords;
-    if (records.isEmpty) return 0;
+  // --- 🎯 ИДЕАЛЬНЫЙ АЛГОРИТМ ПОДСЧЕТА СТРИКОВ ---
 
-    final Set<DateTime> activeDays = {};
+  String _dateToStr(DateTime d) => "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
-    // Собираем ВСЕ дни, затронутые голоданием (включая промежуточные дни)
+  Set<String> _getActiveDaysString(List<FastingRecord> records) {
+    final Set<String> activeDays = {};
     for (var r in records) {
       DateTime current = DateTime(r.startTime.year, r.startTime.month, r.startTime.day);
       final endDay = DateTime(r.endTime.year, r.endTime.month, r.endTime.day);
 
       while (!current.isAfter(endDay)) {
-        activeDays.add(current);
-        current = current.add(const Duration(days: 1));
+        activeDays.add(_dateToStr(current));
+        // 🔥 Безопасный инкремент дня без багов с переводом часов (DST)
+        current = DateTime(current.year, current.month, current.day + 1);
       }
     }
+    return activeDays;
+  }
+
+  int calculateStreak() {
+    final records = _currentRecords;
+    if (records.isEmpty) return 0;
+
+    final activeDays = _getActiveDaysString(records);
 
     int streak = 0;
     final now = DateTime.now();
     DateTime checkDate = DateTime(now.year, now.month, now.day);
 
+    String todayStr = _dateToStr(checkDate);
+    String yesterdayStr = _dateToStr(DateTime(checkDate.year, checkDate.month, checkDate.day - 1));
+
     // Если нет записи ни за сегодня, ни за вчера — стрик разорван
-    if (!activeDays.contains(checkDate) && !activeDays.contains(checkDate.subtract(const Duration(days: 1)))) {
+    if (!activeDays.contains(todayStr) && !activeDays.contains(yesterdayStr)) {
       return 0;
     }
 
-    // Если сегодня записи нет, но есть вчера — начинаем отсчет со вчерашнего дня
-    if (!activeDays.contains(checkDate)) {
-      checkDate = checkDate.subtract(const Duration(days: 1));
+    // Начинаем отсчет: если сегодня нет, значит стрик тянется со вчера
+    if (!activeDays.contains(todayStr)) {
+      checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day - 1);
     }
 
-    while (activeDays.contains(checkDate)) {
+    while (activeDays.contains(_dateToStr(checkDate))) {
       streak++;
-      checkDate = checkDate.subtract(const Duration(days: 1));
+      checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day - 1);
     }
 
     return streak;
+  }
+
+  int calculateLongestStreak() {
+    final records = _currentRecords;
+    if (records.isEmpty) return 0;
+
+    final activeDays = _getActiveDaysString(records);
+    if (activeDays.isEmpty) return 0;
+
+    // Сортируем дни по убыванию (от новых к старым)
+    final sortedDaysStr = activeDays.toList()..sort((a, b) => b.compareTo(a));
+
+    int longestStreak = 1;
+    int tempStreak = 1;
+
+    for (int i = 0; i < sortedDaysStr.length - 1; i++) {
+      final partsA = sortedDaysStr[i].split('-');
+      final dateA = DateTime(int.parse(partsA[0]), int.parse(partsA[1]), int.parse(partsA[2]));
+
+      final partsB = sortedDaysStr[i+1].split('-');
+      final dateB = DateTime(int.parse(partsB[0]), int.parse(partsB[1]), int.parse(partsB[2]));
+
+      final expectedPrevDay = DateTime(dateA.year, dateA.month, dateA.day - 1);
+
+      // Проверяем, идут ли дни подряд
+      if (expectedPrevDay.year == dateB.year && expectedPrevDay.month == dateB.month && expectedPrevDay.day == dateB.day) {
+        tempStreak++;
+        if (tempStreak > longestStreak) longestStreak = tempStreak;
+      } else {
+        tempStreak = 1;
+      }
+    }
+    return longestStreak;
   }
 
   // --- 6. MIGRATION & CLEAR ---
@@ -211,7 +249,6 @@ class HistoryRepository {
     }
   }
 
-  // --- HELPERS ---
   void _updateStream(List<FastingRecord> records) {
     _currentRecords = records;
     if (!_recordsController.isClosed) {

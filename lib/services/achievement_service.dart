@@ -12,6 +12,7 @@ class AchievementService {
     int totalSeconds = 0;
     for (var r in records) totalSeconds += r.duration.inSeconds;
     int totalHours = (totalSeconds / 3600).floor();
+
     int currentStreak = _calculateStreak(records);
 
     // Проверяем все возможные достижения
@@ -20,21 +21,22 @@ class AchievementService {
     }).toList();
   }
 
-  // 🔥 ИСПРАВЛЕНИЕ: Интеллектуальный подсчет стрика для длинных голоданий
-  // Логика на 100% синхронизирована с HistoryRepository
+  // Вспомогательный метод для форматирования
+  String _dateToStr(DateTime d) => "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+
+  // 🔥 ИСПРАВЛЕНИЕ: Безопасный подсчет стрика для ачивок
   int _calculateStreak(List<FastingRecord> records) {
     if (records.isEmpty) return 0;
 
-    final Set<DateTime> activeDays = {};
+    final Set<String> activeDays = {};
 
-    // Собираем ВСЕ дни, затронутые голоданием (включая промежуточные дни)
     for (var r in records) {
       DateTime current = DateTime(r.startTime.year, r.startTime.month, r.startTime.day);
       final endDay = DateTime(r.endTime.year, r.endTime.month, r.endTime.day);
 
       while (!current.isAfter(endDay)) {
-        activeDays.add(current);
-        current = current.add(const Duration(days: 1));
+        activeDays.add(_dateToStr(current));
+        current = DateTime(current.year, current.month, current.day + 1); // Без багов времени
       }
     }
 
@@ -42,19 +44,20 @@ class AchievementService {
     final now = DateTime.now();
     DateTime checkDate = DateTime(now.year, now.month, now.day);
 
-    // Если нет записи ни за сегодня, ни за вчера — стрик разорван
-    if (!activeDays.contains(checkDate) && !activeDays.contains(checkDate.subtract(const Duration(days: 1)))) {
+    String todayStr = _dateToStr(checkDate);
+    String yesterdayStr = _dateToStr(DateTime(checkDate.year, checkDate.month, checkDate.day - 1));
+
+    if (!activeDays.contains(todayStr) && !activeDays.contains(yesterdayStr)) {
       return 0;
     }
 
-    // Если сегодня записи нет, но есть вчера — начинаем отсчет со вчерашнего дня
-    if (!activeDays.contains(checkDate)) {
-      checkDate = checkDate.subtract(const Duration(days: 1));
+    if (!activeDays.contains(todayStr)) {
+      checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day - 1);
     }
 
-    while (activeDays.contains(checkDate)) {
+    while (activeDays.contains(_dateToStr(checkDate))) {
       streak++;
-      checkDate = checkDate.subtract(const Duration(days: 1));
+      checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day - 1);
     }
 
     return streak;

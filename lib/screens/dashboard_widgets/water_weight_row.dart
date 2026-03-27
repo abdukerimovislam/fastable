@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math' as math; // 🔥 ДОБАВЛЕНО
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,7 +57,8 @@ class WaterWeightRow extends StatelessWidget {
                     const SizedBox(height: 12),
                     const Text("Hydration", style: TextStyle(color: Colors.white54, fontSize: 12)),
                     Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                      Text("${waterState.totalHydrationMl.toInt()}", style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: -1.0)),
+                      // 🔥 ФИКС: Защита от отрицательной гидратации (из-за алкоголя)
+                      Text("${math.max(0, waterState.totalHydrationMl).toInt()}", style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: -1.0)),
                       Padding(padding: const EdgeInsets.only(bottom: 4, left: 4), child: Text("/ ${waterState.dailyGoal} ml", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)))
                     ])
                   ],
@@ -201,30 +203,25 @@ class WaterWeightRow extends StatelessWidget {
                     onTap: () async {
                       getIt<HapticService>().lightImpact();
 
-                      // 🔥 ЛОГИКА ЗАЩИТЫ ГОЛОДАНИЯ
                       bool shouldProceed = true;
 
-                      // Если напиток калорийный И сейчас идет голодание
                       if (drink.breaksFast && fastingState.phase == FastingPhase.fasting) {
-                        // Показываем алерт и ждем ответа
                         final confirmed = await _showBreakFastWarning(context, drink);
                         if (confirmed != true) {
-                          shouldProceed = false; // Пользователь испугался и нажал Cancel
+                          shouldProceed = false;
                         }
                       }
 
                       if (!shouldProceed) {
-                        if (context.mounted) Navigator.pop(ctx); // Закрываем шторку напитков
+                        if (context.mounted) Navigator.pop(ctx);
                         return;
                       }
 
-                      // Если всё ок (или это просто вода)
                       soundService.playWaterSound();
                       if (context.mounted) {
                         context.read<WaterBloc>().add(AddDrink(type: drink, volumeMl: 250));
-                        Navigator.pop(ctx); // Закрываем шторку напитков
+                        Navigator.pop(ctx);
 
-                        // Если прервали голодание
                         if (drink.breaksFast && fastingState.phase == FastingPhase.fasting) {
                           context.read<FastingBloc>().add(EndFasting(endTime: DateTime.now(), mood: FastingMood.bad));
 
@@ -332,7 +329,7 @@ class WaterWeightRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// 🔥 ВИДЖЕТ ШТОРКИ ВЕСА (Без изменений)
+// 🔥 ВИДЖЕТ ШТОРКИ ВЕСА
 // ---------------------------------------------------------------------------
 class _WeightPickerSheet extends StatefulWidget {
   final double initialWeight;
