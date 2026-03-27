@@ -22,6 +22,11 @@ class StartFasting extends FastingEvent {
   List<Object?> get props => [startTime];
 }
 
+class StartCircadianFast extends FastingEvent {
+  final Duration targetDuration;
+  const StartCircadianFast(this.targetDuration);
+}
+
 /// Пользователь нажал "End Fasting" (завершил голодание)
 class EndFasting extends FastingEvent {
   final bool isManual; // true если прервал руками

@@ -12,6 +12,7 @@ class FastingState extends Equatable {
 
   // 🔥 Константа для обозначения кастомного плана в коде
   static const int customPlanIndex = -1;
+  static const int circadianPlanIndex = -2; // 🔥 НОВАЯ КОНСТАНТА
 
   const FastingState({
     this.phase = FastingPhase.stopped,

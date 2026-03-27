@@ -15,8 +15,6 @@ import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/repositories/history_repository.dart';
 import 'package:fastable/models/fasting_record.dart';
 
-// 🔥 ИМПОРТИРУЕМ НАШ НОВЫЙ СЕРВИС
-
 import '../../services/live_activity_services.dart';
 
 @injectable
@@ -24,18 +22,19 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
   final NotificationService _notificationService;
   final HapticService _hapticService;
   final HistoryRepository _historyRepository;
-  final LiveActivityService _liveActivityService; // 🔥 ДОБАВИЛИ
+  final LiveActivityService _liveActivityService;
 
   Timer? _ticker;
   final List<FastingPlan> _plans = FastingPlan.defaultPlans;
 
   int _customTargetHours = 14;
+  Duration _circadianDuration = const Duration(hours: 14); // Дефолт на случай ошибки
 
   FastingBloc(
       this._notificationService,
       this._hapticService,
       this._historyRepository,
-      this._liveActivityService, // 🔥 ДОБАВИЛИ В КОНСТРУКТОР
+      this._liveActivityService,
       )
       : super(const FastingState()) {
 
@@ -48,6 +47,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     on<TickTimer>(_onTick);
     on<ChangePlan>(_onChangePlan);
     on<SetCustomPlan>(_onSetCustomPlan);
+    on<StartCircadianFast>(_onStartCircadianFast); // 🔥 ДОБАВЛЕНО
     on<ResetFasting>(_onReset);
   }
 
@@ -72,7 +72,15 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       int planIdx = prefs.getInt('fast_plan_index') ?? 0;
       _customTargetHours = prefs.getInt('custom_target_hours') ?? 14;
 
-      if (planIdx != FastingState.customPlanIndex && (planIdx < 0 || planIdx >= _plans.length)) {
+      // Загружаем сохраненную длительность для циркадного плана, если она была
+      final circadianMinutes = prefs.getInt('circadian_target_minutes');
+      if (circadianMinutes != null) {
+        _circadianDuration = Duration(minutes: circadianMinutes);
+      }
+
+      if (planIdx != FastingState.customPlanIndex &&
+          planIdx != FastingState.circadianPlanIndex && // 🔥 Разрешаем этот индекс
+          (planIdx < 0 || planIdx >= _plans.length)) {
         planIdx = 0;
       }
 
@@ -100,7 +108,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         ));
         _startTicker();
 
-        // 🔥 ВОССТАНАВЛИВАЕМ LIVE ACTIVITY, ЕСЛИ ПРИЛОЖЕНИЕ БЫЛО УБИТО
         _liveActivityService.startFastingActivity(
             startTime: startTime,
             goalDuration: goal,
@@ -108,9 +115,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         );
 
       } else {
-        final fastingGoal = planIdx == FastingState.customPlanIndex
-            ? Duration(hours: _customTargetHours)
-            : _plans[planIdx].fastingDuration;
+        final fastingGoal = _getGoalForPhase(FastingPhase.fasting, planIdx);
 
         emit(state.copyWith(
           phase: FastingPhase.stopped,
@@ -118,13 +123,31 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
           goalDuration: fastingGoal,
         ));
 
-        // 🔥 УБЕДИМСЯ, ЧТО НИЧЕГО НЕ ВИСИТ НА ЛОКСКРИНЕ, ЕСЛИ МЫ ОСТАНОВЛЕНЫ
         _liveActivityService.stopActivity();
       }
     } catch (e) {
       debugPrint("FastingBloc Error in _onCheckState: $e");
       emit(const FastingState());
     }
+  }
+
+  // 🔥 НОВЫЙ МЕТОД ДЛЯ СТАРТА ЦИРКАДНОГО ГОЛОДАНИЯ
+  Future<void> _onStartCircadianFast(
+      StartCircadianFast event, Emitter<FastingState> emit) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Сохраняем настройки плана
+    await prefs.setInt('fast_plan_index', FastingState.circadianPlanIndex);
+    await prefs.setInt('circadian_target_minutes', event.targetDuration.inMinutes);
+    _circadianDuration = event.targetDuration;
+
+    // Вызываем стандартный старт, но уже с новым стейтом
+    emit(state.copyWith(
+      planIndex: FastingState.circadianPlanIndex,
+      goalDuration: event.targetDuration,
+    ));
+
+    add(const StartFasting());
   }
 
   Future<void> _onStartFasting(
@@ -165,7 +188,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       ));
       _startTicker();
 
-      // 🔥 ЗАПУСКАЕМ LIVE ACTIVITY (DYNAMIC ISLAND)
       _liveActivityService.startFastingActivity(
         startTime: startDate,
         goalDuration: goal,
@@ -232,9 +254,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         }
       }
 
-      final eatGoal = state.planIndex == FastingState.customPlanIndex
-          ? Duration(hours: (24 - _customTargetHours).clamp(1, 23))
-          : _plans[state.planIndex].eatingDuration;
+      final eatGoal = _getGoalForPhase(FastingPhase.eating, state.planIndex);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('app_state', FastingPhase.eating.name);
@@ -265,8 +285,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       ));
       _startTicker();
 
-      // 🔥 ПЕРЕКЛЮЧАЕМ LIVE ACTIVITY НА "ОКНО ЕДЫ"
-      await _liveActivityService.stopActivity(); // Сначала убиваем старую
+      await _liveActivityService.stopActivity();
       _liveActivityService.startFastingActivity(
         startTime: endDate,
         goalDuration: eatGoal,
@@ -297,9 +316,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
 
       await _notificationService.cancelFastingNotifications();
 
-      final resetGoal = state.planIndex == FastingState.customPlanIndex
-          ? Duration(hours: _customTargetHours)
-          : _plans[state.planIndex].fastingDuration;
+      final resetGoal = _getGoalForPhase(FastingPhase.fasting, state.planIndex);
 
       emit(state.copyWith(
         phase: FastingPhase.stopped,
@@ -309,7 +326,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         goalDuration: resetGoal,
       ));
 
-      // 🔥 ПОЛНОСТЬЮ УБИРАЕМ ТАЙМЕР С ЛОКСКРИНА (DYNAMIC ISLAND)
       _liveActivityService.stopActivity();
 
     } catch (e) {
@@ -322,13 +338,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('fast_plan_index', event.planIndex);
 
-    Duration newGoal;
-
-    if (state.phase == FastingPhase.eating) {
-      newGoal = _plans[event.planIndex].eatingDuration;
-    } else {
-      newGoal = _plans[event.planIndex].fastingDuration;
-    }
+    final newGoal = _getGoalForPhase(state.phase, event.planIndex);
 
     emit(state.copyWith(
       planIndex: event.planIndex,
@@ -344,29 +354,17 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     await prefs.setInt('custom_target_hours', event.targetHours);
 
     _customTargetHours = event.targetHours;
+    final newGoal = _getGoalForPhase(state.phase, FastingState.customPlanIndex);
 
-    final newGoal = Duration(hours: event.targetHours);
-
-    if (state.phase == FastingPhase.eating) {
-      final eatGoal = Duration(hours: (24 - event.targetHours).clamp(1, 23));
-      emit(state.copyWith(
-        planIndex: FastingState.customPlanIndex,
-        goalDuration: eatGoal,
-      ));
-    } else {
-      emit(state.copyWith(
-        planIndex: FastingState.customPlanIndex,
-        goalDuration: newGoal,
-      ));
-    }
+    emit(state.copyWith(
+      planIndex: FastingState.customPlanIndex,
+      goalDuration: newGoal,
+    ));
   }
 
   void _onTick(TickTimer event, Emitter<FastingState> emit) {
     bool reached = event.elapsed >= state.goalDuration;
     emit(state.copyWith(elapsed: event.elapsed, isGoalReached: reached));
-
-    // Опционально: можно обновлять прогресс в LiveActivity, но iOS сама умеет
-    // считать таймер, если мы передали ей startTime и endTime!
   }
 
   void _startTicker() {
@@ -388,12 +386,21 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     return super.close();
   }
 
+  // 🔥 ОБНОВЛЕННЫЙ МЕТОД: Умеет считать окно еды даже для циркадного плана
   Duration _getGoalForPhase(FastingPhase phase, int planIdx) {
     if (planIdx == FastingState.customPlanIndex) {
       if (phase == FastingPhase.eating) {
         return Duration(hours: (24 - _customTargetHours).clamp(1, 23));
       } else {
         return Duration(hours: _customTargetHours);
+      }
+    } else if (planIdx == FastingState.circadianPlanIndex) {
+      if (phase == FastingPhase.eating) {
+        // Окно еды для циркадного (упрощенно = 24 часа минус время заката-рассвета)
+        final eatingMinutes = (24 * 60) - _circadianDuration.inMinutes;
+        return Duration(minutes: eatingMinutes.clamp(60, 23 * 60));
+      } else {
+        return _circadianDuration;
       }
     }
 

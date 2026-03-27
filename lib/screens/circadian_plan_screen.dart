@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:sunrise_sunset_calc/sunrise_sunset_calc.dart';
 
 import 'package:fastable/injection.dart';
 import 'package:fastable/services/circadian_service.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
+
+import 'package:fastable/bloc/fasting/fasting_bloc.dart';
+import 'package:fastable/bloc/fasting/fasting_event.dart';
 
 class CircadianPlanScreen extends StatefulWidget {
   const CircadianPlanScreen({super.key});
@@ -18,7 +21,7 @@ class CircadianPlanScreen extends StatefulWidget {
 class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
   bool _isLoading = true;
   bool _hasError = false;
-  SunriseSunsetResult? _sunTimes;
+  Map<String, DateTime>? _sunTimes;
 
   @override
   void initState() {
@@ -28,7 +31,9 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
 
   Future<void> _fetchSunTimes() async {
     setState(() { _isLoading = true; _hasError = false; });
-    final times = await getIt<CircadianService>().getTodaySunTimes();
+
+    // Получаем идеальные локальные даты из обновленного сервиса
+    final times = await getIt<CircadianService>().getAccurateSunTimes();
 
     if (mounted) {
       setState(() {
@@ -41,8 +46,29 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double theoreticalHours = 14.0;
+    Duration exactDurationToSunrise = const Duration(hours: 14);
+    DateTime displaySunrise = DateTime.now();
+    DateTime displaySunset = DateTime.now();
+
+    if (_sunTimes != null) {
+      displaySunrise = _sunTimes!['sunrise']!;
+      displaySunset = _sunTimes!['sunset']!;
+      final now = DateTime.now();
+
+      // Сколько всего длится ночь (от заката до рассвета)
+      final theoreticalWindow = displaySunrise.difference(displaySunset);
+      theoreticalHours = theoreticalWindow.inMinutes / 60.0;
+
+      // Точное время голодания от СЕЙЧАС до Рассвета
+      exactDurationToSunrise = displaySunrise.difference(now);
+      if (exactDurationToSunrise.isNegative) {
+        exactDurationToSunrise = const Duration(minutes: 1); // Страховка
+      }
+    }
+
     return MeshBackground(
-      isFasting: false, // Фон с оранжево-фиолетовыми закатными тонами
+      isFasting: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -57,7 +83,6 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- PRO БЕЙДЖ ---
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
@@ -90,7 +115,6 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // --- КАРТОЧКА С РЕЗУЛЬТАТАМИ ---
                 Expanded(
                   child: GlassCard(
                     padding: const EdgeInsets.all(24),
@@ -98,19 +122,28 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
                         ? const Center(child: CircularProgressIndicator(color: Colors.amber))
                         : _hasError
                         ? _buildErrorState()
-                        : _buildSunData(),
+                        : _buildSunData(displaySunrise, displaySunset, theoreticalHours),
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                // --- КНОПКА СТАРТА ---
                 ElevatedButton(
                   onPressed: _isLoading || _hasError ? null : () {
                     getIt<HapticService>().mediumImpact();
-                    // TODO: Передать _sunTimes в FastingBloc для старта
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Circadian Fast Started!")));
-                    Navigator.pop(context);
+
+                    // 🔥 ЗАПУСКАЕМ ТАЙМЕР РОВНО ДО РАССВЕТА
+                    context.read<FastingBloc>().add(StartCircadianFast(exactDurationToSunrise));
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Circadian Fast Started! 🌅", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                            backgroundColor: Colors.amber,
+                            behavior: SnackBarBehavior.floating
+                        )
+                    );
+
+                    Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber,
@@ -131,14 +164,8 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
     );
   }
 
-  Widget _buildSunData() {
+  Widget _buildSunData(DateTime sunrise, DateTime sunset, double theoreticalHours) {
     final format = DateFormat('HH:mm');
-    final sunrise = _sunTimes!.sunrise;
-    final sunset = _sunTimes!.sunset;
-
-    // Высчитываем длительность окна голодания (от заката до рассвета следующего дня)
-    // Упрощенно: берем разницу времени (рассвет обычно на след день, так что добавим 24 часа к рассвету для подсчета)
-    final fastingDuration = (24 - sunset.hour) + sunrise.hour + ((sunrise.minute - sunset.minute) / 60);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -155,16 +182,16 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
 
         Column(
           children: [
-            Text("Your Adaptive Plan", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14, fontWeight: FontWeight.w600)),
+            Text("Full Night Window", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Text(fastingDuration.toStringAsFixed(1), style: const TextStyle(color: Colors.amber, fontSize: 48, fontWeight: FontWeight.w900)),
+                Text(theoreticalHours.toStringAsFixed(1), style: const TextStyle(color: Colors.amber, fontSize: 48, fontWeight: FontWeight.w900)),
                 const SizedBox(width: 4),
-                const Text("hours fast", style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text("hours", style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 4),

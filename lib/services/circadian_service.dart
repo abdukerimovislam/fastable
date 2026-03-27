@@ -6,22 +6,54 @@ import 'package:injectable/injectable.dart';
 @lazySingleton
 class CircadianService {
 
-  /// Получает локальное время заката и рассвета для текущей геопозиции
-  Future<SunriseSunsetResult?> getTodaySunTimes() async {
+  /// Возвращает точное локальное время СЛЕДУЮЩЕГО рассвета и ПОСЛЕДНЕГО заката
+  Future<Map<String, DateTime>?> getAccurateSunTimes() async {
     try {
       final position = await _determinePosition();
       if (position == null) return null;
 
       final now = DateTime.now();
-      // Высчитываем закат и рассвет с учетом часового пояса
-      final sunTimes = getSunriseSunset(
+
+      // 1. Получаем данные на сегодня строго по UTC (Без двойных сдвигов!)
+      final todaySun = getSunriseSunset(
         position.latitude,
         position.longitude,
-        Duration(hours: now.timeZoneOffset.inHours),
-        now,
+        const Duration(), // 0 offset, работаем в чистом UTC
+        now.toUtc(),
       );
 
-      return sunTimes;
+      // Переводим в локальное время силами самого телефона
+      DateTime localSunrise = todaySun.sunrise.toLocal();
+      DateTime localSunset = todaySun.sunset.toLocal();
+
+      // 2. Если сегодняшний рассвет уже прошел (например, сейчас вечер),
+      // нам нужен рассвет на ЗАВТРА!
+      if (now.isAfter(localSunrise)) {
+        final tomorrowSun = getSunriseSunset(
+          position.latitude,
+          position.longitude,
+          const Duration(),
+          now.add(const Duration(days: 1)).toUtc(),
+        );
+        localSunrise = tomorrowSun.sunrise.toLocal();
+      }
+
+      // 3. Закат должен строго предшествовать следующему рассвету.
+      // Если это не так, берем вчерашний закат.
+      if (localSunset.isAfter(localSunrise)) {
+        final yesterdaySun = getSunriseSunset(
+          position.latitude,
+          position.longitude,
+          const Duration(),
+          now.subtract(const Duration(days: 1)).toUtc(),
+        );
+        localSunset = yesterdaySun.sunset.toLocal();
+      }
+
+      return {
+        'sunrise': localSunrise,
+        'sunset': localSunset,
+      };
     } catch (e) {
       debugPrint("CircadianService Error: $e");
       return null;
@@ -44,6 +76,6 @@ class CircadianService {
 
     if (permission == LocationPermission.deniedForever) return null;
 
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low); // low достаточно для заката
+    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
   }
 }

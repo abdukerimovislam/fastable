@@ -160,13 +160,21 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
         final height = context.select((WeightBloc b) => b.state.heightCm);
 
         final isFasting = state.phase == FastingPhase.fasting;
+        final isCircadian = state.planIndex == FastingState.circadianPlanIndex; // 🔥 ПРОВЕРКА ЦИРКАДНОГО ПЛАНА
+
         final currentStage = isFasting ? FastingStage.getCurrentStage(state.elapsed.inMinutes / 60.0) : FastingStage.allStages[0];
 
+        // Цвета
         final Color stateColor = state.phase == FastingPhase.eating
-            ? const Color(0xFF84FAB0)
-            : (state.phase == FastingPhase.stopped ? Colors.blueAccent : currentStage.color);
+            ? const Color(0xFF84FAB0) // Зеленый для еды
+            : (state.phase == FastingPhase.stopped
+            ? Colors.blueAccent
+            : (isCircadian ? Colors.indigoAccent : currentStage.color)); // 🔥 Индиго для циркадного фаста
 
-        final IconData stageIcon = state.phase == FastingPhase.eating ? Icons.restaurant : currentStage.icon;
+        // Иконки
+        final IconData stageIcon = state.phase == FastingPhase.eating
+            ? Icons.restaurant
+            : (isCircadian ? Icons.nights_stay_rounded : currentStage.icon); // 🔥 Месяц для циркадного фаста
 
         String stateText = isFasting ? l10n.fastingPhase : (state.phase == FastingPhase.eating ? l10n.eatingWindow : "Resting Phase");
 
@@ -195,16 +203,29 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
             }
           } else {
             displayTime = state.goalDuration - state.elapsed;
-            timeSubtext = state.phase == FastingPhase.eating ? "Remaining in window" : "Remaining";
+            // 🔥 ОСОБЫЙ ТЕКСТ ДЛЯ ЦИРКАДНОГО ПЛАНА
+            if (isCircadian) {
+              timeSubtext = state.phase == FastingPhase.eating ? "Until Sunset" : "Until Sunrise";
+            } else {
+              timeSubtext = state.phase == FastingPhase.eating ? "Remaining in window" : "Remaining";
+            }
           }
         }
 
         final timeString = _formatDuration(displayTime);
         final double blobPercent = (state.phase == FastingPhase.stopped) ? 0.0 : (state.elapsed.inSeconds / state.goalDuration.inSeconds).clamp(0.0, 1.0);
 
-        String planName = state.planIndex == FastingState.customPlanIndex
-            ? "${l10n.customPlan} (${state.goalDuration.inHours}h)"
-            : "${FastingPlan.defaultPlans[state.planIndex].fastingDuration.inHours}:${FastingPlan.defaultPlans[state.planIndex].eatingDuration.inHours}";
+        // 🔥 БЕЗОПАСНОЕ ПОЛУЧЕНИЕ ИМЕНИ ПЛАНА
+        String planName;
+        if (state.planIndex == FastingState.circadianPlanIndex) {
+          planName = "☀️ Circadian Fast";
+        } else if (state.planIndex == FastingState.customPlanIndex) {
+          planName = "${l10n.customPlan} (${state.goalDuration.inHours}h)";
+        } else if (state.planIndex >= 0 && state.planIndex < FastingPlan.defaultPlans.length) {
+          planName = "${FastingPlan.defaultPlans[state.planIndex].fastingDuration.inHours}:${FastingPlan.defaultPlans[state.planIndex].eatingDuration.inHours}";
+        } else {
+          planName = "Unknown Plan"; // Фолбэк на случай ошибки индекса
+        }
 
         return GlassCard(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -220,7 +241,29 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(stateText, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
-                        if (isFasting && !_isBodyView && !isOvertime)
+
+                        // Если циркадный ритм — показываем красивую подпись вместо стадий
+                        if (isFasting && !_isBodyView && !isOvertime && isCircadian)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: stateColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: stateColor.withOpacity(0.2)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(stageIcon, color: stateColor, size: 14),
+                                  const SizedBox(width: 6),
+                                  Flexible(child: Text("Aligned with Nature", style: TextStyle(color: stateColor, fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                ],
+                              ),
+                            ),
+                          )
+                        else if (isFasting && !_isBodyView && !isOvertime)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: GestureDetector(
@@ -275,7 +318,8 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                           if (result == true && mounted) {
                             final prefs = await SharedPreferences.getInstance();
                             final newIdx = prefs.getInt('fast_plan_index') ?? 0;
-                            if (newIdx != FastingState.customPlanIndex) {
+                            // Если вернулся не кастомный и не циркадный план, то меняем план на стандартный
+                            if (newIdx != FastingState.customPlanIndex && newIdx != FastingState.circadianPlanIndex) {
                               context.read<FastingBloc>().add(ChangePlan(newIdx));
                             }
                           }
@@ -288,9 +332,9 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                               border: Border.all(color: Colors.white.withOpacity(0.15))
                           ),
                           child: Row(children: [
-                            Text(planName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                            Text(planName, style: TextStyle(color: isCircadian ? Colors.amber : Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
                             const SizedBox(width: 4),
-                            const Icon(Icons.edit_calendar_rounded, color: Colors.white70, size: 14)
+                            Icon(Icons.edit_calendar_rounded, color: isCircadian ? Colors.amber : Colors.white70, size: 14)
                           ]),
                         ),
                       ),
