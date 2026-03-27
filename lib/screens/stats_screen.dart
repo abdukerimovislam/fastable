@@ -14,6 +14,7 @@ import 'package:fastable/services/haptic_service.dart';
 // --- WIDGETS ---
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/widgets/pro_correlation_chart.dart'; // 🔥 ИМПОРТ НАШЕГО ГРАФИКА
 
 class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key});
@@ -61,9 +62,15 @@ class StatsScreen extends StatelessWidget {
               _buildEnergyCard(context, l10n),
 
               const SizedBox(height: 24),
+              _sectionHeader("INSIGHTS & TRENDS"),
+
+              // 🔥 3. НАШ НОВЫЙ PRO-ГРАФИК (Advanced Charts)
+              const ProCorrelationChart(),
+
+              const SizedBox(height: 24),
               _sectionHeader(l10n.fastingPhase),
 
-              // 3. СТАТИСТИКА ГОЛОДАНИЯ
+              // 4. СТАТИСТИКА ГОЛОДАНИЯ
               BlocBuilder<HistoryBloc, HistoryState>(
                 builder: (context, state) {
                   return Column(
@@ -196,7 +203,7 @@ class StatsScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Row(
                 children: [
-                  // Circular BMI Indicator (Native Flutter)
+                  // Circular BMI Indicator
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -307,7 +314,6 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  // 🔥 ИСПРАВЛЕННЫЙ ВИДЖЕТ: С ЗАЩИТОЙ ОТ ПЕРЕПОЛНЕНИЯ (Flexible/Expanded)
   Widget _buildEnergyItem(String title, String value, String unit, Color color, IconData icon) {
     return Expanded(
       child: Row(
@@ -318,7 +324,6 @@ class StatsScreen extends StatelessWidget {
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 12),
-          // Оборачиваем колонку в Expanded, чтобы текст не вылезал
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +357,6 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  // 🔥 ИСПРАВЛЕННЫЙ ВИДЖЕТ: С ЗАЩИТОЙ ОТ ПЕРЕПОЛНЕНИЯ
   Widget _buildStatBox(String value, String title, IconData icon, Color color, {String? unit}) {
     return GlassCard(
       height: 110,

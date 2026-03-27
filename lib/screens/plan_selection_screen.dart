@@ -11,7 +11,10 @@ import 'package:fastable/injection.dart';
 import 'package:fastable/bloc/fasting/fasting_bloc.dart';
 import 'package:fastable/bloc/fasting/fasting_event.dart';
 import 'package:fastable/bloc/fasting/fasting_state.dart';
+
+// Экраны
 import 'package:fastable/screens/custom_plan_screen.dart';
+import 'package:fastable/screens/circadian_plan_screen.dart'; // 🔥 ИМПОРТ ЦИРКАДНОГО ЭКРАНА
 
 class PlanSelectionScreen extends StatefulWidget {
   const PlanSelectionScreen({super.key});
@@ -72,6 +75,27 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
     }
   }
 
+  // Открываем Циркадный План
+  Future<void> _openCircadianPlan() async {
+    getIt<HapticService>().mediumImpact();
+
+    // Мы ожидаем возврата true, если юзер нажал "Start Circadian Fast"
+    final bool? started = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CircadianPlanScreen()),
+    );
+
+    if (started == true && mounted) {
+      // Пока что помечаем как кастомный план, в будущем можно сделать отдельный индекс
+      // Задаем примерные 14 часов, так как точное время считается внутри CircadianPlanScreen
+      context.read<FastingBloc>().add(SetCustomPlan(14));
+      setState(() {
+        _selectedIndex = FastingState.customPlanIndex;
+      });
+      Navigator.of(context).pop(true);
+    }
+  }
+
   String _getTranslatedName(BuildContext context, String key) {
     final l10n = AppLocalizations.of(context)!;
     if (key.contains("16")) return l10n.fastingPlan16_8;
@@ -84,7 +108,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isAndroid = Platform.isAndroid; // 🔥 Проверка платформы
+    final isAndroid = Platform.isAndroid;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -127,9 +151,73 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
               // --- LIST ---
               Expanded(
                 child: ListView(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   children: [
-                    // 🔥 КНОПКА CUSTOM PLAN (Скрыта на Android)
+
+                    // 🔥 НОВАЯ КАРТОЧКА: CIRCADIAN RHYTHM (PRO) 🔥
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: GestureDetector(
+                        onTap: _openCircadianPlan,
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(0),
+                          child: Stack(
+                            children: [
+                              // Красивый градиентный фон для карточки
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Colors.orangeAccent.withOpacity(0.2), Colors.purpleAccent.withOpacity(0.2)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.amber,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [BoxShadow(color: Colors.amber, blurRadius: 12, spreadRadius: -2)],
+                                      ),
+                                      child: const Icon(Icons.wb_sunny_rounded, color: Colors.black, size: 24),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    const Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text("Circadian Fast", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                              SizedBox(width: 8),
+                                              Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                            ],
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text("Align fasting with the sun", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // КНОПКА CUSTOM PLAN (Скрыта на Android)
                     if (!isAndroid)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
@@ -167,13 +255,12 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          // Убедитесь, что l10n.customPlan существует, иначе используйте хардкод "Custom Plan"
                                           l10n.customPlan,
                                           style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                                         ),
                                         const SizedBox(height: 4),
                                         const Text(
-                                          "Set your own window", // Можно вынести в l10n
+                                          "Set your own window",
                                           style: TextStyle(color: Colors.white70, fontSize: 12),
                                         ),
                                       ],
@@ -194,15 +281,14 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                         ),
                       ),
 
-                    // ЗАГОЛОВОК ПРЕСЕТОВ (Показываем только если есть кастомный план, для разделения)
-                    if (!isAndroid)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8, bottom: 12),
-                        child: Text(
-                          "PRESETS",
-                          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                        ),
+                    // ЗАГОЛОВОК ПРЕСЕТОВ
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, bottom: 12, top: 8),
+                      child: Text(
+                        "PRESETS",
+                        style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
                       ),
+                    ),
 
                     // СТАНДАРТНЫЕ ПЛАНЫ
                     ...List.generate(plans.length, (index) {
@@ -265,7 +351,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                       );
                     }),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),

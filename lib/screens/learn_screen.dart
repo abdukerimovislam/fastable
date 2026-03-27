@@ -38,14 +38,13 @@ class _LearnScreenState extends State<LearnScreen> {
   Widget build(BuildContext context) {
     final locale = context.read<SettingsBloc>().state.locale.languageCode;
     final l10n = AppLocalizations.of(context)!;
-    final isAndroid = Platform.isAndroid; // Проверка платформы
+    final isAndroid = Platform.isAndroid;
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (context) => getIt<ArticleBloc>()..add(LoadArticles(locale)),
         ),
-        // На Android не грузим рецепты, чтобы не тратить ресурсы
         if (!isAndroid)
           BlocProvider(
             create: (context) => getIt<RecipeBloc>()..add(LoadRecipes(locale)),
@@ -88,7 +87,6 @@ class _LearnScreenState extends State<LearnScreen> {
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                   // КОНТЕНТ
-                  // На Android всегда показываем статьи. На iOS зависит от переключателя.
                   if (isAndroid || _selectedIndex == 0)
                     ..._buildArticlesTab(context, isPro, l10n)
                   else
@@ -175,24 +173,30 @@ class _LearnScreenState extends State<LearnScreen> {
     );
   }
 
-  // --- TAB: ARTICLES ---
+  // --- TAB: ARTICLES (С интегрированными Stories) ---
 
   List<Widget> _buildArticlesTab(BuildContext context, bool isPro, AppLocalizations l10n) {
     return [
+      // 🔥 STORIES ЛЕНТА 🔥
+      const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text("Quick Bites", style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        ),
+      ),
       SliverToBoxAdapter(
         child: SizedBox(
           height: 110,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            physics: const BouncingScrollPhysics(),
             children: [
-              _buildCategoryCard(l10n.catBasics, Icons.book, Colors.blueAccent),
-              const SizedBox(width: 12),
-              _buildCategoryCard(l10n.catNutrition, Icons.restaurant, Colors.greenAccent),
-              const SizedBox(width: 12),
-              _buildCategoryCard(l10n.catHealth, Icons.favorite, Colors.redAccent),
-              const SizedBox(width: 12),
-              _buildCategoryCard(l10n.catKeto, Icons.bolt, Colors.orangeAccent),
+              _buildStoryCircle(context, "Fasting 101", Colors.orangeAccent, Icons.local_fire_department, true),
+              _buildStoryCircle(context, "Autophagy", Colors.purpleAccent, Icons.autorenew_rounded, false),
+              _buildStoryCircle(context, "Keto Diet", Colors.greenAccent, Icons.eco_rounded, false),
+              _buildStoryCircle(context, "Hydration", Colors.blueAccent, Icons.water_drop_rounded, false),
+              _buildStoryCircle(context, "Sleep", Colors.indigoAccent, Icons.bedtime_rounded, false),
             ],
           ),
         ),
@@ -286,7 +290,45 @@ class _LearnScreenState extends State<LearnScreen> {
 
   // --- COMMON WIDGETS ---
 
-  /// Универсальный виджет "Скоро появится"
+  Widget _buildStoryCircle(BuildContext context, String title, Color color, IconData icon, bool hasUnseenContent) {
+    return GestureDetector(
+      onTap: () {
+        getIt<HapticService>().lightImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Opening story: $title..."), backgroundColor: color),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: hasUnseenContent
+                    ? const LinearGradient(colors: [Colors.pinkAccent, Colors.orangeAccent], begin: Alignment.topLeft, end: Alignment.bottomRight)
+                    : null,
+                border: hasUnseenContent ? null : Border.all(color: Colors.white24, width: 2),
+              ),
+              child: Container(
+                width: 65,
+                height: 65,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1E1E1E),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 30),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildComingSoonWidget(AppLocalizations l10n, IconData icon) {
     return Padding(
       padding: const EdgeInsets.all(32.0),
@@ -463,17 +505,6 @@ class _LearnScreenState extends State<LearnScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildCategoryCard(String title, IconData icon, Color color) {
-    return GlassCard(
-      width: 100, padding: const EdgeInsets.all(12),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: color, size: 24)),
-        const SizedBox(height: 12),
-        Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14), textAlign: TextAlign.center)
-      ]),
     );
   }
 

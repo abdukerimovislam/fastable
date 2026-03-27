@@ -8,15 +8,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/bloc/settings/settings_event.dart';
 import 'package:fastable/bloc/settings/settings_state.dart';
 import 'package:fastable/services/health_service.dart';
-import 'package:fastable/services/notification_service.dart'; // 🔥 ИМПОРТ НОТИФИКАЦИЙ
-import 'package:fastable/l10n/app_localizations.dart'; // 🔥 ИМПОРТ ЛОКАЛИЗАЦИИ
+import 'package:fastable/services/notification_service.dart';
+import 'package:fastable/l10n/app_localizations.dart';
 
 @injectable
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final HealthService _healthService;
-  final NotificationService _notificationService; // 🔥 ИНЪЕКЦИЯ
+  final NotificationService _notificationService;
 
-  // Обновленный конструктор
   SettingsBloc(this._healthService, this._notificationService) : super(const SettingsState()) {
     on<LoadSettings>(_onLoadSettings);
     on<ChangeTheme>(_onChangeTheme);
@@ -79,14 +78,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await prefs.setString('locale_code', event.locale.languageCode);
     emit(state.copyWith(locale: event.locale));
 
-    // 🔥 ПЕРЕВОДИМ УВЕДОМЛЕНИЯ ПРИ СМЕНЕ ЯЗЫКА!
-    try {
-      // Ищем загруженные локализации для выбранного языка (без контекста)
-      final l10n = await lookupAppLocalizations(event.locale);
-      await _notificationService.rescheduleAll(l10n);
-      debugPrint("✅ Notifications rescheduled to language: ${event.locale.languageCode}");
-    } catch (e) {
-      debugPrint("⚠️ Failed to reschedule notifications: $e");
+    // 🔥 ПЕРЕВОДИМ УВЕДОМЛЕНИЯ ТОЛЬКО ЕСЛИ ОНИ ВКЛЮЧЕНЫ
+    if (state.areNotificationsEnabled) {
+      try {
+        final l10n = await lookupAppLocalizations(event.locale);
+        await _notificationService.rescheduleAll(l10n);
+        debugPrint("✅ Notifications rescheduled to language: ${event.locale.languageCode}");
+      } catch (e) {
+        debugPrint("⚠️ Failed to reschedule notifications: $e");
+      }
     }
   }
 
@@ -105,5 +105,19 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications_enabled', event.isEnabled);
     emit(state.copyWith(areNotificationsEnabled: event.isEnabled));
+
+    // 🔥 ФИКС: РЕАЛЬНОЕ ВКЛЮЧЕНИЕ / ВЫКЛЮЧЕНИЕ ПУШЕЙ В СИСТЕМЕ
+    if (event.isEnabled) {
+      try {
+        final l10n = await lookupAppLocalizations(state.locale);
+        await _notificationService.rescheduleAll(l10n);
+        debugPrint("✅ Notifications turned ON and rescheduled.");
+      } catch (e) {
+        debugPrint("⚠️ Failed to reschedule notifications: $e");
+      }
+    } else {
+      await _notificationService.cancelAllNotifications();
+      debugPrint("⏹ Notifications turned OFF. All scheduled pushes cancelled.");
+    }
   }
 }

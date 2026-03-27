@@ -244,8 +244,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       maxY: 24,
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-          tooltipBgColor: const Color(0xFF2A2A2A),
-          tooltipRoundedRadius: 12,
+          getTooltipColor: (group) => const Color(0xFF2A2A2A),
+          // 🔥 ИСПРАВЛЕНИЕ: Убрали tooltipRoundedRadius
           tooltipPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           getTooltipItem: (group, groupIndex, rod, rodIndex) {
             final dayRecords = last7DaysRecords[group.x.toInt()]!;
@@ -509,7 +509,6 @@ class _ModernCalendarState extends State<_ModernCalendar> {
         ),
         const SizedBox(height: 12),
 
-        // 🔥 ИСПРАВЛЕНИЕ: Увеличили высоту с 250 до 360, чтобы все 6 строк (недель) помещались идеально!
         SizedBox(
           height: 360,
           child: PageView.builder(
@@ -556,7 +555,7 @@ class _ModernCalendarState extends State<_ModernCalendar> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
-        mainAxisSpacing: 6, // Чуть уменьшили для большей компактности
+        mainAxisSpacing: 6,
         crossAxisSpacing: 0,
         childAspectRatio: 1.0,
       ),

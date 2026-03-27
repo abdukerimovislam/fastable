@@ -274,6 +274,11 @@ class NotificationService {
 
   // --- CANCELLATION ---
 
+  // 🔥 НОВЫЙ МЕТОД ДЛЯ ПОЛНОЙ ОТМЕНЫ УВЕДОМЛЕНИЙ (Вызывается из SettingsBloc)
+  Future<void> cancelAllNotifications() async {
+    await _notificationsPlugin.cancelAll();
+  }
+
   Future<void> cancelFastingNotifications() async {
     await _notificationsPlugin.cancel(500);
     await _notificationsPlugin.cancel(900);
