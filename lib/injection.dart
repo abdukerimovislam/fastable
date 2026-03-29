@@ -33,7 +33,9 @@ Future<void> configureDependencies() async {
     getIt.registerLazySingleton<FirestoreService>(() => FirestoreService());
   }
   if (!getIt.isRegistered<NotificationService>()) {
-    getIt.registerLazySingleton<NotificationService>(() => NotificationService());
+    getIt.registerLazySingleton<NotificationService>(
+      () => NotificationService(),
+    );
   }
   if (!getIt.isRegistered<LocaleService>()) {
     getIt.registerLazySingleton<LocaleService>(() => LocaleService());

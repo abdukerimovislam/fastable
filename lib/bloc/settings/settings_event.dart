@@ -25,11 +25,40 @@ class ChangeLocale extends SettingsEvent {
 /// Переключить синхронизацию здоровья
 class ToggleHealthSync extends SettingsEvent {
   final bool isEnabled;
-  const ToggleHealthSync(this.isEnabled);
+  final bool requestPermissions;
+
+  const ToggleHealthSync(this.isEnabled, {this.requestPermissions = true});
+
+  @override
+  List<Object?> get props => [isEnabled, requestPermissions];
 }
 
 /// Переключить уведомления
 class ToggleNotifications extends SettingsEvent {
   final bool isEnabled;
   const ToggleNotifications(this.isEnabled);
+}
+
+class ToggleWaterReminder extends SettingsEvent {
+  final bool isEnabled;
+  const ToggleWaterReminder(this.isEnabled);
+
+  @override
+  List<Object?> get props => [isEnabled];
+}
+
+class ToggleWeightReminder extends SettingsEvent {
+  final bool isEnabled;
+  const ToggleWeightReminder(this.isEnabled);
+
+  @override
+  List<Object?> get props => [isEnabled];
+}
+
+class ToggleFastingStartReminder extends SettingsEvent {
+  final bool isEnabled;
+  const ToggleFastingStartReminder(this.isEnabled);
+
+  @override
+  List<Object?> get props => [isEnabled];
 }

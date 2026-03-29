@@ -71,11 +71,12 @@ class _RingPainter extends CustomPainter {
 
     // Логика углов
     double startAngle = -pi / 2; // Сверху
-    double totalSweep = 2 * pi;  // Полный круг
+    double totalSweep = 2 * pi; // Полный круг
 
     if (isOpen) {
       startAngle = 135 * (pi / 180); // Начинаем слева снизу
-      totalSweep = 270 * (pi / 180); // Заканчиваем справа снизу (оставляем низ открытым)
+      totalSweep =
+          270 * (pi / 180); // Заканчиваем справа снизу (оставляем низ открытым)
     }
 
     // 1. Рисуем фон
@@ -93,7 +94,7 @@ class _RingPainter extends CustomPainter {
     // Тень под прогрессом (для объема)
     if (percent > 0.01) {
       final shadowPaint = Paint()
-        ..color = activeColor.withOpacity(0.4)
+        ..color = activeColor.withValues(alpha: 0.4)
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeWidth = strokeWidth
@@ -132,7 +133,7 @@ class _RingPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(knobX, knobY),
         strokeWidth / 6,
-        Paint()..color = Colors.white.withOpacity(0.8),
+        Paint()..color = Colors.white.withValues(alpha: 0.8),
       );
     }
   }

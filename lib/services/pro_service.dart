@@ -70,8 +70,9 @@ class ProService {
     if (Platform.isAndroid) return false;
 
     try {
-      // 🔥 ИСПРАВЛЕНИЕ: Используем строгий тип PurchaseResult для новых версий RevenueCat
-      final PurchaseResult result = await Purchases.purchasePackage(package);
+      final PurchaseResult result = await Purchases.purchase(
+        PurchaseParams.package(package),
+      );
       final CustomerInfo customerInfo = result.customerInfo;
 
       // Проверяем подписку после успешной транзакции

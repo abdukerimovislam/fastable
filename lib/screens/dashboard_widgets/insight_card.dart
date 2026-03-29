@@ -11,10 +11,7 @@ import 'package:fastable/screens/pro_screen.dart'; // Для перехода н
 class InsightCard extends StatelessWidget {
   final bool isPro; // <--- Принимаем статус подписки
 
-  const InsightCard({
-    super.key,
-    required this.isPro,
-  });
+  const InsightCard({super.key, required this.isPro});
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +29,14 @@ class InsightCard extends StatelessWidget {
       builder: (context, state) {
         if (state is InsightInitial) {
           // ЗАПУСКАЕМ ЗАГРУЗКУ
-          context.read<InsightBloc>().add(FetchDailyInsight(
-            fallbackText: l10n.aiInsightFallback,
-            notEnoughDataText: l10n.aiInsightNotEnoughData, // <--- ВАЖНО: Добавили этот параметр
-            languageCode: locale,
-          ));
+          context.read<InsightBloc>().add(
+            FetchDailyInsight(
+              fallbackText: l10n.aiInsightFallback,
+              notEnoughDataText: l10n
+                  .aiInsightNotEnoughData, // <--- ВАЖНО: Добавили этот параметр
+              languageCode: locale,
+            ),
+          );
           return const SizedBox.shrink();
         }
 
@@ -80,7 +80,7 @@ class InsightCard extends StatelessWidget {
         Text(
           l10n.aiInsightTitle, // "DAILY INSIGHT"
           style: TextStyle(
-            color: Colors.purpleAccent.withOpacity(0.8),
+            color: Colors.purpleAccent.withValues(alpha: 0.8),
             fontSize: 12,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
@@ -97,7 +97,10 @@ class InsightCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // При клике ведем на экран покупки
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ProScreen()),
+        );
       },
       child: GlassCard(
         padding: const EdgeInsets.all(16),
@@ -112,11 +115,16 @@ class InsightCard extends StatelessWidget {
 
                 // Эффект размытия только на тексте
                 ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0), // Сила размытия
+                  imageFilter: ImageFilter.blur(
+                    sigmaX: 4.0,
+                    sigmaY: 4.0,
+                  ), // Сила размытия
                   child: Text(
                     l10n.aiInsightTeaser, // "Based on your last 7 days..."
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5), // Делаем текст тусклым
+                      color: Colors.white.withValues(
+                        alpha: 0.5,
+                      ), // Делаем текст тусклым
                       fontSize: 15,
                       height: 1.4,
                     ),
@@ -130,24 +138,28 @@ class InsightCard extends StatelessWidget {
               child: Container(
                 alignment: Alignment.center,
                 // Легкое затемнение, чтобы текст читался лучше
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                          color: Colors.purpleAccent,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.purpleAccent.withOpacity(0.4),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            )
-                          ]
+                        color: Colors.purpleAccent,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.purpleAccent.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
-                      child: const Icon(Icons.lock, color: Colors.white, size: 24),
+                      child: const Icon(
+                        Icons.lock,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -156,7 +168,9 @@ class InsightCard extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        shadows: [BoxShadow(color: Colors.black45, blurRadius: 4)],
+                        shadows: [
+                          BoxShadow(color: Colors.black45, blurRadius: 4),
+                        ],
                       ),
                     ),
                   ],
@@ -172,8 +186,8 @@ class InsightCard extends StatelessWidget {
   // --- РЕЖИМ ЗАГРУЗКИ ---
   Widget _buildLoadingShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.1),
+      baseColor: Colors.white.withValues(alpha: 0.05),
+      highlightColor: Colors.white.withValues(alpha: 0.1),
       child: GlassCard(
         height: 100,
         padding: const EdgeInsets.all(16),

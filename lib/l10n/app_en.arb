@@ -595,9 +595,10 @@
                                                "lblHours": "Hours",
                                                "lblDayStreak": "Day Streak",
                                                "msgStartJourney": "Start your journey today",
-                                               "lblToday": "Today",
-                                               "lblYesterday": "Yesterday",
-                                               "lblFastingTypeCircadian": "Circadian",
+  "lblToday": "Today",
+  "lblYesterday": "Yesterday",
+  "confirmTime": "Confirm Time",
+  "lblFastingTypeCircadian": "Circadian",
                                                "lblFastingTypeWarrior": "Warrior",
                                                "lblFastingTypeOmad": "OMAD",
                                                "lblHistoryFor": "History for {date}",
@@ -651,6 +652,9 @@
                                                      "msgLoginFailed": "Login failed: {error}",
                                                      "msgAppleLoginFailed": "Apple Login failed: {error}",
                                                      "msgDeleteError": "Error deleting account",
+                                                     "msgDeleteReauthCancelled": "Account deletion cancelled.",
+                                                     "msgDeleteReauthFailed": "We couldn't confirm your identity. Please try again.",
+                                                     "msgDeleteReauthUnavailable": "Please sign in again with the original provider before deleting this account.",
                                                      "stepLanguage": "Select Language",
                                                        "stepBodyMetrics": "Body Metrics",
                                                        "stepBodyMetricsDesc": "Help us calculate your BMI & goals",
@@ -732,7 +736,260 @@
   "zoneAutophagy": "Autophagy",
   "zoneAutophagyDesc": "Cellular repair and recycling begins. Anti-aging effects.",
   "zoneGrowthHormone": "Growth Hormone",
-  "zoneGrowthHormoneDesc": "Peak fat burning, tissue repair, and muscle preservation."
+  "zoneGrowthHormoneDesc": "Peak fat burning, tissue repair, and muscle preservation.",
+  "continueForPrice": "Continue for {price}",
+  "@continueForPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "offersUnavailable": "Offers are temporarily unavailable",
+  "billedMonthly": "Billed monthly",
+  "billedAnnually": "Billed annually",
+  "oneTimePurchase": "One-time purchase",
+  "goalPriorityTitle": "What matters most right now?",
+  "goalPriorityDesc": "We use this to balance speed, recovery, and long-term consistency.",
+  "goalFatLossTitle": "Lose fat faster",
+  "goalFatLossDesc": "Favor stronger fasting windows when your profile can handle them.",
+  "goalHealthTitle": "Improve health and energy",
+  "goalHealthDesc": "Aim for a balanced plan that supports focus, energy, and adherence.",
+  "goalHabitTitle": "Build a sustainable habit",
+  "goalHabitDesc": "Start easier so the routine actually sticks.",
+  "routineTitle": "Tell us about your routine",
+  "routineDesc": "Sleep and fasting experience change how aggressive your starting plan should be.",
+  "fastingExperienceTitle": "Fasting experience",
+  "experienceBeginnerTitle": "Beginner",
+  "experienceBeginnerDesc": "I am new to fasting or I usually stop early.",
+  "experienceIntermediateTitle": "Some experience",
+  "experienceIntermediateDesc": "I can handle 14-16 hour fasts without much trouble.",
+  "experienceAdvancedTitle": "Advanced",
+  "experienceAdvancedDesc": "I have done longer fasts and want a stronger protocol.",
+  "sleepPatternTitle": "Sleep schedule",
+  "sleepRegularTitle": "Regular sleep",
+  "sleepRegularDesc": "My bedtime and wake time are mostly consistent.",
+  "sleepLateTitle": "Late nights",
+  "sleepLateDesc": "I often go to bed late or drift on weekends.",
+  "sleepIrregularTitle": "Irregular or shift work",
+  "sleepIrregularDesc": "My sleep changes a lot or I work rotating shifts.",
+  "smartPlanDashboardTitle": "Your current strategy",
+  "smartPlanProfileTitle": "Your onboarding strategy",
+  "smartPlanCurrentPlanLabel": "Current plan",
+  "smartPlanRecommendedPlanLabel": "Smart recommendation",
+  "smartPlanSignalsLabel": "Signals",
+  "smartPlanTitle": "Smart recommendation",
+  "smartPlanBestMatch": "Best starting plan: {plan}",
+  "@smartPlanBestMatch": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "smartPlanHint": "You can change this later in settings.",
+  "smartPlanWhyRecovery": "A gentler window is better for recovery, consistency, and adaptation.",
+  "smartPlanWhyActive": "Your activity level favors a plan that protects energy and training quality.",
+  "smartPlanWhyBeginner": "Your goal and experience suggest starting with a plan you can repeat consistently.",
+  "smartPlanWhyBalanced": "This gives you stronger fasting benefits without becoming too aggressive.",
+  "smartPlanWhyAggressive": "Your current profile can handle a tighter window if you want faster progress.",
+  "smartPlanWhySleep": "Your sleep schedule favors a steadier plan that adds less stress to your routine.",
+  "smartPlanWhySustainable": "A sustainable start usually leads to better adherence in the first weeks.",
+  "smartPlanAlternativeEasier": "{plan} is a softer option if you want an easier adjustment.",
+  "@smartPlanAlternativeEasier": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "smartPlanAlternativeStronger": "{plan} is a stronger option if you want a more ambitious cut.",
+  "@smartPlanAlternativeStronger": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "smartPlanCoachGreeting": "I'm Fasty 🥑. You're currently on {plan} and focused on {goal}. With your {experience} background and {sleep} sleep pattern, I can help you stay consistent.",
+  "@smartPlanCoachGreeting": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      },
+      "experience": {
+        "type": "String"
+      },
+      "sleep": {
+        "type": "String"
+      }
+    }
+  },
+  "smartPlanUseRecommendation": "Use smart recommendation",
+  "labelAlternative": "ALTERNATIVE",
+  "perMonthEquivalent": "~{price}/{period}",
+  "@perMonthEquivalent": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "circadianProExclusive": "PRO EXCLUSIVE",
+  "circadianStartFast": "Start Circadian Fast",
+  "sunriseLabel": "Sunrise",
+  "sunsetLabel": "Sunset",
+  "lastMeal": "Last Meal",
+  "circadianTotalWindow": "Total Fasting Window",
+  "hoursLabel": "hours",
+  "basedOnLocalCoordinates": "Based on your local coordinates",
+  "locationRequiredTitle": "Location Required",
+  "locationRequiredDesc": "We need your location to calculate the exact sunset time in your city.",
+  "tryAgain": "Try Again",
+  "circadianStarted": "Circadian Fast Started! 🌅",
+  "planCircadianTitle": "Circadian Fast",
+  "planCircadianSubtitle": "Align fasting with the sun",
+  "planCustomSubtitle": "Set your own window",
+  "planPresets": "Presets",
+  "durationHoursShort": "{hours}h",
+  "@durationHoursShort": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutesShort": "{hours}h {minutes}m",
+  "@durationHoursMinutesShort": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "endFastCongrats": "You did it! 🎉",
+  "endFastTotalTime": "Total fasting time: {time}",
+  "@endFastTotalTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "endFastHowFeel": "How do you feel?",
+  "endFastSaveEat": "Save & Eat",
+  "endFastKeepFasting": "Cancel, keep fasting",
+  "proAccessLabel": "PRO ACCESS",
+  "timerEndTitle": "When did you break your fast?",
+  "timerCannotStartFuture": "You can't start a fast in the future.",
+  "timerCannotEndFuture": "You can't end a fast in the future.",
+  "timerEndBeforeStart": "End time can't be earlier than the start time.",
+  "timerGoalReachedExtra": "🔥 Goal reached (+ extra)",
+  "timerWindowExtended": "Window extended",
+  "timerRemainingInWindow": "Remaining in window",
+  "timerUnknownPlan": "Unknown Plan",
+  "timerLogMoodSymptoms": "Log mood & symptoms",
+  "timerBreakAlreadyActive": "You are already on a break. Enjoy your rest! ☕",
+  "timerRestDayStarted": "Eating window closed. Enjoy your rest day! 🏖️",
+  "timerTakeBreak": "Take a break",
+  "timerLogStartEarlier": "Log start earlier",
+  "timerLogEndEarlier": "Log end earlier",
+  "timerLogFastStartEarlier": "Log fast start earlier",
+  "bodyMeasureChest": "Chest",
+  "bodyMeasureWaist": "Waist",
+  "bodyMeasureHips": "Hips",
+  "bodyMeasureChestTitle": "Chest Size (cm)",
+  "bodyMeasureWaistTitle": "Waist Size (cm)",
+  "bodyMeasureHipsTitle": "Hips Size (cm)",
+  "bodyMeasureAdd": "Add",
+  "drinkWater": "Water",
+  "drinkBlackCoffee": "Black Coffee",
+  "drinkLatteSweetCoffee": "Latte / Sweet Coffee",
+  "drinkGreenBlackTea": "Green / Black Tea",
+  "drinkDietSoda": "Diet Soda",
+  "drinkSweetSoda": "Sweet Soda",
+  "drinkJuice": "Juice",
+  "drinkAlcohol": "Alcohol",
+  "waterDrinkContainsCalories": "{drink} contains calories!",
+  "@waterDrinkContainsCalories": {
+    "placeholders": {
+      "drink": {
+        "type": "String"
+      }
+    }
+  },
+  "waterBreakFastWarning": "Drinking this will break your current fast and automatically start your eating window. Are you sure?",
+  "waterConfirmDrinkBreakFast": "Yes, I drank it",
+  "waterDrinkPrompt": "What did you drink?",
+  "waterFastStoppedByDrink": "Fasting timer stopped because you drank {drink}.",
+  "@waterFastStoppedByDrink": {
+    "placeholders": {
+      "drink": {
+        "type": "String"
+      }
+    }
+  },
+  "waterUndoLastDrink": "Undo last drink",
+  "unitMl": "ml",
+  "healthBadgeSync": "Sync",
+  "healthNoData": "No Data",
+  "healthSleepLabel": "Sleep",
+  "healthCyclePhaseLabel": "Cycle Phase",
+  "cyclePhaseMenstruation": "Menstruation",
+  "cyclePhaseFollicular": "Follicular",
+  "cyclePhaseOvulation": "Ovulation",
+  "cyclePhaseLuteal": "Luteal",
+  "learnQuickBites": "Quick Bites",
+  "storyFasting101": "Fasting 101",
+  "storyAutophagy": "Autophagy",
+  "storyKetoDiet": "Keto Diet",
+  "storyHydration": "Hydration",
+  "storySleep": "Sleep",
+  "storyOpening": "Opening story: {title}...",
+  "@storyOpening": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeSelected": "Selected: {title}",
+  "@recipeSelected": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "aiUpdatingConfig": "AI is updating configuration. Please check your internet and restart the app.",
+  "aiSessionExpired": "Coach session expired. Close and reopen the chat to continue.",
+  "aiEmptyResponse": "I'm still thinking. Please try again.",
+  "authGoogleFailed": "Google Sign-In failed. Please try again.",
+  "authAppleUnavailable": "Apple Sign-In is only available on iOS.",
+  "authAppleFailed": "Apple Sign-In failed. Please try again.",
+  "journalSymptomsTitle": "Symptoms & State",
+  "journalSymptomsPrefix": "Symptoms",
+  "journalUpdated": "Journal updated! 📝",
+  "symptomEnergy": "Energy",
+  "symptomFocus": "Focus",
+  "symptomHungry": "Hungry",
+  "symptomFatigue": "Fatigue",
+  "symptomHeadache": "Headache",
+  "symptomThirsty": "Thirsty",
+  "moodTerrible": "Terrible",
+  "moodBad": "Bad",
+  "moodOkay": "Okay",
+  "moodGood": "Good",
+  "moodGreat": "Great"
 
 
 

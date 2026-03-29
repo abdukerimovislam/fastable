@@ -88,6 +88,4 @@ class UpdateActivityLevel extends WeightEvent {
 
   @override
   List<Object?> get props => [level];
-
-
 }

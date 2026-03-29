@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
-import 'package:flutter/foundation.dart'; // Для debugPrint
-import 'package:flutter/widgets.dart';    // Для WidgetsBindingObserver и AppLifecycleState
+import 'package:flutter/widgets.dart'; // Для WidgetsBindingObserver и AppLifecycleState
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,30 +12,35 @@ import 'package:fastable/services/notification_service.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/repositories/history_repository.dart';
 import 'package:fastable/models/fasting_record.dart';
+import 'package:fastable/services/circadian_service.dart';
+import 'package:fastable/utils/fasting_symptoms.dart';
 
 import '../../services/live_activity_services.dart';
 
 @injectable
-class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingObserver {
+class FastingBloc extends Bloc<FastingEvent, FastingState>
+    with WidgetsBindingObserver {
   final NotificationService _notificationService;
   final HapticService _hapticService;
   final HistoryRepository _historyRepository;
   final LiveActivityService _liveActivityService;
+  final CircadianService _circadianService;
 
   Timer? _ticker;
   final List<FastingPlan> _plans = FastingPlan.defaultPlans;
 
   int _customTargetHours = 14;
-  Duration _circadianDuration = const Duration(hours: 14); // Дефолт на случай ошибки
+  Duration _circadianDuration = const Duration(
+    hours: 14,
+  ); // Дефолт на случай ошибки
 
   FastingBloc(
-      this._notificationService,
-      this._hapticService,
-      this._historyRepository,
-      this._liveActivityService,
-      )
-      : super(const FastingState()) {
-
+    this._notificationService,
+    this._hapticService,
+    this._historyRepository,
+    this._liveActivityService,
+    this._circadianService,
+  ) : super(const FastingState()) {
     WidgetsBinding.instance.addObserver(this);
 
     on<CheckFastingState>(_onCheckState);
@@ -52,11 +55,12 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState stateLifecycle) {
-    if (stateLifecycle == AppLifecycleState.resumed) {
-      if (state.startTime != null && state.phase != FastingPhase.stopped) {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (this.state.startTime != null &&
+          this.state.phase != FastingPhase.stopped) {
         final now = DateTime.now();
-        final diff = now.difference(state.startTime!);
+        final diff = now.difference(this.state.startTime!);
         final elapsed = diff.isNegative ? Duration.zero : diff;
 
         add(TickTimer(elapsed));
@@ -65,7 +69,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
   }
 
   Future<void> _onCheckState(
-      CheckFastingState event, Emitter<FastingState> emit) async {
+    CheckFastingState event,
+    Emitter<FastingState> emit,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -79,18 +85,22 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       }
 
       if (planIdx != FastingState.customPlanIndex &&
-          planIdx != FastingState.circadianPlanIndex && // 🔥 Разрешаем этот индекс
+          planIdx !=
+              FastingState.circadianPlanIndex && // 🔥 Разрешаем этот индекс
           (planIdx < 0 || planIdx >= _plans.length)) {
         planIdx = 0;
       }
 
       String stateStr = prefs.getString('app_state') ?? 'stopped';
       FastingPhase phase = FastingPhase.values.firstWhere(
-              (e) => e.name == stateStr,
-          orElse: () => FastingPhase.stopped);
+        (e) => e.name == stateStr,
+        orElse: () => FastingPhase.stopped,
+      );
 
       String? startStr = prefs.getString('cycle_start_time');
-      DateTime? startTime = startStr != null ? DateTime.tryParse(startStr) : null;
+      DateTime? startTime = startStr != null
+          ? DateTime.tryParse(startStr)
+          : null;
 
       final goal = _getGoalForPhase(phase, planIdx);
 
@@ -99,29 +109,32 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         final diff = now.difference(startTime);
         final elapsed = diff.isNegative ? Duration.zero : diff;
 
-        emit(state.copyWith(
-          phase: phase,
-          startTime: startTime,
-          elapsed: elapsed,
-          planIndex: planIdx,
-          goalDuration: goal,
-        ));
+        emit(
+          state.copyWith(
+            phase: phase,
+            startTime: startTime,
+            elapsed: elapsed,
+            planIndex: planIdx,
+            goalDuration: goal,
+          ),
+        );
         _startTicker();
 
         _liveActivityService.startFastingActivity(
-            startTime: startTime,
-            goalDuration: goal,
-            phaseName: phase == FastingPhase.fasting ? "Fasting" : "Eating"
+          startTime: startTime,
+          goalDuration: goal,
+          phaseName: phase == FastingPhase.fasting ? "Fasting" : "Eating",
         );
-
       } else {
         final fastingGoal = _getGoalForPhase(FastingPhase.fasting, planIdx);
 
-        emit(state.copyWith(
-          phase: FastingPhase.stopped,
-          planIndex: planIdx,
-          goalDuration: fastingGoal,
-        ));
+        emit(
+          state.copyWith(
+            phase: FastingPhase.stopped,
+            planIndex: planIdx,
+            goalDuration: fastingGoal,
+          ),
+        );
 
         _liveActivityService.stopActivity();
       }
@@ -133,38 +146,60 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
 
   // 🔥 НОВЫЙ МЕТОД ДЛЯ СТАРТА ЦИРКАДНОГО ГОЛОДАНИЯ
   Future<void> _onStartCircadianFast(
-      StartCircadianFast event, Emitter<FastingState> emit) async {
+    StartCircadianFast event,
+    Emitter<FastingState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
 
     // Сохраняем настройки плана
     await prefs.setInt('fast_plan_index', FastingState.circadianPlanIndex);
-    await prefs.setInt('circadian_target_minutes', event.targetDuration.inMinutes);
+    await prefs.setInt(
+      'circadian_target_minutes',
+      event.targetDuration.inMinutes,
+    );
     _circadianDuration = event.targetDuration;
 
     // Вызываем стандартный старт, но уже с новым стейтом
-    emit(state.copyWith(
-      planIndex: FastingState.circadianPlanIndex,
-      goalDuration: event.targetDuration,
-    ));
+    emit(
+      state.copyWith(
+        planIndex: FastingState.circadianPlanIndex,
+        goalDuration: event.targetDuration,
+      ),
+    );
 
     add(const StartFasting());
   }
 
   Future<void> _onStartFasting(
-      StartFasting event, Emitter<FastingState> emit) async {
+    StartFasting event,
+    Emitter<FastingState> emit,
+  ) async {
     try {
       _hapticService.mediumImpact();
 
       final startDate = event.startTime ?? DateTime.now();
-      final goal = state.goalDuration;
-
       final prefs = await SharedPreferences.getInstance();
+      var goal = state.goalDuration;
+      if (state.planIndex == FastingState.circadianPlanIndex &&
+          state.phase == FastingPhase.stopped) {
+        final syncedCircadianGoal = await _resolveCircadianGoalDuration(
+          startDate,
+        );
+        if (syncedCircadianGoal != null) {
+          goal = syncedCircadianGoal;
+          _circadianDuration = syncedCircadianGoal;
+          await prefs.setInt(
+            'circadian_target_minutes',
+            syncedCircadianGoal.inMinutes,
+          );
+        }
+      }
+
       await prefs.setString('app_state', FastingPhase.fasting.name);
       await prefs.setString('cycle_start_time', startDate.toIso8601String());
 
       try {
-        final locale = PlatformDispatcher.instance.locale;
-        final l10n = await lookupAppLocalizations(locale);
+        final l10n = await _loadAppLocalizations();
 
         await _notificationService.scheduleFastingNotifications(
           startTime: startDate,
@@ -179,13 +214,15 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       final diff = now.difference(startDate);
       final elapsed = diff.isNegative ? Duration.zero : diff;
 
-      emit(state.copyWith(
-        phase: FastingPhase.fasting,
-        startTime: startDate,
-        elapsed: elapsed,
-        goalDuration: goal,
-        isGoalReached: false,
-      ));
+      emit(
+        state.copyWith(
+          phase: FastingPhase.fasting,
+          startTime: startDate,
+          elapsed: elapsed,
+          goalDuration: goal,
+          isGoalReached: false,
+        ),
+      );
       _startTicker();
 
       _liveActivityService.startFastingActivity(
@@ -193,14 +230,15 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         goalDuration: goal,
         phaseName: "Fasting",
       );
-
     } catch (e) {
       debugPrint("FastingBloc Error in _onStartFasting: $e");
     }
   }
 
   Future<void> _onEndFasting(
-      EndFasting event, Emitter<FastingState> emit) async {
+    EndFasting event,
+    Emitter<FastingState> emit,
+  ) async {
     try {
       _ticker?.cancel();
 
@@ -212,7 +250,11 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
 
       if (state.startTime != null && state.phase == FastingPhase.fasting) {
         if (endDate.isBefore(state.startTime!)) {
-          debugPrint("❌ Guardrail: End time is before Start time. Aborting save.");
+          debugPrint(
+            "❌ Guardrail: End time is before Start time. Aborting transition.",
+          );
+          _startTicker();
+          return;
         } else {
           final duration = endDate.difference(state.startTime!);
 
@@ -224,14 +266,23 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
               FastingMood? loggedMood;
               if (savedMoodStr != null) {
                 try {
-                  loggedMood = FastingMood.values.firstWhere((e) => e.name == savedMoodStr);
+                  loggedMood = FastingMood.values.firstWhere(
+                    (e) => e.name == savedMoodStr,
+                  );
                 } catch (_) {}
               }
 
-              final savedSymptoms = prefs.getStringList('current_fast_symptoms') ?? [];
+              final savedSymptoms = FastingSymptoms.normalizeStoredValues(
+                prefs.getStringList('current_fast_symptoms') ??
+                    const <String>[],
+              );
               String? finalNote;
               if (savedSymptoms.isNotEmpty) {
-                finalNote = "Symptoms: ${savedSymptoms.join(', ')}";
+                final l10n = await _loadAppLocalizations();
+                final localizedSymptoms = savedSymptoms
+                    .map((symptom) => FastingSymptoms.labelFor(l10n, symptom))
+                    .join(', ');
+                finalNote = '${l10n.journalSymptomsPrefix}: $localizedSymptoms';
               }
 
               await prefs.remove('current_fast_mood');
@@ -249,7 +300,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
               debugPrint("History Save Error: $e");
             }
           } else {
-            debugPrint("⏳ Guardrail: Fasting too short (< 5 min), discarded.");
+            debugPrint(
+              "⏳ Guardrail: Fasting too short (< 5 min), history entry discarded.",
+            );
           }
         }
       }
@@ -261,8 +314,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       await prefs.setString('cycle_start_time', endDate.toIso8601String());
 
       try {
-        final locale = PlatformDispatcher.instance.locale;
-        final l10n = await lookupAppLocalizations(locale);
+        final l10n = await _loadAppLocalizations();
 
         await _notificationService.scheduleEatingNotifications(
           startTime: endDate,
@@ -276,13 +328,15 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       final diff = DateTime.now().difference(endDate);
       final elapsed = diff.isNegative ? Duration.zero : diff;
 
-      emit(state.copyWith(
-        phase: FastingPhase.eating,
-        startTime: endDate,
-        elapsed: elapsed,
-        goalDuration: eatGoal,
-        isGoalReached: false,
-      ));
+      emit(
+        state.copyWith(
+          phase: FastingPhase.eating,
+          startTime: endDate,
+          elapsed: elapsed,
+          goalDuration: eatGoal,
+          isGoalReached: false,
+        ),
+      );
       _startTicker();
 
       await _liveActivityService.stopActivity();
@@ -291,14 +345,15 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
         goalDuration: eatGoal,
         phaseName: "Eating",
       );
-
     } catch (e) {
       debugPrint("FastingBloc Error in _onEndFasting: $e");
     }
   }
 
   Future<void> _onEndEatingWindow(
-      EndEatingWindow event, Emitter<FastingState> emit) async {
+    EndEatingWindow event,
+    Emitter<FastingState> emit,
+  ) async {
     add(ResetFasting());
   }
 
@@ -314,40 +369,42 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
       await prefs.remove('current_fast_mood');
       await prefs.remove('current_fast_symptoms');
 
-      await _notificationService.cancelFastingNotifications();
+      await _notificationService.cancelAllFastingNotifications();
 
       final resetGoal = _getGoalForPhase(FastingPhase.fasting, state.planIndex);
 
-      emit(state.copyWith(
-        phase: FastingPhase.stopped,
-        startTime: null,
-        elapsed: Duration.zero,
-        isGoalReached: false,
-        goalDuration: resetGoal,
-      ));
+      emit(
+        state.copyWith(
+          phase: FastingPhase.stopped,
+          startTime: null,
+          elapsed: Duration.zero,
+          isGoalReached: false,
+          goalDuration: resetGoal,
+        ),
+      );
 
       _liveActivityService.stopActivity();
-
     } catch (e) {
       debugPrint("FastingBloc Error in _onReset: $e");
     }
   }
 
   Future<void> _onChangePlan(
-      ChangePlan event, Emitter<FastingState> emit) async {
+    ChangePlan event,
+    Emitter<FastingState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('fast_plan_index', event.planIndex);
 
     final newGoal = _getGoalForPhase(state.phase, event.planIndex);
 
-    emit(state.copyWith(
-      planIndex: event.planIndex,
-      goalDuration: newGoal,
-    ));
+    emit(state.copyWith(planIndex: event.planIndex, goalDuration: newGoal));
   }
 
   Future<void> _onSetCustomPlan(
-      SetCustomPlan event, Emitter<FastingState> emit) async {
+    SetCustomPlan event,
+    Emitter<FastingState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setInt('fast_plan_index', FastingState.customPlanIndex);
@@ -356,10 +413,12 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     _customTargetHours = event.targetHours;
     final newGoal = _getGoalForPhase(state.phase, FastingState.customPlanIndex);
 
-    emit(state.copyWith(
-      planIndex: FastingState.customPlanIndex,
-      goalDuration: newGoal,
-    ));
+    emit(
+      state.copyWith(
+        planIndex: FastingState.customPlanIndex,
+        goalDuration: newGoal,
+      ),
+    );
   }
 
   void _onTick(TickTimer event, Emitter<FastingState> emit) {
@@ -407,5 +466,32 @@ class FastingBloc extends Bloc<FastingEvent, FastingState> with WidgetsBindingOb
     return phase == FastingPhase.eating
         ? _plans[planIdx].eatingDuration
         : _plans[planIdx].fastingDuration;
+  }
+
+  Future<AppLocalizations> _loadAppLocalizations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguageCode = prefs.getString('locale_code') ?? 'en';
+    return lookupAppLocalizations(Locale(savedLanguageCode));
+  }
+
+  Future<Duration?> _resolveCircadianGoalDuration(DateTime startDate) async {
+    final sunTimes = await _circadianService.getAccurateSunTimes(
+      referenceTime: startDate,
+    );
+    if (sunTimes == null) {
+      return null;
+    }
+
+    final sunrise = sunTimes['sunrise'];
+    if (sunrise == null) {
+      return null;
+    }
+
+    final duration = sunrise.difference(startDate);
+    if (duration.isNegative || duration == Duration.zero) {
+      return const Duration(minutes: 1);
+    }
+
+    return duration;
   }
 }

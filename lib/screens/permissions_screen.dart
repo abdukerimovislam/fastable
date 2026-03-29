@@ -11,27 +11,33 @@ import 'package:fastable/services/health_service.dart';
 
 import 'package:fastable/bloc/settings/settings_bloc.dart';
 import 'package:fastable/bloc/settings/settings_event.dart';
-import 'package:fastable/bloc/settings/settings_state.dart';
 
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/utils/health_sync_preferences.dart';
+import 'package:fastable/ui/app_layout.dart';
 
 class PermissionsScreen extends StatefulWidget {
-  const PermissionsScreen({super.key});
+  final bool returnToHomeOnContinue;
+
+  const PermissionsScreen({super.key, this.returnToHomeOnContinue = true});
 
   @override
   State<PermissionsScreen> createState() => _PermissionsScreenState();
 }
 
-class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindingObserver {
+class _PermissionsScreenState extends State<PermissionsScreen>
+    with WidgetsBindingObserver {
   bool _notificationsGranted = false;
   bool _healthGranted = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this); // Слушаем сворачивание/разворачивание приложения
+    WidgetsBinding.instance.addObserver(
+      this,
+    ); // Слушаем сворачивание/разворачивание приложения
     _checkStatuses();
   }
 
@@ -52,10 +58,8 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
   Future<void> _checkStatuses() async {
     final notifStatus = await Permission.notification.status;
 
-    // Для Health мы проверяем, включено ли это в наших настройках (SettingsBloc),
-    // так как "честно" проверить права Health без запроса сложно на всех ОС.
     if (!mounted) return;
-    final isHealthEnabledInSettings = context.read<SettingsBloc>().state.isHealthSyncEnabled;
+    final isHealthEnabledInSettings = await HealthSyncPreferences.isEnabled();
 
     setState(() {
       _notificationsGranted = notifStatus.isGranted;
@@ -68,135 +72,195 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
     final l10n = AppLocalizations.of(context)!;
     final haptic = getIt<HapticService>();
     final isAndroid = Platform.isAndroid;
+    final cardPadding = AppLayout.cardPadding(context);
 
     // Данные для Health карточки
-    final String healthTitle = isAndroid ? l10n.permHealthConnect : "Apple Health";
-    final IconData healthIcon = isAndroid ? Icons.health_and_safety : Icons.favorite;
+    final String healthTitle = isAndroid
+        ? l10n.permHealthConnect
+        : l10n.permHealthTitle;
+    final IconData healthIcon = isAndroid
+        ? Icons.health_and_safety
+        : Icons.favorite;
     final Color healthColor = isAndroid ? Colors.green : Colors.redAccent;
-    final String healthDesc = isAndroid ? l10n.permHealthConnectDesc : l10n.permHealthDesc;
+    final String healthDesc = isAndroid
+        ? l10n.permHealthConnectDesc
+        : l10n.permHealthDesc;
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: MeshBackground(
         isFasting: false,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                const Icon(Icons.shield_outlined, size: 60, color: Colors.blueAccent),
-                const SizedBox(height: 24),
-                Text(
-                  l10n.permTitle,
-                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.permDesc,
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16, height: 1.5),
-                ),
-                const SizedBox(height: 40),
-
-                // 1. NOTIFICATIONS
-                _buildPermissionCard(
-                  icon: Icons.notifications_active,
-                  color: Colors.orangeAccent,
-                  title: l10n.permNotifTitle,
-                  desc: l10n.permNotifDesc,
-                  value: _notificationsGranted,
-                  onChanged: (val) async {
-                    haptic.selectionClick();
-                    if (val) {
-                      // Пытаемся включить
-                      final status = await Permission.notification.status;
-
-                      if (status.isPermanentlyDenied) {
-                        // Если запрещено навсегда - отправляем в настройки
-                        openAppSettings();
-                      } else {
-                        // Иначе запрашиваем
-                        await getIt<NotificationService>().requestPermissions();
-                      }
-
-                      // Обновляем UI после запроса
-                      await _checkStatuses();
-
-                      if (_notificationsGranted && mounted) {
-                        context.read<SettingsBloc>().add(const ToggleNotifications(true));
-                      }
-                    } else {
-                      // Юзер выключает свитч. Системные права забрать нельзя,
-                      // но мы можем просто выключить их в логике приложения.
-                      setState(() => _notificationsGranted = false);
-                      context.read<SettingsBloc>().add(const ToggleNotifications(false));
-                    }
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // 2. HEALTH
-                _buildPermissionCard(
-                  icon: healthIcon,
-                  color: healthColor,
-                  title: healthTitle,
-                  desc: healthDesc,
-                  value: _healthGranted,
-                  onChanged: (val) async {
-                    haptic.selectionClick();
-                    if (val) {
-                      // Запрос прав
-                      final success = await getIt<HealthService>().requestPermissions();
-
-                      if (success && mounted) {
-                        setState(() => _healthGranted = true);
-                        context.read<SettingsBloc>().add(const ToggleHealthSync(true));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.msgHealthSyncEnabled), backgroundColor: Colors.green)
-                        );
-                      } else {
-                        // Если отказ или ошибка
-                        setState(() => _healthGranted = false);
-                        context.read<SettingsBloc>().add(const ToggleHealthSync(false));
-                      }
-                    } else {
-                      // Выключение
-                      setState(() => _healthGranted = false);
-                      context.read<SettingsBloc>().add(const ToggleHealthSync(false));
-                    }
-                  },
-                ),
-
-                const Spacer(),
-
-                // CONTINUE BUTTON
-                GestureDetector(
-                  onTap: () {
-                    haptic.mediumImpact();
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomePage()),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [BoxShadow(color: Colors.white.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 5))],
-                    ),
-                    child: Center(
-                      child: Text(
-                        l10n.permContinue,
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Padding(
+                padding: AppLayout.contentPadding(context, vertical: 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GlassCard(
+                      padding: EdgeInsets.all(cardPadding + 2),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withValues(alpha: 0.16),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.shield_outlined,
+                              size: 28,
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.permTitle,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  l10n.permDesc,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.72),
+                                    fontSize: 14,
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 18),
+                    _buildPermissionCard(
+                      icon: Icons.notifications_active,
+                      color: Colors.orangeAccent,
+                      title: l10n.permNotifTitle,
+                      desc: l10n.permNotifDesc,
+                      value: _notificationsGranted,
+                      onChanged: (val) async {
+                        haptic.selectionClick();
+                        if (val) {
+                          final status = await Permission.notification.status;
+
+                          if (status.isPermanentlyDenied) {
+                            openAppSettings();
+                          } else {
+                            await getIt<NotificationService>()
+                                .requestPermissions();
+                          }
+
+                          await _checkStatuses();
+
+                          if (!context.mounted) return;
+                          if (_notificationsGranted) {
+                            context.read<SettingsBloc>().add(
+                              const ToggleNotifications(true),
+                            );
+                          }
+                        } else {
+                          setState(() => _notificationsGranted = false);
+                          context.read<SettingsBloc>().add(
+                            const ToggleNotifications(false),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    _buildPermissionCard(
+                      icon: healthIcon,
+                      color: healthColor,
+                      title: healthTitle,
+                      desc: healthDesc,
+                      value: _healthGranted,
+                      onChanged: (val) async {
+                        haptic.selectionClick();
+                        if (val) {
+                          final success = await getIt<HealthService>()
+                              .requestPermissions();
+
+                          if (!context.mounted) return;
+
+                          if (success) {
+                            setState(() => _healthGranted = true);
+                            context.read<SettingsBloc>().add(
+                              const ToggleHealthSync(
+                                true,
+                                requestPermissions: false,
+                              ),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.msgHealthSyncEnabled),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            setState(() => _healthGranted = false);
+                            context.read<SettingsBloc>().add(
+                              const ToggleHealthSync(
+                                false,
+                                requestPermissions: false,
+                              ),
+                            );
+                          }
+                        } else {
+                          setState(() => _healthGranted = false);
+                          context.read<SettingsBloc>().add(
+                            const ToggleHealthSync(
+                              false,
+                              requestPermissions: false,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: () {
+                        haptic.mediumImpact();
+                        if (widget.returnToHomeOnContinue) {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const HomePage()),
+                          );
+                          return;
+                        }
+
+                        Navigator.of(context).pop(true);
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.permContinue,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
           ),
         ),
@@ -215,12 +279,15 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
     return GestureDetector(
       onTap: () => onChanged(!value), // Позволяем кликать по всей карточке
       child: GlassCard(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppLayout.cardPadding(context)),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, color: color),
             ),
             const SizedBox(width: 16),
@@ -228,9 +295,36 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        value
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        color: value ? color : Colors.white24,
+                        size: 18,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 4),
-                  Text(desc, style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.2)),
+                  Text(
+                    desc,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.58),
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -238,8 +332,8 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
               scale: 0.9,
               child: Switch(
                 value: value,
-                activeColor: Colors.blueAccent,
-                activeTrackColor: Colors.blueAccent.withOpacity(0.3),
+                activeThumbColor: Colors.blueAccent,
+                activeTrackColor: Colors.blueAccent.withValues(alpha: 0.3),
                 inactiveThumbColor: Colors.grey,
                 inactiveTrackColor: Colors.white10,
                 onChanged: onChanged,

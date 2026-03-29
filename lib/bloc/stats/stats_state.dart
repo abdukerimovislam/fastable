@@ -27,7 +27,7 @@ class StatsState extends Equatable {
     this.longestStreak = 0,
     this.averageDuration = 0.0,
     this.successRate = 0.0,
-    this.weeklyChartData = const [0,0,0,0,0,0,0],
+    this.weeklyChartData = const [0, 0, 0, 0, 0, 0, 0],
     this.maxChartValue = 24.0,
     this.unlockedAchievements = const [], // <--- Default
   });
@@ -60,8 +60,15 @@ class StatsState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status, totalFasts, totalHours, currentStreak,
-    longestStreak, averageDuration, successRate,
-    weeklyChartData, maxChartValue, unlockedAchievements
+    status,
+    totalFasts,
+    totalHours,
+    currentStreak,
+    longestStreak,
+    averageDuration,
+    successRate,
+    weeklyChartData,
+    maxChartValue,
+    unlockedAchievements,
   ];
 }

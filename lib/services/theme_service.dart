@@ -15,7 +15,8 @@ class ThemeService {
 
   Future<void> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final String themeName = prefs.getString(kThemeKey) ?? ThemeMode.system.name;
+    final String themeName =
+        prefs.getString(kThemeKey) ?? ThemeMode.system.name;
 
     if (themeName == ThemeMode.light.name) {
       themeNotifier.value = ThemeMode.light;

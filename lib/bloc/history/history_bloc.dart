@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:fastable/bloc/history/history_event.dart';
@@ -19,7 +20,10 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<AddManualRecord>(_onAddManualRecord);
   }
 
-  Future<void> _onSubscribeHistory(SubscribeHistory event, Emitter<HistoryState> emit) async {
+  Future<void> _onSubscribeHistory(
+    SubscribeHistory event,
+    Emitter<HistoryState> emit,
+  ) async {
     emit(state.copyWith(status: HistoryStatus.loading));
 
     await _historySubscription?.cancel();
@@ -27,11 +31,11 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     // 🔥 Благодаря нашему исправлению в репозитории (yield _currentRecords),
     // этот слушатель моментально получит данные из кэша и UI отрисуется без задержек.
     _historySubscription = _historyRepository.getRecordsStream().listen(
-          (records) {
+      (records) {
         add(HistoryUpdated(records));
       },
       onError: (error) {
-        print("Stream error: $error");
+        debugPrint("Stream error: $error");
         emit(state.copyWith(status: HistoryStatus.failure));
       },
     );
@@ -41,7 +45,10 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     _historyRepository.getAllRecords().catchError((_) => <FastingRecord>[]);
   }
 
-  Future<void> _onHistoryUpdated(HistoryUpdated event, Emitter<HistoryState> emit) async {
+  Future<void> _onHistoryUpdated(
+    HistoryUpdated event,
+    Emitter<HistoryState> emit,
+  ) async {
     final records = event.records;
 
     // 1. Считаем Общее время
@@ -60,19 +67,24 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     try {
       streak = _historyRepository.calculateStreak();
     } catch (e) {
-      print("Error calc streak in bloc: $e");
+      debugPrint("Error calc streak in bloc: $e");
     }
 
-    emit(state.copyWith(
-      status: HistoryStatus.success,
-      records: records,
-      totalFastingTime: totalTime,
-      averageDuration: avgTime,
-      currentStreak: streak,
-    ));
+    emit(
+      state.copyWith(
+        status: HistoryStatus.success,
+        records: records,
+        totalFastingTime: totalTime,
+        averageDuration: avgTime,
+        currentStreak: streak,
+      ),
+    );
   }
 
-  Future<void> _onDeleteRecord(DeleteRecordEvent event, Emitter<HistoryState> emit) async {
+  Future<void> _onDeleteRecord(
+    DeleteRecordEvent event,
+    Emitter<HistoryState> emit,
+  ) async {
     try {
       await _historyRepository.deleteRecord(event.record);
     } catch (e) {
@@ -80,7 +92,10 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     }
   }
 
-  Future<void> _onAddManualRecord(AddManualRecord event, Emitter<HistoryState> emit) async {
+  Future<void> _onAddManualRecord(
+    AddManualRecord event,
+    Emitter<HistoryState> emit,
+  ) async {
     try {
       await _historyRepository.addRecord(event.record);
     } catch (e) {

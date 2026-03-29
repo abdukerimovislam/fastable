@@ -3,14 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:fastable/injection.dart';
 import 'package:fastable/services/haptic_service.dart';
-import 'package:fastable/services/notification_service.dart';
 
 import 'package:fastable/bloc/fasting/fasting_bloc.dart';
 import 'package:fastable/bloc/fasting/fasting_state.dart';
+import 'package:fastable/bloc/history/history_bloc.dart';
+import 'package:fastable/bloc/history/history_event.dart';
 
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/ui/app_layout.dart';
 
 // ЭКРАНЫ
 import 'package:fastable/screens/history_screen.dart';
@@ -27,7 +29,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final NotificationService _notificationService;
   late final HapticService _hapticService;
 
   int _selectedIndex = 2; // Таймер по центру
@@ -44,14 +45,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _notificationService = getIt<NotificationService>();
     _hapticService = getIt<HapticService>();
-    _notificationService.requestPermissions();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final edgePadding = AppLayout.edgePadding(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -61,26 +61,33 @@ class _HomePageState extends State<HomePage> {
         builder: (context, state) {
           return MeshBackground(
             isFasting: state.phase == FastingPhase.fasting,
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: _pages,
-            ),
+            child: IndexedStack(index: _selectedIndex, children: _pages),
           );
         },
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: EdgeInsets.fromLTRB(
+            edgePadding,
+            0,
+            edgePadding,
+            AppLayout.sectionGap(context) + 2,
+          ),
           color: Colors.transparent,
           child: GlassCard(
-            height: 70,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            height: 66,
+            padding: const EdgeInsets.symmetric(horizontal: 2),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildDockItem(Icons.history_rounded, 0, l10n.navHistory),
                 _buildDockItem(Icons.bar_chart_rounded, 1, l10n.navStats),
-                _buildDockItem(Icons.timer_rounded, 2, l10n.navTimer, isCenter: true),
+                _buildDockItem(
+                  Icons.timer_rounded,
+                  2,
+                  l10n.navTimer,
+                  isCenter: true,
+                ),
                 _buildDockItem(Icons.school_rounded, 3, l10n.navLearn),
                 // 🔥 ИСПРАВЛЕНИЕ: Иконка шестеренки для настроек
                 _buildDockItem(Icons.settings_rounded, 4, l10n.navSettings),
@@ -92,7 +99,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDockItem(IconData icon, int index, String label, {bool isCenter = false}) {
+  Widget _buildDockItem(
+    IconData icon,
+    int index,
+    String label, {
+    bool isCenter = false,
+  }) {
     final bool isSelected = _selectedIndex == index;
     final double iconSize = isCenter ? 30 : 24;
     final Color activeColor = isCenter ? Colors.blueAccent : Colors.white;
@@ -100,6 +112,9 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () {
         _hapticService.selectionClick();
+        if (index == 0) {
+          context.read<HistoryBloc>().add(SubscribeHistory());
+        }
         setState(() => _selectedIndex = index);
       },
       behavior: HitTestBehavior.opaque,
@@ -112,17 +127,26 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.all(isCenter ? 12 : 8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? (isCenter ? Colors.blueAccent.withOpacity(0.2) : Colors.white.withOpacity(0.1))
+                  ? (isCenter
+                        ? Colors.blueAccent.withValues(alpha: 0.2)
+                        : Colors.white.withValues(alpha: 0.1))
                   : Colors.transparent,
               shape: BoxShape.circle,
               boxShadow: isSelected && isCenter
-                  ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.3), blurRadius: 10)]
+                  ? [
+                      BoxShadow(
+                        color: Colors.blueAccent.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                      ),
+                    ]
                   : [],
             ),
             child: Icon(
-                icon,
-                color: isSelected ? activeColor : Colors.white.withOpacity(0.4),
-                size: iconSize
+              icon,
+              color: isSelected
+                  ? activeColor
+                  : Colors.white.withValues(alpha: 0.4),
+              size: iconSize,
             ),
           ),
         ],

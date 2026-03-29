@@ -9,13 +9,15 @@ import 'package:fastable/bloc/weight/weight_state.dart';
 import 'package:fastable/repositories/weight_repository.dart';
 import 'package:fastable/models/weight_entry.dart';
 import 'package:fastable/services/health_service.dart';
+import 'package:fastable/utils/health_sync_preferences.dart';
 
 @injectable
 class WeightBloc extends Bloc<WeightEvent, WeightState> {
   final WeightRepository _repository;
   final HealthService _healthService;
 
-  WeightBloc(this._repository, this._healthService) : super(const WeightState()) {
+  WeightBloc(this._repository, this._healthService)
+    : super(const WeightState()) {
     on<LoadWeightData>(_onLoadData);
 
     on<UpdateHeight>(_onUpdateHeight);
@@ -31,7 +33,10 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
     on<UpdateHips>(_onUpdateHips);
   }
 
-  Future<void> _onLoadData(LoadWeightData event, Emitter<WeightState> emit) async {
+  Future<void> _onLoadData(
+    LoadWeightData event,
+    Emitter<WeightState> emit,
+  ) async {
     emit(state.copyWith(status: WeightStatus.loading));
 
     try {
@@ -45,7 +50,8 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
       final gender = Gender.values.asMap()[genderIdx] ?? Gender.male;
 
       final activityIdx = prefs.getInt('user_activity') ?? 1;
-      final activity = ActivityLevel.values.asMap()[activityIdx] ?? ActivityLevel.moderate;
+      final activity =
+          ActivityLevel.values.asMap()[activityIdx] ?? ActivityLevel.moderate;
 
       // 🔥 ЗАГРУЖАЕМ ЗАМЕРЫ (Если их нет, вернется null)
       final chest = prefs.getDouble('user_chest');
@@ -61,7 +67,10 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
 
       // --- ИНТЕГРАЦИЯ HEALTH (ЧТЕНИЕ И УМНОЕ СОХРАНЕНИЕ) ---
       try {
-        if (await _healthService.isHealthSupported()) {
+        final isHealthSyncEnabled = await HealthSyncPreferences.isEnabled(
+          prefs,
+        );
+        if (isHealthSyncEnabled && await _healthService.isHealthSupported()) {
           final healthWeight = await _healthService.getLatestWeight();
 
           if (healthWeight != null && healthWeight != currentWeight) {
@@ -72,7 +81,9 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
             await prefs.setDouble('user_weight', currentWeight);
 
             // Обязательно сохраняем вес в наш Репозиторий
-            await _repository.addWeightEntry(WeightEntry(date: DateTime.now(), weight: currentWeight));
+            await _repository.addWeightEntry(
+              WeightEntry(date: DateTime.now(), weight: currentWeight),
+            );
 
             // 2. Перезапрашиваем историю, чтобы UI перерисовался корректно
             history = await _repository.getWeightHistory();
@@ -81,33 +92,46 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
       } catch (e) {
         debugPrint("Health Sync Read Error: $e");
       }
+
+      if (history.isNotEmpty) {
+        currentWeight = history.last.weight;
+        await prefs.setDouble('user_weight', currentWeight);
+      }
       // ----------------------------------
 
-      emit(state.copyWith(
-        status: WeightStatus.success,
-        heightCm: height,
-        currentWeight: currentWeight,
-        age: age,
-        gender: gender,
-        activityLevel: activity,
-        history: history,
-        // 🔥 ПЕРЕДАЕМ ЗАМЕРЫ В СТЕЙТ (Используем функции-генераторы, как прописано в copyWith)
-        chestCm: () => chest,
-        waistCm: () => waist,
-        hipsCm: () => hips,
-      ));
+      emit(
+        state.copyWith(
+          status: WeightStatus.success,
+          heightCm: height,
+          currentWeight: currentWeight,
+          age: age,
+          gender: gender,
+          activityLevel: activity,
+          history: history,
+          // 🔥 ПЕРЕДАЕМ ЗАМЕРЫ В СТЕЙТ (Используем функции-генераторы, как прописано в copyWith)
+          chestCm: () => chest,
+          waistCm: () => waist,
+          hipsCm: () => hips,
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(status: WeightStatus.failure));
     }
   }
 
-  Future<void> _onUpdateHeight(UpdateHeight event, Emitter<WeightState> emit) async {
+  Future<void> _onUpdateHeight(
+    UpdateHeight event,
+    Emitter<WeightState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('user_height', event.heightCm);
     emit(state.copyWith(heightCm: event.heightCm));
   }
 
-  Future<void> _onAddEntry(AddWeightEntry event, Emitter<WeightState> emit) async {
+  Future<void> _onAddEntry(
+    AddWeightEntry event,
+    Emitter<WeightState> emit,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -116,20 +140,22 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
       final newEntry = WeightEntry(date: DateTime.now(), weight: event.weight);
       await _repository.addWeightEntry(newEntry);
 
-      _healthService.writeWeight(event.weight).then((success) {
-        if (success) {
-          debugPrint("✅ Weight synced to Health App");
-        } else {
-          debugPrint("⚠️ Weight sync skipped (no permission or error)");
-        }
-      });
+      final isHealthSyncEnabled = await HealthSyncPreferences.isEnabled(prefs);
+      if (isHealthSyncEnabled) {
+        _healthService.writeWeight(event.weight).then((success) {
+          if (success) {
+            debugPrint("✅ Weight synced to Health App");
+          } else {
+            debugPrint("⚠️ Weight sync skipped (no permission or error)");
+          }
+        });
+      }
 
       final updatedHistory = await _repository.getWeightHistory();
 
-      emit(state.copyWith(
-        currentWeight: event.weight,
-        history: updatedHistory,
-      ));
+      emit(
+        state.copyWith(currentWeight: event.weight, history: updatedHistory),
+      );
     } catch (e) {
       debugPrint("Error adding weight: $e");
     }
@@ -141,13 +167,19 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
     emit(state.copyWith(age: event.age));
   }
 
-  Future<void> _onUpdateGender(UpdateGender event, Emitter<WeightState> emit) async {
+  Future<void> _onUpdateGender(
+    UpdateGender event,
+    Emitter<WeightState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('user_gender', event.gender.index);
     emit(state.copyWith(gender: event.gender));
   }
 
-  Future<void> _onUpdateActivity(UpdateActivityLevel event, Emitter<WeightState> emit) async {
+  Future<void> _onUpdateActivity(
+    UpdateActivityLevel event,
+    Emitter<WeightState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('user_activity', event.level.index);
     emit(state.copyWith(activityLevel: event.level));
@@ -155,19 +187,28 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
 
   // --- 🔥 МЕТОДЫ СОХРАНЕНИЯ ЗАМЕРОВ ---
 
-  Future<void> _onUpdateChest(UpdateChest event, Emitter<WeightState> emit) async {
+  Future<void> _onUpdateChest(
+    UpdateChest event,
+    Emitter<WeightState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('user_chest', event.chestCm);
     emit(state.copyWith(chestCm: () => event.chestCm));
   }
 
-  Future<void> _onUpdateWaist(UpdateWaist event, Emitter<WeightState> emit) async {
+  Future<void> _onUpdateWaist(
+    UpdateWaist event,
+    Emitter<WeightState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('user_waist', event.waistCm);
     emit(state.copyWith(waistCm: () => event.waistCm));
   }
 
-  Future<void> _onUpdateHips(UpdateHips event, Emitter<WeightState> emit) async {
+  Future<void> _onUpdateHips(
+    UpdateHips event,
+    Emitter<WeightState> emit,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('user_hips', event.hipsCm);
     emit(state.copyWith(hipsCm: () => event.hipsCm));

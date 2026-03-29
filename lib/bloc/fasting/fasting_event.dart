@@ -34,11 +34,7 @@ class EndFasting extends FastingEvent {
   // Если null, значит конец "сейчас". Если передано значение — ручной выбор.
   final DateTime? endTime;
 
-  const EndFasting({
-    this.isManual = true,
-    this.endTime,
-    this.mood,
-  });
+  const EndFasting({this.isManual = true, this.endTime, this.mood});
 
   @override
   List<Object?> get props => [isManual, endTime, mood];

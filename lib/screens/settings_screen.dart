@@ -3,33 +3,28 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:fastable/injection.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/l10n/app_localizations.dart';
-import 'package:fastable/services/locale_service.dart';
-import 'package:fastable/services/notification_service.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mesh_background.dart';
+import 'package:fastable/ui/app_layout.dart';
 
 // BLoC
 import 'package:fastable/bloc/settings/settings_bloc.dart';
 import 'package:fastable/bloc/settings/settings_event.dart';
-import 'package:fastable/bloc/settings/settings_state.dart';
 import 'package:fastable/bloc/pro/pro_bloc.dart';
 import 'package:fastable/bloc/pro/pro_event.dart';
+import 'package:fastable/bloc/water/water_bloc.dart';
+import 'package:fastable/bloc/water/water_event.dart';
 
 // Экраны
 import 'package:fastable/screens/medical_disclaimer_screen.dart';
+import 'package:fastable/screens/permissions_screen.dart';
 import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/screens/profile_screen.dart';
-
-const String kWaterGoalKey = 'water_goal';
-const String kNotifyWaterKey = 'notify_water';
-const String kNotifyWeightKey = 'notify_weight';
-const String kNotifyFastingStartKey = 'notify_fasting_start';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -39,62 +34,16 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  int _waterGoal = 8;
-  bool _isLoading = true;
-  bool _notifyWater = false;
-  bool _notifyWeight = false;
-  bool _notifyFastingStart = false;
+  void _updateWaterGoal(
+    BuildContext context, {
+    required int currentCups,
+    required int delta,
+  }) {
+    final nextCups = currentCups + delta;
+    if (nextCups < 1) return;
 
-  final NotificationService _notificationService = NotificationService();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _waterGoal = prefs.getInt(kWaterGoalKey) ?? 8;
-      _notifyWater = prefs.getBool(kNotifyWaterKey) ?? false;
-      _notifyWeight = prefs.getBool(kNotifyWeightKey) ?? false;
-      _notifyFastingStart = prefs.getBool(kNotifyFastingStartKey) ?? false;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _saveInt(String key, int value) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setInt(key, value);
-  }
-
-  Future<void> _saveBool(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
-  }
-
-  void _onWaterToggle(bool value) {
-    getIt<HapticService>().selectionClick();
-    setState(() => _notifyWater = value);
-    _saveBool(kNotifyWaterKey, value);
-  }
-
-  void _onWeightToggle(bool value) {
-    getIt<HapticService>().selectionClick();
-    setState(() => _notifyWeight = value);
-    _saveBool(kNotifyWeightKey, value);
-    if (value) {
-      final l10n = AppLocalizations.of(context)!;
-      _notificationService.scheduleDailyWeightReminder(l10n);
-    }
-  }
-
-  void _onFastingStartToggle(bool value) {
-    getIt<HapticService>().selectionClick();
-    setState(() => _notifyFastingStart = value);
-    _saveBool(kNotifyFastingStartKey, value);
+    getIt<HapticService>().lightImpact();
+    context.read<WaterBloc>().add(UpdateWaterGoal(nextCups * 250));
   }
 
   Future<void> _launchUrl(String urlString) async {
@@ -108,21 +57,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _sectionHeader(String title) {
     return Padding(
-        padding: const EdgeInsets.only(left: 8, bottom: 10, top: 12),
-        child: Text(
-            title.toUpperCase(),
-            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)
-        )
+      padding: const EdgeInsets.only(left: 8, bottom: 10, top: 12),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.5),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 
   String _getLanguageName(String code) {
     switch (code) {
-      case 'ru': return 'Русский';
-      case 'es': return 'Español';
-      case 'pt': return 'Português';
+      case 'ru':
+        return 'Русский';
+      case 'es':
+        return 'Español';
+      case 'pt':
+        return 'Português';
       case 'en':
-      default: return 'English';
+      default:
+        return 'English';
     }
   }
 
@@ -144,16 +102,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E).withOpacity(0.95),
+            color: const Color(0xFF1E1E1E).withValues(alpha: 0.95),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(height: 24),
-              Text(AppLocalizations.of(context)!.settingLanguage, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(
+                AppLocalizations.of(context)!.settingLanguage,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 16),
               ...languages.map((lang) {
                 final isSelected = lang['code'] == currentLang;
@@ -161,15 +133,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () {
                     getIt<HapticService>().selectionClick();
                     // 🔥 Отправляем событие в BLoC. Экран сам перерисуется благодаря context.watch!
-                    context.read<SettingsBloc>().add(ChangeLocale(Locale(lang['code']!)));
-                    LocaleService().setLocale(lang['code']!);
+                    context.read<SettingsBloc>().add(
+                      ChangeLocale(Locale(lang['code']!)),
+                    );
                     Navigator.pop(ctx);
                   },
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  tileColor: isSelected ? Colors.blueAccent.withOpacity(0.1) : Colors.transparent,
-                  leading: Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
-                  title: Text(lang['name']!, style: TextStyle(color: isSelected ? Colors.blueAccent : Colors.white, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-                  trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: Colors.blueAccent) : null,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  tileColor: isSelected
+                      ? Colors.blueAccent.withValues(alpha: 0.1)
+                      : Colors.transparent,
+                  leading: Text(
+                    lang['flag']!,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  title: Text(
+                    lang['name']!,
+                    style: TextStyle(
+                      color: isSelected ? Colors.blueAccent : Colors.white,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: Colors.blueAccent,
+                        )
+                      : null,
                 );
               }),
               const SizedBox(height: 20),
@@ -188,23 +181,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onTap: () => _showLanguagePicker(context, currentCode),
         leading: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: Colors.orangeAccent.withOpacity(0.15), shape: BoxShape.circle),
-          child: const Icon(Icons.language_rounded, color: Colors.orangeAccent, size: 20),
+          decoration: BoxDecoration(
+            color: Colors.orangeAccent.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.language_rounded,
+            color: Colors.orangeAccent,
+            size: 20,
+          ),
         ),
-        title: Text(l10n.settingLanguage, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.settingLanguage,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_getLanguageName(currentCode), style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)),
+            Text(
+              _getLanguageName(currentCode),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 14,
+              ),
+            ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.3)),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white.withValues(alpha: 0.3),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildIntStepper({required String title, required String unit, required int currentValue, required int step, required String saveKey}) {
+  Widget _buildIntStepper({
+    required String title,
+    required String unit,
+    required int currentValue,
+    required VoidCallback onDecrement,
+    required VoidCallback onIncrement,
+  }) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,35 +234,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.cyanAccent.withOpacity(0.15), shape: BoxShape.circle),
-                child: const Icon(Icons.local_drink_rounded, color: Colors.cyanAccent, size: 20),
+                decoration: BoxDecoration(
+                  color: Colors.cyanAccent.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.local_drink_rounded,
+                  color: Colors.cyanAccent,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("$currentValue $unit", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+              Text(
+                "$currentValue $unit",
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                ),
+              ),
               Row(
                 children: [
-                  _buildCircleBtn(Icons.remove, () {
-                    getIt<HapticService>().lightImpact();
-                    final newValue = currentValue - step;
-                    if (newValue >= 1) {
-                      setState(() { if (saveKey == kWaterGoalKey) _waterGoal = newValue; });
-                      _saveInt(saveKey, newValue);
-                    }
-                  }),
+                  _buildCircleBtn(Icons.remove, onDecrement),
                   const SizedBox(width: 12),
-                  _buildCircleBtn(Icons.add, () {
-                    getIt<HapticService>().lightImpact();
-                    final newValue = currentValue + step;
-                    setState(() { if (saveKey == kWaterGoalKey) _waterGoal = newValue; });
-                    _saveInt(saveKey, newValue);
-                  }, isFilled: true),
+                  _buildCircleBtn(Icons.add, onIncrement, isFilled: true),
                 ],
               ),
             ],
@@ -251,42 +281,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildCircleBtn(IconData icon, VoidCallback onTap, {bool isFilled = false}) {
+  Widget _buildCircleBtn(
+    IconData icon,
+    VoidCallback onTap, {
+    bool isFilled = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: isFilled ? Colors.blueAccent : Colors.transparent,
           shape: BoxShape.circle,
-          border: isFilled ? null : Border.all(color: Colors.white.withOpacity(0.2)),
+          border: isFilled
+              ? null
+              : Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Icon(icon, color: Colors.white, size: 20),
       ),
     );
   }
 
-  Widget _buildSwitchTile({required IconData icon, required Color iconColor, required String title, required String subtitle, required bool value, required Function(bool) onChanged}) {
+  Widget _buildSwitchTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required Function(bool) onChanged,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassCard(
         padding: EdgeInsets.zero,
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
           leading: Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: iconColor.withOpacity(0.15), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4.0),
-            child: Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13, height: 1.2)),
+            child: Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 13,
+                height: 1.2,
+              ),
+            ),
           ),
           trailing: CupertinoSwitch(
             value: value,
-            activeColor: Colors.blueAccent,
-            trackColor: Colors.white.withOpacity(0.1),
+            activeTrackColor: Colors.blueAccent,
+            inactiveTrackColor: Colors.white.withValues(alpha: 0.1),
             onChanged: onChanged,
           ),
         ),
@@ -297,8 +360,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // 🔥 ИСПРАВЛЕНИЕ: Читаем текущий язык напрямую из состояния SettingsBloc
-    final currentLanguageCode = context.watch<SettingsBloc>().state.locale.languageCode;
+    final settingsState = context.watch<SettingsBloc>().state;
+    final waterState = context.watch<WaterBloc>().state;
+    final currentLanguageCode = settingsState.locale.languageCode;
+    final isHealthSyncEnabled = settingsState.isHealthSyncEnabled;
+    final waterGoalCups = (waterState.dailyGoal / 250).round().clamp(1, 99);
 
     return MeshBackground(
       isFasting: false,
@@ -307,23 +373,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: Text(l10n.navSettings, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Text(
+            l10n.navSettings,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             IconButton(
-              icon: const Icon(Icons.account_circle_outlined, color: Colors.white, size: 28),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
+              icon: const Icon(
+                Icons.account_circle_outlined,
+                color: Colors.white,
+                size: 28,
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              ),
             ),
             const SizedBox(width: 8),
           ],
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
-            : SafeArea(
+        body: SafeArea(
           bottom: true,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+            padding: AppLayout.screenPadding(
+              context,
+              top: 10,
+              bottom: 92,
+              includeBottomSafeArea: true,
+            ),
             physics: const BouncingScrollPhysics(),
             children: [
               // 1. PRO СЕКЦИЯ (Только iOS)
@@ -333,17 +415,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: EdgeInsets.zero,
                   onTap: () {
                     getIt<HapticService>().lightImpact();
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ProScreen()),
+                    );
                   },
                   child: ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.amber.withOpacity(0.15), shape: BoxShape.circle),
-                      child: const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber,
+                        size: 20,
+                      ),
                     ),
-                    title: Text(l10n.proTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    subtitle: const Text('Unlock all features', style: TextStyle(color: Colors.white54)),
-                    trailing: Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.3)),
+                    title: Text(
+                      l10n.proTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Unlock all features',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -356,11 +460,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.restore_rounded, color: Colors.white70, size: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.restore_rounded,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
                     ),
-                    title: Text(l10n.restorePurchases, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-                    trailing: Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.3)),
+                    title: Text(
+                      l10n.restorePurchases,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
                   ),
                 ),
               ],
@@ -370,41 +490,131 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // 🔥 Передаем актуальный код языка в виджет
               _buildLanguageSelector(l10n, currentLanguageCode),
               const SizedBox(height: 12),
-              _buildIntStepper(title: l10n.settingWaterGoal, unit: l10n.waterCups, currentValue: _waterGoal, step: 1, saveKey: kWaterGoalKey),
+              _buildIntStepper(
+                title: l10n.settingWaterGoal,
+                unit: l10n.waterCups,
+                currentValue: waterGoalCups,
+                onDecrement: () => _updateWaterGoal(
+                  context,
+                  currentCups: waterGoalCups,
+                  delta: -1,
+                ),
+                onIncrement: () => _updateWaterGoal(
+                  context,
+                  currentCups: waterGoalCups,
+                  delta: 1,
+                ),
+              ),
               const SizedBox(height: 12),
 
               // Здоровье
               GlassCard(
                 padding: EdgeInsets.zero,
-                onTap: () => getIt<HapticService>().lightImpact(),
+                onTap: () {
+                  getIt<HapticService>().lightImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PermissionsScreen(
+                        returnToHomeOnContinue: false,
+                      ),
+                    ),
+                  );
+                },
                 child: ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.15), shape: BoxShape.circle),
-                    child: const Icon(Icons.health_and_safety_rounded, color: Colors.greenAccent, size: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.greenAccent.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.health_and_safety_rounded,
+                      color: Colors.greenAccent,
+                      size: 20,
+                    ),
                   ),
-                  title: Text(l10n.settingsHealthConnect, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  subtitle: Text(l10n.settingsSyncWeight, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13)),
-                  trailing: Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.3)),
+                  title: Text(
+                    l10n.settingsHealthConnect,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  subtitle: Text(
+                    isHealthSyncEnabled
+                        ? l10n.msgHealthSyncEnabled
+                        : l10n.settingsSyncWeight,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 13,
+                    ),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isHealthSyncEnabled)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.greenAccent.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Icon(
+                            Icons.check_rounded,
+                            color: Colors.greenAccent,
+                            size: 14,
+                          ),
+                        ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
               // 3. УВЕДОМЛЕНИЯ
               _sectionHeader(l10n.settingsNotifications),
               _buildSwitchTile(
-                  icon: Icons.water_drop_rounded, iconColor: Colors.blueAccent,
-                  title: l10n.notifyWater, subtitle: l10n.notifyWaterDesc,
-                  value: _notifyWater, onChanged: _onWaterToggle
+                icon: Icons.water_drop_rounded,
+                iconColor: Colors.blueAccent,
+                title: l10n.notifyWater,
+                subtitle: l10n.notifyWaterDesc,
+                value: settingsState.notifyWater,
+                onChanged: (value) {
+                  getIt<HapticService>().selectionClick();
+                  context.read<SettingsBloc>().add(ToggleWaterReminder(value));
+                },
               ),
               _buildSwitchTile(
-                  icon: Icons.monitor_weight_rounded, iconColor: Colors.purpleAccent,
-                  title: l10n.notifyWeight, subtitle: l10n.notifyWeightDesc,
-                  value: _notifyWeight, onChanged: _onWeightToggle
+                icon: Icons.monitor_weight_rounded,
+                iconColor: Colors.purpleAccent,
+                title: l10n.notifyWeight,
+                subtitle: l10n.notifyWeightDesc,
+                value: settingsState.notifyWeight,
+                onChanged: (value) {
+                  getIt<HapticService>().selectionClick();
+                  context.read<SettingsBloc>().add(ToggleWeightReminder(value));
+                },
               ),
               _buildSwitchTile(
-                  icon: Icons.timer_rounded, iconColor: Colors.amberAccent,
-                  title: l10n.notifyFastingStart, subtitle: l10n.notifyFastingStartDesc,
-                  value: _notifyFastingStart, onChanged: _onFastingStartToggle
+                icon: Icons.timer_rounded,
+                iconColor: Colors.amberAccent,
+                title: l10n.notifyFastingStart,
+                subtitle: l10n.notifyFastingStartDesc,
+                value: settingsState.notifyFastingStart,
+                onChanged: (value) {
+                  getIt<HapticService>().selectionClick();
+                  context.read<SettingsBloc>().add(
+                    ToggleFastingStartReminder(value),
+                  );
+                },
               ),
 
               // 4. ЮРИДИЧЕСКАЯ ИНФОРМАЦИЯ И ПОДДЕРЖКА
@@ -413,12 +623,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.zero,
                 onTap: () {
                   getIt<HapticService>().lightImpact();
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalDisclaimerScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MedicalDisclaimerScreen(),
+                    ),
+                  );
                 },
                 child: ListTile(
-                    leading: const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 22),
-                    title: Text(l10n.settingsMedicalDisclaimer, style: const TextStyle(color: Colors.white)),
-                    trailing: Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.3))
+                  leading: const Icon(
+                    Icons.info_outline_rounded,
+                    color: Colors.white70,
+                    size: 22,
+                  ),
+                  title: Text(
+                    l10n.settingsMedicalDisclaimer,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -426,12 +651,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.zero,
                 onTap: () {
                   getIt<HapticService>().lightImpact();
-                  _launchUrl('https://sites.google.com/view/fastable-privacy-policy');
+                  _launchUrl(
+                    'https://sites.google.com/view/fastable-privacy-policy',
+                  );
                 },
                 child: ListTile(
-                    leading: const Icon(Icons.privacy_tip_outlined, color: Colors.white70, size: 22),
-                    title: Text(l10n.privacyPolicy, style: const TextStyle(color: Colors.white)),
-                    trailing: Icon(Icons.open_in_new_rounded, size: 16, color: Colors.white.withOpacity(0.3))
+                  leading: const Icon(
+                    Icons.privacy_tip_outlined,
+                    color: Colors.white70,
+                    size: 22,
+                  ),
+                  title: Text(
+                    l10n.privacyPolicy,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: Icon(
+                    Icons.open_in_new_rounded,
+                    size: 16,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -439,12 +677,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.zero,
                 onTap: () {
                   getIt<HapticService>().lightImpact();
-                  _launchUrl('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+                  _launchUrl(
+                    'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+                  );
                 },
                 child: ListTile(
-                    leading: const Icon(Icons.description_outlined, color: Colors.white70, size: 22),
-                    title: Text(l10n.settingsTermsOfUse, style: const TextStyle(color: Colors.white)),
-                    trailing: Icon(Icons.open_in_new_rounded, size: 16, color: Colors.white.withOpacity(0.3))
+                  leading: const Icon(
+                    Icons.description_outlined,
+                    color: Colors.white70,
+                    size: 22,
+                  ),
+                  title: Text(
+                    l10n.settingsTermsOfUse,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: Icon(
+                    Icons.open_in_new_rounded,
+                    size: 16,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -455,15 +706,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _launchUrl('mailto:freeman60012@gmail.com');
                 },
                 child: ListTile(
-                    leading: const Icon(Icons.mail_outline_rounded, color: Colors.blueAccent, size: 22),
-                    title: Text(l10n.contactSupport ?? "Contact Support", style: const TextStyle(color: Colors.white)),
-                    trailing: Icon(Icons.open_in_new_rounded, size: 16, color: Colors.white.withOpacity(0.3))
+                  leading: const Icon(
+                    Icons.mail_outline_rounded,
+                    color: Colors.blueAccent,
+                    size: 22,
+                  ),
+                  title: Text(
+                    l10n.contactSupport,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: Icon(
+                    Icons.open_in_new_rounded,
+                    size: 16,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
 
               const SizedBox(height: 30),
               Center(
-                child: Text("Fastable v1.0.0", style: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 13, letterSpacing: 1.5)),
+                child: Text(
+                  "Fastable v1.0.0",
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    fontSize: 13,
+                    letterSpacing: 1.5,
+                  ),
+                ),
               ),
             ],
           ),

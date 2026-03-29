@@ -1356,6 +1356,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lblYesterday => 'Yesterday';
 
   @override
+  String get confirmTime => 'Confirm Time';
+
+  @override
   String get lblFastingTypeCircadian => 'Circadian';
 
   @override
@@ -1479,6 +1482,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get msgDeleteError => 'Error deleting account';
+
+  @override
+  String get msgDeleteReauthCancelled => 'Account deletion cancelled.';
+
+  @override
+  String get msgDeleteReauthFailed => 'We couldn\'t confirm your identity. Please try again.';
+
+  @override
+  String get msgDeleteReauthUnavailable => 'Please sign in again with the original provider before deleting this account.';
 
   @override
   String get stepLanguage => 'Select Language';
@@ -1655,4 +1667,471 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zoneGrowthHormoneDesc => 'Peak fat burning, tissue repair, and muscle preservation.';
+
+  @override
+  String continueForPrice(String price) {
+    return 'Continue for $price';
+  }
+
+  @override
+  String get offersUnavailable => 'Offers are temporarily unavailable';
+
+  @override
+  String get billedMonthly => 'Billed monthly';
+
+  @override
+  String get billedAnnually => 'Billed annually';
+
+  @override
+  String get oneTimePurchase => 'One-time purchase';
+
+  @override
+  String get goalPriorityTitle => 'What matters most right now?';
+
+  @override
+  String get goalPriorityDesc => 'We use this to balance speed, recovery, and long-term consistency.';
+
+  @override
+  String get goalFatLossTitle => 'Lose fat faster';
+
+  @override
+  String get goalFatLossDesc => 'Favor stronger fasting windows when your profile can handle them.';
+
+  @override
+  String get goalHealthTitle => 'Improve health and energy';
+
+  @override
+  String get goalHealthDesc => 'Aim for a balanced plan that supports focus, energy, and adherence.';
+
+  @override
+  String get goalHabitTitle => 'Build a sustainable habit';
+
+  @override
+  String get goalHabitDesc => 'Start easier so the routine actually sticks.';
+
+  @override
+  String get routineTitle => 'Tell us about your routine';
+
+  @override
+  String get routineDesc => 'Sleep and fasting experience change how aggressive your starting plan should be.';
+
+  @override
+  String get fastingExperienceTitle => 'Fasting experience';
+
+  @override
+  String get experienceBeginnerTitle => 'Beginner';
+
+  @override
+  String get experienceBeginnerDesc => 'I am new to fasting or I usually stop early.';
+
+  @override
+  String get experienceIntermediateTitle => 'Some experience';
+
+  @override
+  String get experienceIntermediateDesc => 'I can handle 14-16 hour fasts without much trouble.';
+
+  @override
+  String get experienceAdvancedTitle => 'Advanced';
+
+  @override
+  String get experienceAdvancedDesc => 'I have done longer fasts and want a stronger protocol.';
+
+  @override
+  String get sleepPatternTitle => 'Sleep schedule';
+
+  @override
+  String get sleepRegularTitle => 'Regular sleep';
+
+  @override
+  String get sleepRegularDesc => 'My bedtime and wake time are mostly consistent.';
+
+  @override
+  String get sleepLateTitle => 'Late nights';
+
+  @override
+  String get sleepLateDesc => 'I often go to bed late or drift on weekends.';
+
+  @override
+  String get sleepIrregularTitle => 'Irregular or shift work';
+
+  @override
+  String get sleepIrregularDesc => 'My sleep changes a lot or I work rotating shifts.';
+
+  @override
+  String get smartPlanDashboardTitle => 'Your current strategy';
+
+  @override
+  String get smartPlanProfileTitle => 'Your onboarding strategy';
+
+  @override
+  String get smartPlanCurrentPlanLabel => 'Current plan';
+
+  @override
+  String get smartPlanRecommendedPlanLabel => 'Smart recommendation';
+
+  @override
+  String get smartPlanSignalsLabel => 'Signals';
+
+  @override
+  String get smartPlanTitle => 'Smart recommendation';
+
+  @override
+  String smartPlanBestMatch(String plan) {
+    return 'Best starting plan: $plan';
+  }
+
+  @override
+  String get smartPlanHint => 'You can change this later in settings.';
+
+  @override
+  String get smartPlanWhyRecovery => 'A gentler window is better for recovery, consistency, and adaptation.';
+
+  @override
+  String get smartPlanWhyActive => 'Your activity level favors a plan that protects energy and training quality.';
+
+  @override
+  String get smartPlanWhyBeginner => 'Your goal and experience suggest starting with a plan you can repeat consistently.';
+
+  @override
+  String get smartPlanWhyBalanced => 'This gives you stronger fasting benefits without becoming too aggressive.';
+
+  @override
+  String get smartPlanWhyAggressive => 'Your current profile can handle a tighter window if you want faster progress.';
+
+  @override
+  String get smartPlanWhySleep => 'Your sleep schedule favors a steadier plan that adds less stress to your routine.';
+
+  @override
+  String get smartPlanWhySustainable => 'A sustainable start usually leads to better adherence in the first weeks.';
+
+  @override
+  String smartPlanAlternativeEasier(String plan) {
+    return '$plan is a softer option if you want an easier adjustment.';
+  }
+
+  @override
+  String smartPlanAlternativeStronger(String plan) {
+    return '$plan is a stronger option if you want a more ambitious cut.';
+  }
+
+  @override
+  String smartPlanCoachGreeting(String plan, String goal, String experience, String sleep) {
+    return 'I\'m Fasty 🥑. You\'re currently on $plan and focused on $goal. With your $experience background and $sleep sleep pattern, I can help you stay consistent.';
+  }
+
+  @override
+  String get smartPlanUseRecommendation => 'Use smart recommendation';
+
+  @override
+  String get labelAlternative => 'ALTERNATIVE';
+
+  @override
+  String perMonthEquivalent(String price, String period) {
+    return '~$price/$period';
+  }
+
+  @override
+  String get circadianProExclusive => 'PRO EXCLUSIVE';
+
+  @override
+  String get circadianStartFast => 'Start Circadian Fast';
+
+  @override
+  String get sunriseLabel => 'Sunrise';
+
+  @override
+  String get sunsetLabel => 'Sunset';
+
+  @override
+  String get lastMeal => 'Last Meal';
+
+  @override
+  String get circadianTotalWindow => 'Total Fasting Window';
+
+  @override
+  String get hoursLabel => 'hours';
+
+  @override
+  String get basedOnLocalCoordinates => 'Based on your local coordinates';
+
+  @override
+  String get locationRequiredTitle => 'Location Required';
+
+  @override
+  String get locationRequiredDesc => 'We need your location to calculate the exact sunset time in your city.';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String get circadianStarted => 'Circadian Fast Started! 🌅';
+
+  @override
+  String get planCircadianTitle => 'Circadian Fast';
+
+  @override
+  String get planCircadianSubtitle => 'Align fasting with the sun';
+
+  @override
+  String get planCustomSubtitle => 'Set your own window';
+
+  @override
+  String get planPresets => 'Presets';
+
+  @override
+  String durationHoursShort(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String durationHoursMinutesShort(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String get endFastCongrats => 'You did it! 🎉';
+
+  @override
+  String endFastTotalTime(String time) {
+    return 'Total fasting time: $time';
+  }
+
+  @override
+  String get endFastHowFeel => 'How do you feel?';
+
+  @override
+  String get endFastSaveEat => 'Save & Eat';
+
+  @override
+  String get endFastKeepFasting => 'Cancel, keep fasting';
+
+  @override
+  String get proAccessLabel => 'PRO ACCESS';
+
+  @override
+  String get timerEndTitle => 'When did you break your fast?';
+
+  @override
+  String get timerCannotStartFuture => 'You can\'t start a fast in the future.';
+
+  @override
+  String get timerCannotEndFuture => 'You can\'t end a fast in the future.';
+
+  @override
+  String get timerEndBeforeStart => 'End time can\'t be earlier than the start time.';
+
+  @override
+  String get timerGoalReachedExtra => '🔥 Goal reached (+ extra)';
+
+  @override
+  String get timerWindowExtended => 'Window extended';
+
+  @override
+  String get timerRemainingInWindow => 'Remaining in window';
+
+  @override
+  String get timerUnknownPlan => 'Unknown Plan';
+
+  @override
+  String get timerLogMoodSymptoms => 'Log mood & symptoms';
+
+  @override
+  String get timerBreakAlreadyActive => 'You are already on a break. Enjoy your rest! ☕';
+
+  @override
+  String get timerRestDayStarted => 'Eating window closed. Enjoy your rest day! 🏖️';
+
+  @override
+  String get timerTakeBreak => 'Take a break';
+
+  @override
+  String get timerLogStartEarlier => 'Log start earlier';
+
+  @override
+  String get timerLogEndEarlier => 'Log end earlier';
+
+  @override
+  String get timerLogFastStartEarlier => 'Log fast start earlier';
+
+  @override
+  String get bodyMeasureChest => 'Chest';
+
+  @override
+  String get bodyMeasureWaist => 'Waist';
+
+  @override
+  String get bodyMeasureHips => 'Hips';
+
+  @override
+  String get bodyMeasureChestTitle => 'Chest Size (cm)';
+
+  @override
+  String get bodyMeasureWaistTitle => 'Waist Size (cm)';
+
+  @override
+  String get bodyMeasureHipsTitle => 'Hips Size (cm)';
+
+  @override
+  String get bodyMeasureAdd => 'Add';
+
+  @override
+  String get drinkWater => 'Water';
+
+  @override
+  String get drinkBlackCoffee => 'Black Coffee';
+
+  @override
+  String get drinkLatteSweetCoffee => 'Latte / Sweet Coffee';
+
+  @override
+  String get drinkGreenBlackTea => 'Green / Black Tea';
+
+  @override
+  String get drinkDietSoda => 'Diet Soda';
+
+  @override
+  String get drinkSweetSoda => 'Sweet Soda';
+
+  @override
+  String get drinkJuice => 'Juice';
+
+  @override
+  String get drinkAlcohol => 'Alcohol';
+
+  @override
+  String waterDrinkContainsCalories(String drink) {
+    return '$drink contains calories!';
+  }
+
+  @override
+  String get waterBreakFastWarning => 'Drinking this will break your current fast and automatically start your eating window. Are you sure?';
+
+  @override
+  String get waterConfirmDrinkBreakFast => 'Yes, I drank it';
+
+  @override
+  String get waterDrinkPrompt => 'What did you drink?';
+
+  @override
+  String waterFastStoppedByDrink(String drink) {
+    return 'Fasting timer stopped because you drank $drink.';
+  }
+
+  @override
+  String get waterUndoLastDrink => 'Undo last drink';
+
+  @override
+  String get unitMl => 'ml';
+
+  @override
+  String get healthBadgeSync => 'Sync';
+
+  @override
+  String get healthNoData => 'No Data';
+
+  @override
+  String get healthSleepLabel => 'Sleep';
+
+  @override
+  String get healthCyclePhaseLabel => 'Cycle Phase';
+
+  @override
+  String get cyclePhaseMenstruation => 'Menstruation';
+
+  @override
+  String get cyclePhaseFollicular => 'Follicular';
+
+  @override
+  String get cyclePhaseOvulation => 'Ovulation';
+
+  @override
+  String get cyclePhaseLuteal => 'Luteal';
+
+  @override
+  String get learnQuickBites => 'Quick Bites';
+
+  @override
+  String get storyFasting101 => 'Fasting 101';
+
+  @override
+  String get storyAutophagy => 'Autophagy';
+
+  @override
+  String get storyKetoDiet => 'Keto Diet';
+
+  @override
+  String get storyHydration => 'Hydration';
+
+  @override
+  String get storySleep => 'Sleep';
+
+  @override
+  String storyOpening(String title) {
+    return 'Opening story: $title...';
+  }
+
+  @override
+  String recipeSelected(String title) {
+    return 'Selected: $title';
+  }
+
+  @override
+  String get aiUpdatingConfig => 'AI is updating configuration. Please check your internet and restart the app.';
+
+  @override
+  String get aiSessionExpired => 'Coach session expired. Close and reopen the chat to continue.';
+
+  @override
+  String get aiEmptyResponse => 'I\'m still thinking. Please try again.';
+
+  @override
+  String get authGoogleFailed => 'Google Sign-In failed. Please try again.';
+
+  @override
+  String get authAppleUnavailable => 'Apple Sign-In is only available on iOS.';
+
+  @override
+  String get authAppleFailed => 'Apple Sign-In failed. Please try again.';
+
+  @override
+  String get journalSymptomsTitle => 'Symptoms & State';
+
+  @override
+  String get journalSymptomsPrefix => 'Symptoms';
+
+  @override
+  String get journalUpdated => 'Journal updated! 📝';
+
+  @override
+  String get symptomEnergy => 'Energy';
+
+  @override
+  String get symptomFocus => 'Focus';
+
+  @override
+  String get symptomHungry => 'Hungry';
+
+  @override
+  String get symptomFatigue => 'Fatigue';
+
+  @override
+  String get symptomHeadache => 'Headache';
+
+  @override
+  String get symptomThirsty => 'Thirsty';
+
+  @override
+  String get moodTerrible => 'Terrible';
+
+  @override
+  String get moodBad => 'Bad';
+
+  @override
+  String get moodOkay => 'Okay';
+
+  @override
+  String get moodGood => 'Good';
+
+  @override
+  String get moodGreat => 'Great';
 }

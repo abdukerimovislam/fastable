@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:fastable/models/fasting_stage.dart';
 import 'package:fastable/l10n/app_localizations.dart';
@@ -7,10 +6,7 @@ import 'package:fastable/widgets/glass_card.dart'; // 🔥 ИСПОЛЬЗУЕМ 
 class FastingStageWidget extends StatelessWidget {
   final Duration elapsedDuration;
 
-  const FastingStageWidget({
-    super.key,
-    required this.elapsedDuration,
-  });
+  const FastingStageWidget({super.key, required this.elapsedDuration});
 
   String _formatDuration(Duration d) {
     final h = d.inHours;
@@ -26,11 +22,14 @@ class FastingStageWidget extends StatelessWidget {
     final double elapsedHours = elapsedDuration.inMinutes / 60.0;
 
     // Получаем текущую стадию из нашей новой модели!
-    final FastingStage currentStage = FastingStage.getCurrentStage(elapsedHours);
+    final FastingStage currentStage = FastingStage.getCurrentStage(
+      elapsedHours,
+    );
     final int currentIndex = FastingStage.allStages.indexOf(currentStage);
 
     // Ищем следующую стадию
-    final FastingStage? nextStage = (currentIndex + 1 < FastingStage.allStages.length)
+    final FastingStage? nextStage =
+        (currentIndex + 1 < FastingStage.allStages.length)
         ? FastingStage.allStages[currentIndex + 1]
         : null;
 
@@ -40,7 +39,8 @@ class FastingStageWidget extends StatelessWidget {
     String nextStageTitle = "";
 
     if (nextStage != null && currentStage.endHour != null) {
-      final timeUntilNext = Duration(hours: currentStage.endHour!) - elapsedDuration;
+      final timeUntilNext =
+          Duration(hours: currentStage.endHour!) - elapsedDuration;
       if (!timeUntilNext.isNegative) {
         timeLeftText = _formatDuration(timeUntilNext);
       }
@@ -63,15 +63,18 @@ class FastingStageWidget extends StatelessWidget {
             height: 75,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: mainColor.withOpacity(0.15),
+              color: mainColor.withValues(alpha: 0.15),
               boxShadow: [
                 BoxShadow(
-                  color: mainColor.withOpacity(0.5),
+                  color: mainColor.withValues(alpha: 0.5),
                   blurRadius: 25,
                   spreadRadius: 2,
                 ),
               ],
-              border: Border.all(color: mainColor.withOpacity(0.8), width: 2),
+              border: Border.all(
+                color: mainColor.withValues(alpha: 0.8),
+                width: 2,
+              ),
             ),
             child: Icon(currentStage.icon, color: mainColor, size: 34),
           ),
@@ -87,7 +90,9 @@ class FastingStageWidget extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Colors.white,
               letterSpacing: 0.5,
-              shadows: [Shadow(color: mainColor.withOpacity(0.6), blurRadius: 15)], // Текст тоже слегка светится!
+              shadows: [
+                Shadow(color: mainColor.withValues(alpha: 0.6), blurRadius: 15),
+              ], // Текст тоже слегка светится!
             ),
           ),
 
@@ -99,7 +104,7 @@ class FastingStageWidget extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15,
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -116,12 +121,21 @@ class FastingStageWidget extends StatelessWidget {
                   children: [
                     Text(
                       "NEXT STAGE", // Можешь заменить на l10n.nextStage если есть
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       nextStageTitle,
-                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -130,7 +144,12 @@ class FastingStageWidget extends StatelessWidget {
                   children: [
                     Text(
                       l10n.timeLeft.toUpperCase(),
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -154,7 +173,7 @@ class FastingStageWidget extends StatelessWidget {
               clipBehavior: Clip.hardEdge,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(5),
-                color: Colors.white.withOpacity(0.06), // Темная подложка
+                color: Colors.white.withValues(alpha: 0.06), // Темная подложка
               ),
               child: Stack(
                 children: [
@@ -164,12 +183,15 @@ class FastingStageWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(5),
                         gradient: LinearGradient(
-                          colors: [mainColor.withOpacity(0.3), mainColor],
+                          colors: [mainColor.withValues(alpha: 0.3), mainColor],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),
                         boxShadow: [
-                          BoxShadow(color: mainColor.withOpacity(0.8), blurRadius: 10),
+                          BoxShadow(
+                            color: mainColor.withValues(alpha: 0.8),
+                            blurRadius: 10,
+                          ),
                         ],
                       ),
                     ),
@@ -182,20 +204,26 @@ class FastingStageWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.amber.withOpacity(0.5))
+                color: Colors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.emoji_events, color: Colors.amber),
-                  const SizedBox(width: 10),
-                  Text("Maximum Benefits Reached!", style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                  Icon(Icons.emoji_events, color: Colors.amber),
+                  SizedBox(width: 10),
+                  Text(
+                    "Maximum Benefits Reached!",
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
-            )
-          ]
+            ),
+          ],
         ],
       ),
     );

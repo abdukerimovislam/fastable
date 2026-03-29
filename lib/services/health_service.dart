@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 import 'package:injectable/injectable.dart';
 
@@ -10,15 +10,15 @@ class HealthService {
   static final _types = [
     HealthDataType.WEIGHT,
     HealthDataType.WATER,
-    HealthDataType.SLEEP_ASLEEP,      // Сон
+    HealthDataType.SLEEP_ASLEEP, // Сон
     HealthDataType.MENSTRUATION_FLOW, // Цикл
   ];
 
   static final _permissions = [
     HealthDataAccess.READ_WRITE, // WEIGHT
     HealthDataAccess.READ_WRITE, // WATER
-    HealthDataAccess.READ,       // SLEEP_ASLEEP
-    HealthDataAccess.READ,       // MENSTRUATION_FLOW
+    HealthDataAccess.READ, // SLEEP_ASLEEP
+    HealthDataAccess.READ, // MENSTRUATION_FLOW
   ];
 
   Future<bool> isHealthSupported() async {
@@ -37,7 +37,7 @@ class HealthService {
       );
       return requested;
     } catch (e) {
-      print("HealthService: Auth Error: $e");
+      debugPrint("HealthService: Auth Error: $e");
       return false;
     }
   }
@@ -52,7 +52,7 @@ class HealthService {
         endTime: DateTime.now(),
       );
     } catch (e) {
-      print("HealthService: Error writing weight: $e");
+      debugPrint("HealthService: Error writing weight: $e");
       return false;
     }
   }
@@ -73,7 +73,7 @@ class HealthService {
       final val = data.first.value as NumericHealthValue;
       return val.numericValue.toDouble();
     } catch (e) {
-      print("HealthService: Error reading weight: $e");
+      debugPrint("HealthService: Error reading weight: $e");
       return null;
     }
   }
@@ -88,7 +88,7 @@ class HealthService {
         endTime: DateTime.now(),
       );
     } catch (e) {
-      print("HealthService: Error writing water: $e");
+      debugPrint("HealthService: Error writing water: $e");
       return false;
     }
   }
@@ -107,12 +107,13 @@ class HealthService {
       double totalLiters = 0;
       for (var point in data) {
         if (point.value is NumericHealthValue) {
-          totalLiters += (point.value as NumericHealthValue).numericValue.toDouble();
+          totalLiters += (point.value as NumericHealthValue).numericValue
+              .toDouble();
         }
       }
       return totalLiters;
     } catch (e) {
-      print("HealthService: Error reading water: $e");
+      debugPrint("HealthService: Error reading water: $e");
       return 0.0;
     }
   }
@@ -122,7 +123,13 @@ class HealthService {
     try {
       final now = DateTime.now();
       final yesterday = now.subtract(const Duration(days: 1));
-      final from = DateTime(yesterday.year, yesterday.month, yesterday.day, 12, 0);
+      final from = DateTime(
+        yesterday.year,
+        yesterday.month,
+        yesterday.day,
+        12,
+        0,
+      );
 
       // Запрашиваем ТОЛЬКО SLEEP_ASLEEP
       List<HealthDataPoint> data = await _health.getHealthDataFromTypes(
@@ -143,7 +150,7 @@ class HealthService {
 
       return Duration(minutes: totalMinutes);
     } catch (e) {
-      print("HealthService: Error reading sleep: $e");
+      debugPrint("HealthService: Error reading sleep: $e");
       return Duration.zero;
     }
   }
@@ -167,7 +174,7 @@ class HealthService {
 
       return now.difference(lastPeriodDate).inDays;
     } catch (e) {
-      print("HealthService: Error reading menstruation: $e");
+      debugPrint("HealthService: Error reading menstruation: $e");
       return null;
     }
   }

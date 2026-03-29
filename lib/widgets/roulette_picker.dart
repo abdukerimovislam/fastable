@@ -31,10 +31,13 @@ class RoulettePicker<T> extends StatelessWidget {
         Container(
           height: itemHeight,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
             border: Border.symmetric(
-              horizontal: BorderSide(color: Colors.white.withOpacity(0.15), width: 1),
+              horizontal: BorderSide(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1,
+              ),
             ),
           ),
         ),
@@ -57,9 +60,9 @@ class RoulettePicker<T> extends StatelessWidget {
                 child: Text(
                   textMapper(items[index]),
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
                   ).merge(textStyle),
                 ),
               );
@@ -79,8 +82,8 @@ class RoulettePicker<T> extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFF1E1E1E).withOpacity(0.95),
-                          const Color(0xFF1E1E1E).withOpacity(0.0),
+                          const Color(0xFF1E1E1E).withValues(alpha: 0.95),
+                          const Color(0xFF1E1E1E).withValues(alpha: 0.0),
                         ],
                       ),
                     ),
@@ -94,8 +97,8 @@ class RoulettePicker<T> extends StatelessWidget {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          const Color(0xFF1E1E1E).withOpacity(0.95),
-                          const Color(0xFF1E1E1E).withOpacity(0.0),
+                          const Color(0xFF1E1E1E).withValues(alpha: 0.95),
+                          const Color(0xFF1E1E1E).withValues(alpha: 0.0),
                         ],
                       ),
                     ),

@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 enum FastingPhase { stopped, fasting, eating }
 
 class FastingState extends Equatable {
+  static const Object _unset = Object();
+
   final FastingPhase phase;
   final DateTime? startTime;
   final Duration elapsed;
@@ -40,7 +42,7 @@ class FastingState extends Equatable {
 
   FastingState copyWith({
     FastingPhase? phase,
-    DateTime? startTime,
+    Object? startTime = _unset,
     Duration? elapsed,
     Duration? goalDuration,
     int? planIndex,
@@ -48,7 +50,9 @@ class FastingState extends Equatable {
   }) {
     return FastingState(
       phase: phase ?? this.phase,
-      startTime: startTime ?? this.startTime,
+      startTime: identical(startTime, _unset)
+          ? this.startTime
+          : startTime as DateTime?,
       elapsed: elapsed ?? this.elapsed,
       goalDuration: goalDuration ?? this.goalDuration,
       planIndex: planIndex ?? this.planIndex,
@@ -57,5 +61,12 @@ class FastingState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [phase, startTime, elapsed, goalDuration, planIndex, isGoalReached];
+  List<Object?> get props => [
+    phase,
+    startTime,
+    elapsed,
+    goalDuration,
+    planIndex,
+    isGoalReached,
+  ];
 }

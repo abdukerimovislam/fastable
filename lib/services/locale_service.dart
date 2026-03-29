@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui'; // Для PlatformDispatcher
 
-const String kLocaleKey = 'app_locale';
+const String kLocaleKey = 'locale_code';
+const String _legacyLocaleKey = 'app_locale';
 
 class LocaleService {
   static final LocaleService _instance = LocaleService._internal();
@@ -10,16 +11,22 @@ class LocaleService {
   LocaleService._internal();
 
   // Слушатель изменений языка
-  final ValueNotifier<Locale> localeNotifier = ValueNotifier(const Locale('en'));
+  final ValueNotifier<Locale> localeNotifier = ValueNotifier(
+    const Locale('en'),
+  );
 
   // Загрузка сохраненного языка
   Future<void> loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? languageCode = prefs.getString(kLocaleKey);
+    final String? languageCode =
+        prefs.getString(kLocaleKey) ?? prefs.getString(_legacyLocaleKey);
 
     if (languageCode != null) {
       // Если пользователь уже выбирал язык, используем его
       localeNotifier.value = Locale(languageCode);
+      if (!prefs.containsKey(kLocaleKey)) {
+        await prefs.setString(kLocaleKey, languageCode);
+      }
     } else {
       // Если нет, пытаемся определить язык системы, если он поддерживается
       // (Для простоты, если ничего не сохранено, оставляем дефолтным или системным,
@@ -36,5 +43,8 @@ class LocaleService {
     localeNotifier.value = Locale(languageCode);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(kLocaleKey, languageCode);
+    if (prefs.containsKey(_legacyLocaleKey)) {
+      await prefs.remove(_legacyLocaleKey);
+    }
   }
 }

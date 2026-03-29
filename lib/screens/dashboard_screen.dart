@@ -4,25 +4,39 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import 'package:fastable/injection.dart';
 import 'package:fastable/services/notification_service.dart';
+import 'package:fastable/bloc/history/history_bloc.dart';
+import 'package:fastable/bloc/history/history_state.dart';
+import 'package:fastable/bloc/fasting/fasting_bloc.dart';
+import 'package:fastable/bloc/fasting/fasting_state.dart';
+import 'package:fastable/bloc/onboarding_profile/onboarding_profile_cubit.dart';
 import 'package:fastable/bloc/pro/pro_bloc.dart';
 import 'package:fastable/bloc/pro/pro_state.dart';
 import 'package:fastable/bloc/insight/insight_bloc.dart';
+import 'package:fastable/bloc/weight/weight_bloc.dart';
+import 'package:fastable/bloc/weight/weight_state.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/screens/pro_screen.dart';
 import 'package:fastable/screens/coach_screen.dart';
 import 'package:fastable/screens/medical_disclaimer_screen.dart';
 import 'package:fastable/screens/profile_screen.dart';
+import 'package:fastable/utils/onboarding_personalization.dart';
+import 'package:fastable/ui/app_layout.dart';
 
 import 'package:fastable/screens/dashboard_widgets/fasting_timer_card.dart';
-import 'package:fastable/screens/dashboard_widgets/water_weight_row.dart';
-import 'package:fastable/screens/dashboard_widgets/stats_row.dart';
+import 'package:fastable/screens/dashboard_widgets/smart_strategy_card.dart';
 import 'package:fastable/screens/dashboard_widgets/insight_card.dart';
 
-import 'dashboard_widgets/health_metric_row.dart'; // 🔥 ИСПРАВЛЕНИЕ: ДОБАВЛЕН ИМПОРТ
+// BENTO CARDS
+import 'package:fastable/screens/dashboard_widgets/bento_water_weight_cards.dart';
+import 'package:fastable/screens/dashboard_widgets/bento_health_cards.dart';
+import 'package:fastable/screens/dashboard_widgets/bento_stats_cards.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -38,12 +52,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   InterstitialAd? _interstitialAd;
 
   final String _bannerId = Platform.isAndroid
-      ? 'ca-app-pub-7039790177400209/1487192350'
-      : 'ca-app-pub-7039790177400209/7671069742';
+      ? dotenv.env['ANDROID_BANNER_AD_ID'] ?? ''
+      : dotenv.env['IOS_BANNER_AD_ID'] ?? '';
 
   final String _interstitialId = Platform.isAndroid
-      ? 'ca-app-pub-7039790177400209/3371119662'
-      : 'ca-app-pub-7039790177400209/9605397701';
+      ? dotenv.env['ANDROID_INTERSTITIAL_AD_ID'] ?? ''
+      : dotenv.env['IOS_INTERSTITIAL_AD_ID'] ?? '';
 
   @override
   void initState() {
@@ -60,10 +74,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     }
 
-    // Реклама грузится только если нет PRO (всегда на Android)
+    if (!mounted) return;
+
     final isPro = context.read<ProBloc>().state.isPro;
-    if (Platform.isAndroid || !isPro) {
+    if (Platform.isAndroid) {
       _loadAds();
+    } else if (!isPro) {
+      _loadInterstitial();
     }
   }
 
@@ -88,11 +105,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onAdFailedToLoad: (ad, err) {
           debugPrint('Banner failed: $err');
           ad.dispose();
+          _bannerAd = null;
+          _isBannerReady = false;
         },
       ),
     )..load();
 
-    _loadInterstitial();
+    if (_interstitialAd == null) {
+      _loadInterstitial();
+    }
   }
 
   void _loadInterstitial() {
@@ -102,16 +123,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
-          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-              _loadInterstitial();
-            },
-            onAdFailedToShowFullScreenContent: (ad, err) {
-              ad.dispose();
-              _loadInterstitial();
-            },
-          );
+          _interstitialAd!.fullScreenContentCallback =
+              FullScreenContentCallback(
+                onAdDismissedFullScreenContent: (ad) {
+                  ad.dispose();
+                  _loadInterstitial();
+                },
+                onAdFailedToShowFullScreenContent: (ad, err) {
+                  ad.dispose();
+                  _loadInterstitial();
+                },
+              );
         },
         onAdFailedToLoad: (err) => debugPrint('Interstitial failed: $err'),
       ),
@@ -131,157 +153,349 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isAndroid = Platform.isAndroid;
+    final onboardingProfile = context
+        .select<OnboardingProfileCubit, OnboardingProfileState>(
+          (cubit) => cubit.state,
+        );
+    final fastingState = context.select<FastingBloc, FastingState>(
+      (bloc) => bloc.state,
+    );
+    final weightState = context.select<WeightBloc, WeightState>(
+      (bloc) => bloc.state,
+    );
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final insightHistoryKey = context.select<HistoryBloc, String>((bloc) {
+      final HistoryState state = bloc.state;
+      final lastEndTime = state.records.isEmpty
+          ? ''
+          : state.records.last.endTime.toIso8601String();
+      return '${state.records.length}|${state.totalFastingTime.inMinutes}|$lastEndTime';
+    });
+    final insightWeightKey = context.select<WeightBloc, String>((bloc) {
+      final WeightState state = bloc.state;
+      final lastWeightDate = state.history.isEmpty
+          ? ''
+          : state.history.last.date.toIso8601String();
+      return '${state.currentWeight.toStringAsFixed(1)}|${state.history.length}|$lastWeightDate';
+    });
+    final personalization = OnboardingPersonalizationSnapshot.fromState(
+      onboardingProfile: onboardingProfile,
+      weightState: weightState,
+      fastingState: fastingState,
+    );
 
-    return BlocProvider(
-      create: (_) => getIt<InsightBloc>(),
-      child: BlocConsumer<ProBloc, ProState>(
-        listener: (context, proState) {
-          final shouldShowAds = isAndroid || !proState.isPro;
+    return BlocConsumer<ProBloc, ProState>(
+      listener: (context, proState) {
+        final shouldShowAds = isAndroid || !proState.isPro;
+        final shouldShowBannerAds = Platform.isAndroid && shouldShowAds;
 
-          if (!shouldShowAds) {
-            _bannerAd?.dispose();
-            _interstitialAd?.dispose();
-            setState(() {
-              _bannerAd = null;
-              _isBannerReady = false;
-            });
+        if (!shouldShowAds) {
+          _bannerAd?.dispose();
+          _interstitialAd?.dispose();
+          setState(() {
+            _bannerAd = null;
+            _isBannerReady = false;
+          });
 
-            final notificationService = getIt<NotificationService>();
-            notificationService.requestPermissions().then((_) {
-              notificationService.scheduleDailyInsight(l10n);
-            });
-          } else {
-            if (!_isBannerReady && _bannerAd == null) {
-              _loadAds();
-            }
-            getIt<NotificationService>().cancelDailyInsight();
+          final notificationService = getIt<NotificationService>();
+          notificationService.scheduleDailyInsight(l10n);
+        } else {
+          if (shouldShowBannerAds && !_isBannerReady && _bannerAd == null) {
+            _loadAds();
+          } else if (!shouldShowBannerAds && _interstitialAd == null) {
+            _loadInterstitial();
           }
-        },
-        builder: (context, proState) {
-          final showAds = isAndroid || !proState.isPro;
-          final showProBanner = !isAndroid && !proState.isPro;
-          final showProFeatures = !isAndroid;
+          getIt<NotificationService>().cancelDailyInsight(
+            clearPreference: true,
+          );
+        }
+      },
+      builder: (context, proState) {
+        final showAds = isAndroid || !proState.isPro;
+        final showBannerAds =
+            Platform.isAndroid &&
+            showAds &&
+            _isBannerReady &&
+            _bannerAd != null;
+        final showProBanner = !isAndroid && !proState.isPro;
+        final showProFeatures = !isAndroid;
+        final insightProviderKey = ValueKey(
+          'insight:$localeCode:$insightHistoryKey:$insightWeightKey',
+        );
+        final sectionGap = AppLayout.sectionGap(context);
 
-          return UpgradeAlert(
-            upgrader: Upgrader(),
-            dialogStyle: Platform.isIOS
-                ? UpgradeDialogStyle.cupertino
-                : UpgradeDialogStyle.material,
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              body: SafeArea(
-                bottom: false,
+        // Grid spacing definition for StaggeredGrid
+        final double gridSpacing = sectionGap;
+
+        return UpgradeAlert(
+          upgrader: Upgrader(),
+          dialogStyle: Platform.isIOS
+              ? UpgradeDialogStyle.cupertino
+              : UpgradeDialogStyle.material,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: SafeArea(
+              bottom: false,
+              child: AnimationLimiter(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(16, 10, 16, 100 + MediaQuery.of(context).padding.bottom),
+                  physics: const BouncingScrollPhysics(),
+                  padding: AppLayout.screenPadding(
+                    context,
+                    top: 10,
+                    bottom: 92,
+                    includeBottomSafeArea: true,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // --- HEADER ---
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(l10n.dashboardToday, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 16)),
-                              Text(l10n.dashboardOverview, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.account_circle_outlined, color: Colors.white, size: 28),
-                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.info_outline, color: Colors.white54, size: 28),
-                                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalDisclaimerScreen())),
-                              ),
-                              if (showProFeatures) ...[
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => Navigator.push(context, CoachScreen.route()),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.purpleAccent.withOpacity(0.15),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.purpleAccent.withOpacity(0.4), width: 1),
-                                    ),
-                                    child: const Icon(Icons.auto_awesome, color: Colors.purpleAccent, size: 28),
+                    children: AnimationConfiguration.toStaggeredList(
+                      duration: const Duration(milliseconds: 375),
+                      childAnimationBuilder: (widget) => SlideAnimation(
+                        verticalOffset: 40.0,
+                        curve: Curves.easeOutCubic,
+                        child: FadeInAnimation(child: widget),
+                      ),
+                      children: [
+                        // --- HEADER ---
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.dashboardOverview,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ]
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // --- РЕКЛАМА БАННЕР ---
-                      if (showAds && _isBannerReady && _bannerAd != null) ...[
-                        Container(
-                          width: double.infinity,
-                          height: _bannerAd!.size.height.toDouble(),
-                          alignment: Alignment.center,
-                          child: AdWidget(ad: _bannerAd!),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // --- ТАЙМЕР ГОЛОДАНИЯ ---
-                      FastingTimerCard(
-                        onStartFasting: showAds ? _showInterstitialAd : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // --- AI INSIGHT CARD ---
-                      if (showProFeatures)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: InsightCard(isPro: proState.isPro),
-                        ),
-
-                      // --- СТАТИСТИКА (ФАЗА, СТРИК, ИМТ) ---
-                      const StatsRow(),
-                      const SizedBox(height: 12),
-
-                      // --- 🔥 НОВАЯ ПАНЕЛЬ (СОН И ЦИКЛ) ---
-                      const HealthMetricsRow(),
-                      const SizedBox(height: 16),
-
-                      // --- ВОДА И ВЕС ---
-                      const WaterWeightRow(),
-                      const SizedBox(height: 16),
-
-                      // --- PRO БАННЕР ---
-                      if (showProBanner)
-                        GlassCard(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen())),
-                          child: Row(children: [
-                            Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), shape: BoxShape.circle),
-                                child: const Icon(Icons.star, color: Colors.amber)),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(l10n.proBannerTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                                Text(l10n.proBannerDesc, style: const TextStyle(color: Colors.white54, fontSize: 13))
-                              ]),
+                              ],
                             ),
-                            Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3))
-                          ]),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.account_circle_outlined,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ProfileScreen(),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.info_outline,
+                                    color: Colors.white54,
+                                    size: 28,
+                                  ),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const MedicalDisclaimerScreen(),
+                                    ),
+                                  ),
+                                ),
+                                if (showProFeatures) ...[
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      CoachScreen.route(),
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.purpleAccent.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.purpleAccent.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.auto_awesome,
+                                        color: Colors.purpleAccent,
+                                        size: 28,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
                         ),
-                    ],
+
+                        SizedBox(height: sectionGap + 4),
+
+                        // --- РЕКЛАМА БАННЕР ---
+                        if (showBannerAds) ...[
+                          Container(
+                            width: double.infinity,
+                            height: _bannerAd!.size.height.toDouble(),
+                            alignment: Alignment.center,
+                            child: AdWidget(
+                              key: ObjectKey(_bannerAd),
+                              ad: _bannerAd!,
+                            ),
+                          ),
+                          SizedBox(height: sectionGap + 2),
+                        ],
+
+                        // --- THE BENTO GRID START ---
+                        StaggeredGrid.count(
+                          crossAxisCount: 4, // 4-column dense grid
+                          mainAxisSpacing: gridSpacing,
+                          crossAxisSpacing: gridSpacing,
+                          children: [
+                            // 1. HERO TIMER CARD (Full Width - 4 columns)
+                            StaggeredGridTile.fit(
+                              crossAxisCellCount: 4,
+                              child: FastingTimerCard(
+                                onStartFasting: showAds ? _showInterstitialAd : null,
+                              ),
+                            ),
+
+                            // 2. WATER (Square - 2 columns)
+                            const StaggeredGridTile.fit(
+                              crossAxisCellCount: 2,
+                              child: BentoWaterCard(),
+                            ),
+
+                            // 3. WEIGHT (Square - 2 columns)
+                            const StaggeredGridTile.fit(
+                              crossAxisCellCount: 2,
+                              child: BentoWeightCard(),
+                            ),
+
+                            // 4. SMART STRATEGY (Full width - 4 columns)
+                            StaggeredGridTile.fit(
+                              crossAxisCellCount: 4,
+                              child: SmartStrategyCard(
+                                l10n: l10n, personalization: personalization
+                              ),
+                            ),
+
+                            // --- DENSE MICRO ROW: Phase, Streak, BMI, Sleep ---
+                            // Each takes 1 column (25% width) side-by-side!
+                            const StaggeredGridTile.fit(
+                              crossAxisCellCount: 1,
+                              child: BentoPhaseCard(),
+                            ),
+                            const StaggeredGridTile.fit(
+                              crossAxisCellCount: 1,
+                              child: BentoStreakCard(),
+                            ),
+                            const StaggeredGridTile.fit(
+                              crossAxisCellCount: 1,
+                              child: BentoBmiCard(),
+                            ),
+                            StaggeredGridTile.fit(
+                              crossAxisCellCount: 1,
+                              child: BentoHealthCards(
+                                builder: (context, isLoading, isConnected, sleep, cycle, onRefresh) {
+                                  return BentoSleepCard(
+                                    isLoading: isLoading, isConnected: isConnected, sleepDuration: sleep, onTap: onRefresh
+                                  );
+                                },
+                              ),
+                            ),
+
+                            // CYCLE (Full width - 4 columns)
+                            StaggeredGridTile.fit(
+                              crossAxisCellCount: 4, 
+                              child: BentoHealthCards(
+                                builder: (context, isLoading, isConnected, sleep, cycle, onRefresh) {
+                                  return BentoCycleCard(
+                                    isLoading: isLoading, isConnected: isConnected, cycleDays: cycle, onTap: onRefresh
+                                  );
+                                },
+                              ),
+                            ),
+
+                            // AI INSIGHT CARD (4 cols - if Pro)
+                            if (showProFeatures)
+                              StaggeredGridTile.fit(
+                                crossAxisCellCount: 4,
+                                child: proState.isPro
+                                    ? BlocProvider(
+                                        key: insightProviderKey,
+                                        create: (_) => getIt<InsightBloc>(),
+                                        child: const InsightCard(isPro: true),
+                                      )
+                                    : const InsightCard(isPro: false),
+                              ),
+
+                            // PRO BANNER (4 Cols)
+                            if (showProBanner)
+                              StaggeredGridTile.fit(
+                                crossAxisCellCount: 4,
+                                child: GlassCard(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const ProScreen()),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.withValues(alpha: 0.2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.star, color: Colors.amber),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              l10n.proBannerTitle,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Text(
+                                              l10n.proBannerDesc,
+                                              style: const TextStyle(
+                                                color: Colors.white54,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

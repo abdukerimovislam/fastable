@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 
 enum NotificationCategory { bio, progress, water, weight }

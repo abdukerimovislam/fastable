@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
@@ -58,15 +59,15 @@ class InsightBloc extends Bloc<InsightEvent, InsightState> {
   final HistoryRepository _historyRepository;
   final WeightRepository _weightRepository;
 
-  InsightBloc(
-      this._aiService,
-      this._historyRepository,
-      this._weightRepository,
-      ) : super(InsightInitial()) {
+  InsightBloc(this._aiService, this._historyRepository, this._weightRepository)
+    : super(InsightInitial()) {
     on<FetchDailyInsight>(_onFetch);
   }
 
-  Future<void> _onFetch(FetchDailyInsight event, Emitter<InsightState> emit) async {
+  Future<void> _onFetch(
+    FetchDailyInsight event,
+    Emitter<InsightState> emit,
+  ) async {
     // ⚠️ ВАЖНО: Мы убрали проверку (state is InsightLoaded),
     // чтобы при добавлении новых записей инсайт обновлялся сразу,
     // а не висел старый "Мало данных".
@@ -97,14 +98,16 @@ class InsightBloc extends Bloc<InsightEvent, InsightState> {
         }
       } catch (e) {
         // Если ошибка веса, не ломаем блок, просто данные будут 0.0
-        print("⚠️ InsightBloc: Ошибка получения веса: $e");
+        debugPrint("⚠️ InsightBloc: Ошибка получения веса: $e");
       }
 
       // 3. ПОДГОТОВКА ДАННЫХ ДЛЯ AI
       // Берем последние 7 записей
       final recentRecords = allRecords.take(7);
 
-      final List<Map<String, dynamic>> historyData = recentRecords.map((record) {
+      final List<Map<String, dynamic>> historyData = recentRecords.map((
+        record,
+      ) {
         return {
           'day': DateFormat('E').format(record.endTime), // "Mon", "Tue"...
           'hours': record.duration.inHours,

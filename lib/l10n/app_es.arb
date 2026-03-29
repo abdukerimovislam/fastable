@@ -615,6 +615,7 @@
                                                    "msgStartJourney": "Comienza tu camino hoy",
                                                    "lblToday": "Hoy",
                                                    "lblYesterday": "Ayer",
+                                                   "confirmTime": "Confirmar hora",
                                                    "lblFastingTypeCircadian": "Circadiano",
                                                    "lblFastingTypeWarrior": "Guerrero",
                                                    "lblFastingTypeOmad": "OMAD",
@@ -669,6 +670,9 @@
                                                            "msgLoginFailed": "Error al iniciar sesión: {error}",
                                                            "msgAppleLoginFailed": "Error al iniciar sesión con Apple: {error}",
                                                            "msgDeleteError": "Error al eliminar la cuenta",
+                                                           "msgDeleteReauthCancelled": "Se canceló la eliminación de la cuenta.",
+                                                           "msgDeleteReauthFailed": "No pudimos confirmar tu identidad. Inténtalo de nuevo.",
+                                                           "msgDeleteReauthUnavailable": "Vuelve a iniciar sesión con el proveedor original antes de eliminar esta cuenta.",
                                                            "stepLanguage": "Seleccionar idioma",
                                                              "stepBodyMetrics": "Métricas corporales",
                                                              "stepBodyMetricsDesc": "Ayúdanos a calcular tu IMC y objetivos",
@@ -738,7 +742,296 @@
                                                                "deleteAccountContent": "Esta acción es irreversible. Todo tu historial de ayuno y datos locales serán eliminados permanentemente.",
                                                                "cancelButton": "Cancelar",
                                                                "deleteButton": "Eliminar",
-                                                               "planExtended": "Prolongado"
+                                                               "planExtended": "Prolongado",
+                                                               "circadianProExclusive": "EXCLUSIVO PRO",
+                                                               "circadianStartFast": "Iniciar ayuno circadiano",
+                                                               "sunriseLabel": "Amanecer",
+                                                               "sunsetLabel": "Atardecer",
+                                                               "lastMeal": "Última comida",
+                                                               "circadianTotalWindow": "Ventana total de ayuno",
+                                                               "hoursLabel": "horas",
+                                                               "basedOnLocalCoordinates": "Según tus coordenadas locales",
+                                                               "locationRequiredTitle": "Se requiere ubicación",
+                                                               "locationRequiredDesc": "Necesitamos tu ubicación para calcular la hora exacta del atardecer en tu ciudad.",
+                                                               "tryAgain": "Intentar de nuevo",
+                                                               "circadianStarted": "¡Ayuno circadiano iniciado! 🌅",
+                                                               "planCircadianTitle": "Ayuno circadiano",
+                                                               "planCircadianSubtitle": "Alinea el ayuno con el sol",
+                                                               "planCustomSubtitle": "Configura tu propia ventana",
+                                                               "planPresets": "PLANES PREDEFINIDOS",
+                                                               "durationHoursShort": "{hours}h",
+                                                               "@durationHoursShort": {
+                                                                 "placeholders": {
+                                                                   "hours": {
+                                                                     "type": "int"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "durationHoursMinutesShort": "{hours} h {minutes} min",
+                                                               "@durationHoursMinutesShort": {
+                                                                 "placeholders": {
+                                                                   "hours": {
+                                                                     "type": "int"
+                                                                   },
+                                                                   "minutes": {
+                                                                     "type": "int"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "endFastCongrats": "¡Lo lograste! 🎉",
+                                                               "endFastTotalTime": "Tiempo total de ayuno: {time}",
+                                                               "@endFastTotalTime": {
+                                                                 "placeholders": {
+                                                                   "time": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "endFastHowFeel": "¿Cómo te sientes?",
+                                                               "endFastSaveEat": "Guardar y comer",
+                                                               "endFastKeepFasting": "Cancelar, seguir ayunando",
+                                                               "proAccessLabel": "ACCESO PRO",
+                                                               "continueForPrice": "Continuar por {price}",
+                                                               "@continueForPrice": {
+                                                                 "placeholders": {
+                                                                   "price": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "offersUnavailable": "Las ofertas no están disponibles temporalmente",
+                                                               "billedMonthly": "Cobro mensual",
+                                                               "billedAnnually": "Cobro anual",
+                                                               "oneTimePurchase": "Pago único",
+                                                               "goalPriorityTitle": "¿Qué es lo más importante para ti ahora?",
+                                                               "goalPriorityDesc": "Usamos esto para equilibrar velocidad, recuperación y constancia a largo plazo.",
+                                                               "goalFatLossTitle": "Perder grasa más rápido",
+                                                               "goalFatLossDesc": "Priorizamos ventanas más intensas cuando tu perfil puede sostenerlas.",
+                                                               "goalHealthTitle": "Mejorar salud y energía",
+                                                               "goalHealthDesc": "Buscamos un plan equilibrado que apoye enfoque, energía y adherencia.",
+                                                               "goalHabitTitle": "Crear un hábito sostenible",
+                                                               "goalHabitDesc": "Empezamos más fácil para que la rutina realmente se mantenga.",
+                                                               "routineTitle": "Cuéntanos sobre tu rutina",
+                                                               "routineDesc": "Tu sueño y tu experiencia con el ayuno cambian lo agresivo que debería ser tu plan inicial.",
+                                                               "fastingExperienceTitle": "Experiencia con ayuno",
+                                                               "experienceBeginnerTitle": "Principiante",
+                                                               "experienceBeginnerDesc": "Soy nuevo en el ayuno o suelo detenerme antes de tiempo.",
+                                                               "experienceIntermediateTitle": "Algo de experiencia",
+                                                               "experienceIntermediateDesc": "Puedo hacer ayunos de 14-16 horas sin demasiada dificultad.",
+                                                               "experienceAdvancedTitle": "Avanzado",
+                                                               "experienceAdvancedDesc": "Ya hice ayunos más largos y quiero un protocolo más fuerte.",
+                                                               "sleepPatternTitle": "Horario de sueño",
+                                                               "sleepRegularTitle": "Sueño regular",
+                                                               "sleepRegularDesc": "Mi hora de dormir y despertar suele ser bastante constante.",
+                                                               "sleepLateTitle": "Noches tardías",
+                                                               "sleepLateDesc": "A menudo me acuesto tarde o cambio mucho los fines de semana.",
+                                                               "sleepIrregularTitle": "Irregular o turnos",
+                                                               "sleepIrregularDesc": "Mi sueño cambia mucho o trabajo por turnos rotativos.",
+                                                               "smartPlanDashboardTitle": "Tu estrategia actual",
+                                                               "smartPlanProfileTitle": "Tu estrategia de onboarding",
+                                                               "smartPlanCurrentPlanLabel": "Plan actual",
+                                                               "smartPlanRecommendedPlanLabel": "Recomendación inteligente",
+                                                               "smartPlanSignalsLabel": "Señales",
+                                                               "smartPlanTitle": "Recomendación inteligente",
+                                                               "smartPlanBestMatch": "Mejor plan inicial: {plan}",
+                                                               "@smartPlanBestMatch": {
+                                                                 "placeholders": {
+                                                                   "plan": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "smartPlanHint": "Podrás cambiarlo más tarde en ajustes.",
+                                                               "smartPlanWhyRecovery": "Una ventana más suave es mejor para la recuperación, la constancia y la adaptación.",
+                                                               "smartPlanWhyActive": "Tu nivel de actividad necesita un plan que proteja la energía y la calidad del entrenamiento.",
+                                                               "smartPlanWhyBeginner": "Tu objetivo y tu experiencia indican que conviene empezar con un plan que puedas repetir con constancia.",
+                                                               "smartPlanWhyBalanced": "Te da beneficios de ayuno más fuertes sin volverse demasiado agresivo.",
+                                                               "smartPlanWhyAggressive": "Tu perfil actual puede manejar una ventana más ajustada si buscas un progreso más rápido.",
+                                                               "smartPlanWhySleep": "Tu horario de sueño encaja mejor con un plan más estable y con menos estrés extra.",
+                                                               "smartPlanWhySustainable": "Un comienzo sostenible suele dar una mejor adherencia durante las primeras semanas.",
+                                                               "smartPlanAlternativeEasier": "{plan} es una opción más suave si quieres una adaptación más fácil.",
+                                                               "@smartPlanAlternativeEasier": {
+                                                                 "placeholders": {
+                                                                   "plan": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "smartPlanAlternativeStronger": "{plan} es una opción más intensa si quieres un enfoque más ambicioso.",
+                                                               "@smartPlanAlternativeStronger": {
+                                                                 "placeholders": {
+                                                                   "plan": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "smartPlanCoachGreeting": "Soy Fasty 🥑. Ahora mismo estás en {plan} y tu foco principal es {goal}. Con tu nivel de {experience} y tu patrón de sueño {sleep}, puedo ayudarte a mantener la constancia.",
+                                                               "@smartPlanCoachGreeting": {
+                                                                 "placeholders": {
+                                                                   "plan": {
+                                                                     "type": "String"
+                                                                   },
+                                                                   "goal": {
+                                                                     "type": "String"
+                                                                   },
+                                                                   "experience": {
+                                                                     "type": "String"
+                                                                   },
+                                                                   "sleep": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "smartPlanUseRecommendation": "Usar recomendación inteligente",
+                                                               "labelAlternative": "ALTERNATIVA",
+                                                               "perMonthEquivalent": "~{price}/{period}",
+                                                               "@perMonthEquivalent": {
+                                                                 "placeholders": {
+                                                                   "price": {
+                                                                     "type": "String"
+                                                                   },
+                                                                   "period": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "circadianEnabled": "Modo circadiano activado",
+                                                               "circadianDisabled": "Modo circadiano desactivado",
+                                                               "notifBio4hTitle": "Azúcar en sangre estabilizada 🩸",
+                                                               "notifBio4hBody": "Tus niveles de insulina están bajando. La sensación de hambre falsa puede desaparecer.",
+                                                               "notifBio8hTitle": "Estómago vacío ✅",
+                                                               "notifBio8hBody": "La digestión terminó. Tu cuerpo está entrando en modo de reparación.",
+                                                               "notifBio12hTitle": "Entrando en cetosis 🔥",
+                                                               "notifBio12hBody": "¡Tu cuerpo ha comenzado a quemar la grasa almacenada para obtener energía!",
+                                                               "notifBio16hTitle": "Pico de quema de grasa ⚡️",
+                                                               "notifBio16hBody": "El metabolismo está acelerado. Estás en la zona de quema intensa.",
+                                                               "notifBio18hTitle": "La autofagia comenzó ♻️",
+                                                               "notifBio18hBody": "La limpieza celular está activa. Tu cuerpo está reciclando células viejas.",
+                                                               "notifBio24hTitle": "Aumento de HGH 🛡",
+                                                               "notifBio24hBody": "Los niveles de la hormona del crecimiento aumentan para proteger tus músculos.",
+                                                               "notifProg50Title": "¡Ya vas por la mitad! 🚀",
+                                                               "notifProg50Body": "Has superado el 50% de tu objetivo. ¡Sigue así!",
+                                                               "notifProg1hTitle": "Queda 1 hora ⏳",
+                                                               "notifProg1hBody": "¡Casi terminas! Ya puedes empezar a preparar tu comida.",
+                                                               "notifProgFinishTitle": "¡Objetivo alcanzado! 🏆",
+                                                               "notifProgFinishBody": "¡Lo lograste! No olvides detener el temporizador.",
+                                                               "notifWaterTitle": "Bebe agua 💧",
+                                                               "notifWaterBody": "La hidratación acelera tu metabolismo y reduce el hambre.",
+                                                               "notifWeightTitle": "Pesaje matutino ⚖️",
+                                                               "notifWeightBody": "La mañana es el mejor momento para registrar tu peso.",
+                                                               "zoneSugarRises": "Sube el azúcar en sangre",
+                                                               "zoneSugarRisesDesc": "Tu cuerpo está procesando tu última comida y almacenando energía.",
+                                                               "zoneSugarDrops": "Baja el azúcar en sangre",
+                                                               "zoneSugarDropsDesc": "La digestión termina. Los niveles de azúcar en sangre vuelven a la normalidad.",
+                                                               "zoneFatBurning": "Quema de grasa",
+                                                               "zoneFatBurningDesc": "Tu cuerpo comienza a quemar la grasa almacenada para obtener energía.",
+                                                               "zoneKetosis": "Cetosis",
+                                                               "zoneKetosisDesc": "La quema de grasa se acelera. La claridad mental aumenta.",
+                                                               "zoneAutophagy": "Autofagia",
+                                                               "zoneAutophagyDesc": "Comienza la reparación y el reciclaje celular. Hay efectos antienvejecimiento.",
+                                                               "zoneGrowthHormone": "Hormona del crecimiento",
+                                                               "zoneGrowthHormoneDesc": "Pico de quema de grasa, reparación de tejidos y preservación muscular.",
+                                                               "timerEndTitle": "¿Cuándo terminaste tu ayuno?",
+                                                               "timerCannotStartFuture": "No puedes iniciar un ayuno en el futuro.",
+                                                               "timerCannotEndFuture": "No puedes terminar un ayuno en el futuro.",
+                                                               "timerEndBeforeStart": "La hora de finalización no puede ser anterior a la de inicio.",
+                                                               "timerGoalReachedExtra": "🔥 Objetivo alcanzado (+ extra)",
+                                                               "timerWindowExtended": "Ventana extendida",
+                                                               "timerRemainingInWindow": "Tiempo restante de la ventana",
+                                                               "timerUnknownPlan": "Plan desconocido",
+                                                               "timerLogMoodSymptoms": "Registrar estado y síntomas",
+                                                               "timerBreakAlreadyActive": "Ya estás en un descanso. ¡Disfruta tu pausa! ☕",
+                                                               "timerRestDayStarted": "La ventana de comida se cerró. ¡Disfruta tu día de descanso! 🏖️",
+                                                               "timerTakeBreak": "Tomar un descanso",
+                                                               "timerLogStartEarlier": "Registrar inicio anterior",
+                                                               "timerLogEndEarlier": "Registrar final anterior",
+                                                               "timerLogFastStartEarlier": "Registrar inicio del ayuno anterior",
+                                                               "bodyMeasureChest": "Pecho",
+                                                               "bodyMeasureWaist": "Cintura",
+                                                               "bodyMeasureHips": "Caderas",
+                                                               "bodyMeasureChestTitle": "Medida de pecho (cm)",
+                                                               "bodyMeasureWaistTitle": "Medida de cintura (cm)",
+                                                               "bodyMeasureHipsTitle": "Medida de caderas (cm)",
+                                                               "bodyMeasureAdd": "Agregar",
+                                                               "drinkWater": "Agua",
+                                                               "drinkBlackCoffee": "Café negro",
+                                                               "drinkLatteSweetCoffee": "Latte / café dulce",
+                                                               "drinkGreenBlackTea": "Té verde / negro",
+                                                               "drinkDietSoda": "Refresco dietético",
+                                                               "drinkSweetSoda": "Refresco azucarado",
+                                                               "drinkJuice": "Jugo",
+                                                               "drinkAlcohol": "Alcohol",
+                                                               "waterDrinkContainsCalories": "¡{drink} contiene calorías!",
+                                                               "@waterDrinkContainsCalories": {
+                                                                 "placeholders": {
+                                                                   "drink": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "waterBreakFastWarning": "Beber esto romperá tu ayuno actual y abrirá automáticamente tu ventana de comida. ¿Seguro que quieres continuar?",
+                                                               "waterConfirmDrinkBreakFast": "Sí, lo bebí",
+                                                               "waterDrinkPrompt": "¿Qué bebiste?",
+                                                               "waterFastStoppedByDrink": "El temporizador del ayuno se detuvo porque bebiste {drink}.",
+                                                               "@waterFastStoppedByDrink": {
+                                                                 "placeholders": {
+                                                                   "drink": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "waterUndoLastDrink": "Deshacer última bebida",
+                                                               "unitMl": "ml",
+                                                               "healthBadgeSync": "Sincr.",
+                                                               "healthNoData": "Sin datos",
+                                                               "healthSleepLabel": "Sueño",
+                                                               "healthCyclePhaseLabel": "Fase del ciclo",
+                                                               "cyclePhaseMenstruation": "Menstruación",
+                                                               "cyclePhaseFollicular": "Folicular",
+                                                               "cyclePhaseOvulation": "Ovulación",
+                                                               "cyclePhaseLuteal": "Lútea",
+                                                               "learnQuickBites": "Consejos rápidos",
+                                                               "storyFasting101": "Ayuno 101",
+                                                               "storyAutophagy": "Autofagia",
+                                                               "storyKetoDiet": "Dieta keto",
+                                                               "storyHydration": "Hidratación",
+                                                               "storySleep": "Sueño",
+                                                               "storyOpening": "Abriendo historia: {title}...",
+                                                               "@storyOpening": {
+                                                                 "placeholders": {
+                                                                   "title": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "recipeSelected": "Seleccionado: {title}",
+                                                               "@recipeSelected": {
+                                                                 "placeholders": {
+                                                                   "title": {
+                                                                     "type": "String"
+                                                                   }
+                                                                 }
+                                                               },
+                                                               "aiUpdatingConfig": "La IA está actualizando la configuración. Revisa tu internet y reinicia la app.",
+                                                               "aiSessionExpired": "La sesión del coach expiró. Cierra y vuelve a abrir el chat.",
+                                                               "aiEmptyResponse": "Todavía estoy pensando. Inténtalo de nuevo.",
+                                                               "authGoogleFailed": "No se pudo iniciar sesión con Google. Inténtalo de nuevo.",
+                                                               "authAppleUnavailable": "El inicio de sesión con Apple solo está disponible en iOS.",
+                                                               "authAppleFailed": "No se pudo iniciar sesión con Apple. Inténtalo de nuevo.",
+                                                               "journalSymptomsTitle": "Síntomas y estado",
+                                                               "journalSymptomsPrefix": "Síntomas",
+                                                               "journalUpdated": "¡Diario actualizado! 📝",
+                                                               "symptomEnergy": "Energía",
+                                                               "symptomFocus": "Enfoque",
+                                                               "symptomHungry": "Hambre",
+                                                               "symptomFatigue": "Fatiga",
+                                                               "symptomHeadache": "Dolor de cabeza",
+                                                               "symptomThirsty": "Sed",
+                                                               "moodTerrible": "Terrible",
+                                                               "moodBad": "Mal",
+                                                               "moodOkay": "Bien",
+                                                               "moodGood": "Bueno",
+                                                               "moodGreat": "Genial"
 
 
 

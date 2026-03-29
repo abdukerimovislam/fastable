@@ -5,62 +5,39 @@ import 'package:injectable/injectable.dart';
 
 @lazySingleton
 class CircadianService {
-
-  /// Возвращает точное локальное время СЛЕДУЮЩЕГО рассвета и ПОСЛЕДНЕГО заката
-  Future<Map<String, DateTime>?> getAccurateSunTimes() async {
+  Future<Map<String, DateTime>?> getAccurateSunTimes({
+    DateTime? referenceTime,
+  }) async {
     try {
       final position = await _determinePosition();
       if (position == null) return null;
 
-      final now = DateTime.now();
+      final now = referenceTime ?? DateTime.now();
 
-      // 1. Получаем данные на сегодня строго по UTC (Без двойных сдвигов!)
-      final todaySun = getSunriseSunset(
-        position.latitude,
-        position.longitude,
-        const Duration(), // 0 offset, работаем в чистом UTC
-        now.toUtc(),
-      );
+      DateTime sunrise = _resolveSunrise(position, now);
+      DateTime sunset = _resolveSunset(position, now);
 
-      // Переводим в локальное время силами самого телефона
-      DateTime localSunrise = todaySun.sunrise.toLocal();
-      DateTime localSunset = todaySun.sunset.toLocal();
-
-      // 2. Если сегодняшний рассвет уже прошел (например, сейчас вечер),
-      // нам нужен рассвет на ЗАВТРА!
-      if (now.isAfter(localSunrise)) {
-        final tomorrowSun = getSunriseSunset(
-          position.latitude,
-          position.longitude,
-          const Duration(),
-          now.add(const Duration(days: 1)).toUtc(),
-        );
-        localSunrise = tomorrowSun.sunrise.toLocal();
+      // 3. Цель: Следующий Рассвет.
+      // Если сегодняшний рассвет уже прошел (сейчас день или вечер), берем завтрашний.
+      if (now.isAfter(sunrise)) {
+        final tomorrow = now.add(const Duration(days: 1));
+        sunrise = _resolveSunrise(position, tomorrow);
       }
 
-      // 3. Закат должен строго предшествовать следующему рассвету.
-      // Если это не так, берем вчерашний закат.
-      if (localSunset.isAfter(localSunrise)) {
-        final yesterdaySun = getSunriseSunset(
-          position.latitude,
-          position.longitude,
-          const Duration(),
-          now.subtract(const Duration(days: 1)).toUtc(),
-        );
-        localSunset = yesterdaySun.sunset.toLocal();
+      // 4. Начало: Последний Закат.
+      // Закат логически должен быть ДО следующего рассвета.
+      if (sunset.isAfter(sunrise)) {
+        final yesterday = now.subtract(const Duration(days: 1));
+        sunset = _resolveSunset(position, yesterday);
       }
 
-      return {
-        'sunrise': localSunrise,
-        'sunset': localSunset,
-      };
+      return {'sunrise': sunrise, 'sunset': sunset};
     } catch (e) {
       debugPrint("CircadianService Error: $e");
       return null;
     }
   }
 
-  /// Проверяет права и получает координаты
   Future<Position?> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -76,6 +53,40 @@ class CircadianService {
 
     if (permission == LocationPermission.deniedForever) return null;
 
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+    );
+  }
+
+  DateTime _resolveSunrise(Position position, DateTime date) {
+    final sun = getSunriseSunset(
+      position.latitude,
+      position.longitude,
+      date.timeZoneOffset,
+      date,
+    );
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      sun.sunrise.hour,
+      sun.sunrise.minute,
+    );
+  }
+
+  DateTime _resolveSunset(Position position, DateTime date) {
+    final sun = getSunriseSunset(
+      position.latitude,
+      position.longitude,
+      date.timeZoneOffset,
+      date,
+    );
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      sun.sunset.hour,
+      sun.sunset.minute,
+    );
   }
 }

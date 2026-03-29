@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:injectable/injectable.dart';
@@ -14,6 +13,9 @@ class WaterRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static const String _localKey = 'water_history_log';
+  static const String _todayDrinksKey = 'today_drinks_json';
+  static const String _waterLastDateKey = 'water_last_date';
+  static const String _healthWaterLastLitersKey = 'health_water_last_liters';
 
   // 🔥 ИСПРАВЛЕНИЕ: Генерация ID с учетом ЛОКАЛЬНОГО часового пояса (Баг №8)
   String _getDateId(DateTime date) {
@@ -73,14 +75,20 @@ class WaterRepository {
   }
 
   Future<void> saveEntry(DateTime date, int cupCount) async {
-    final entry = WaterEntry(date: date, cupCount: cupCount);
     final entries = await _getLocalHistory();
     final index = entries.indexWhere((e) => DateUtils.isSameDay(e.date, date));
 
-    if (index != -1) {
-      entries[index] = entry;
+    if (cupCount <= 0) {
+      if (index != -1) {
+        entries.removeAt(index);
+      }
     } else {
-      entries.add(entry);
+      final entry = WaterEntry(date: date, cupCount: cupCount);
+      if (index != -1) {
+        entries[index] = entry;
+      } else {
+        entries.add(entry);
+      }
     }
 
     await _saveToLocal(entries);
@@ -90,15 +98,19 @@ class WaterRepository {
     if (user != null) {
       try {
         final docId = _getDateId(date);
-        await _db
+        final docRef = _db
             .collection('users')
             .doc(user.uid)
             .collection('water_history')
-            .doc(docId)
-            .set({
-          'date': Timestamp.fromDate(date),
-          'cupCount': cupCount,
-        });
+            .doc(docId);
+        if (cupCount <= 0) {
+          await docRef.delete();
+        } else {
+          await docRef.set({
+            'date': Timestamp.fromDate(date),
+            'cupCount': cupCount,
+          });
+        }
         debugPrint("☁️ Water synced to cloud");
       } catch (e) {
         debugPrint("❌ Water cloud sync error: $e");
@@ -110,7 +122,7 @@ class WaterRepository {
     final entries = await _getLocalHistory();
     try {
       final entry = entries.firstWhere(
-            (e) => DateUtils.isSameDay(e.date, date),
+        (e) => DateUtils.isSameDay(e.date, date),
         orElse: () => WaterEntry(date: date, cupCount: 0),
       );
       return entry.cupCount;
@@ -128,7 +140,11 @@ class WaterRepository {
 
     for (var entry in localData) {
       final docId = _getDateId(entry.date);
-      final ref = _db.collection('users').doc(uid).collection('water_history').doc(docId);
+      final ref = _db
+          .collection('users')
+          .doc(uid)
+          .collection('water_history')
+          .doc(docId);
 
       batch.set(ref, {
         'date': Timestamp.fromDate(entry.date),
@@ -141,8 +157,7 @@ class WaterRepository {
   }
 
   Future<void> clearAllData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_localKey);
+    await clearLocalCache();
 
     final user = _auth.currentUser;
     if (user != null) {
@@ -158,6 +173,25 @@ class WaterRepository {
       }
       await batch.commit();
       debugPrint("🔥 Water history cleared from cloud");
+    }
+  }
+
+  Future<bool> hasLocalData() async {
+    final entries = await _getLocalHistory();
+    return entries.isNotEmpty;
+  }
+
+  Future<bool> hasCloudData(String uid) async {
+    try {
+      final snapshot = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('water_history')
+          .limit(1)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -178,7 +212,14 @@ class WaterRepository {
   Future<void> clearLocalCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localKey);
-    await prefs.remove('health_water_last_liters');
+    await prefs.remove(_todayDrinksKey);
+    await prefs.remove(_waterLastDateKey);
+    await prefs.remove(_healthWaterLastLitersKey);
+  }
+
+  Future<void> discardLocalAndUseCloud(String _) async {
+    await clearLocalCache();
+    await getHistory();
   }
 
   Future<void> _saveToLocal(List<WaterEntry> list) async {

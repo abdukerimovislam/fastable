@@ -18,7 +18,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late AnimationController _mainController;
   late AnimationController _windController;
 
@@ -54,12 +55,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
 
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _mainController,
-        curve: const Interval(0.4, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _mainController,
+            curve: const Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _mainController.forward();
     _checkState();
@@ -74,7 +76,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   Future<void> _checkState() async {
     // 1. Запускаем таймер красивой анимации (минимум 3 секунды)
-    final minSplashDuration = Future.delayed(const Duration(milliseconds: 3000));
+    final minSplashDuration = Future.delayed(
+      const Duration(milliseconds: 3000),
+    );
 
     // 2. 🔥 ИСПРАВЛЕНИЕ: Гарантируем, что юзер авторизован до входа в приложение
     final authService = getIt<AuthService>();
@@ -101,7 +105,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const HomePage(),
-            transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+            transitionsBuilder: (_, a, __, c) =>
+                FadeTransition(opacity: a, child: c),
             transitionDuration: const Duration(milliseconds: 800),
           ),
         );
@@ -109,7 +114,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const OnboardingScreen(),
-            transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+            transitionsBuilder: (_, a, __, c) =>
+                FadeTransition(opacity: a, child: c),
             transitionDuration: const Duration(milliseconds: 800),
           ),
         );
@@ -132,10 +138,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               gradient: RadialGradient(
                 center: Alignment.center,
                 radius: 1.5,
-                colors: [
-                  Color(0xFF1A2634),
-                  Color(0xFF000000),
-                ],
+                colors: [Color(0xFF1A2634), Color(0xFF000000)],
               ),
             ),
           ),
@@ -167,7 +170,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         borderRadius: BorderRadius.circular(40),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF00D2FF).withOpacity(0.25),
+                            color: const Color(
+                              0xFF00D2FF,
+                            ).withValues(alpha: 0.25),
                             blurRadius: 100,
                             spreadRadius: 10,
                           ),
@@ -211,7 +216,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         Text(
                           l10n.splashSlogan,
                           style: TextStyle(
-                            color: Colors.blueAccent.shade100.withOpacity(0.7),
+                            color: Colors.blueAccent.shade100.withValues(
+                              alpha: 0.7,
+                            ),
                             fontSize: 14,
                             letterSpacing: 1.2,
                             fontWeight: FontWeight.w400,
@@ -242,16 +249,54 @@ class WindPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    _drawWindLine(canvas, size, paint, yFactor: 0.25, speed: 0.5, opacity: 0.03, width: 2);
-    _drawWindLine(canvas, size, paint, yFactor: 0.45, speed: 0.8, opacity: 0.05, width: 1.5);
-    _drawWindLine(canvas, size, paint, yFactor: 0.60, speed: 0.6, opacity: 0.04, width: 3);
-    _drawWindLine(canvas, size, paint, yFactor: 0.85, speed: 1.0, opacity: 0.02, width: 2);
+    _drawWindLine(
+      canvas,
+      size,
+      paint,
+      yFactor: 0.25,
+      speed: 0.5,
+      opacity: 0.03,
+      width: 2,
+    );
+    _drawWindLine(
+      canvas,
+      size,
+      paint,
+      yFactor: 0.45,
+      speed: 0.8,
+      opacity: 0.05,
+      width: 1.5,
+    );
+    _drawWindLine(
+      canvas,
+      size,
+      paint,
+      yFactor: 0.60,
+      speed: 0.6,
+      opacity: 0.04,
+      width: 3,
+    );
+    _drawWindLine(
+      canvas,
+      size,
+      paint,
+      yFactor: 0.85,
+      speed: 1.0,
+      opacity: 0.02,
+      width: 2,
+    );
   }
 
-  void _drawWindLine(Canvas canvas, Size size, Paint paint,
-      {required double yFactor, required double speed, required double opacity, required double width}) {
-
-    paint.color = Colors.cyanAccent.withOpacity(opacity);
+  void _drawWindLine(
+    Canvas canvas,
+    Size size,
+    Paint paint, {
+    required double yFactor,
+    required double speed,
+    required double opacity,
+    required double width,
+  }) {
+    paint.color = Colors.cyanAccent.withValues(alpha: opacity);
     paint.strokeWidth = width;
 
     final path = Path();
@@ -262,10 +307,7 @@ class WindPainter extends CustomPainter {
     path.moveTo(startX, baseY);
 
     for (double i = 0; i < size.width * 1.5; i += 20) {
-      path.lineTo(
-          startX + i,
-          baseY + 15 * math.sin((startX + i) * 0.015)
-      );
+      path.lineTo(startX + i, baseY + 15 * math.sin((startX + i) * 0.015));
     }
 
     canvas.drawPath(path, paint);

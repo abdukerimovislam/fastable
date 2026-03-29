@@ -718,10 +718,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navFood => 'Comida';
 
   @override
-  String get circadianEnabled => 'Circadian mode enabled';
+  String get circadianEnabled => 'Modo circadiano activado';
 
   @override
-  String get circadianDisabled => 'Circadian mode disabled';
+  String get circadianDisabled => 'Modo circadiano desactivado';
 
   @override
   String get tabRecipes => 'Recetas';
@@ -862,70 +862,70 @@ class AppLocalizationsEs extends AppLocalizations {
   String get circadianManaged => 'Controlado por el sol';
 
   @override
-  String get notifBio4hTitle => 'Blood Sugar Stabilized 🩸';
+  String get notifBio4hTitle => 'Azúcar en sangre estabilizada 🩸';
 
   @override
-  String get notifBio4hBody => 'Your insulin levels are dropping. False hunger pangs may disappear.';
+  String get notifBio4hBody => 'Tus niveles de insulina están bajando. La sensación de hambre falsa puede desaparecer.';
 
   @override
-  String get notifBio8hTitle => 'Stomach is Empty ✅';
+  String get notifBio8hTitle => 'Estómago vacío ✅';
 
   @override
-  String get notifBio8hBody => 'Digestion is complete. Your body is shifting into repair mode.';
+  String get notifBio8hBody => 'La digestión terminó. Tu cuerpo está entrando en modo de reparación.';
 
   @override
-  String get notifBio12hTitle => 'Entering Ketosis 🔥';
+  String get notifBio12hTitle => 'Entrando en cetosis 🔥';
 
   @override
-  String get notifBio12hBody => 'Your body has started burning stored fat for energy!';
+  String get notifBio12hBody => '¡Tu cuerpo ha comenzado a quemar la grasa almacenada para obtener energía!';
 
   @override
-  String get notifBio16hTitle => 'Fat Burning Peak ⚡️';
+  String get notifBio16hTitle => 'Pico de quema de grasa ⚡️';
 
   @override
-  String get notifBio16hBody => 'Metabolism is accelerated. You are in the intense burning zone.';
+  String get notifBio16hBody => 'El metabolismo está acelerado. Estás en la zona de quema intensa.';
 
   @override
-  String get notifBio18hTitle => 'Autophagy Started ♻️';
+  String get notifBio18hTitle => 'La autofagia comenzó ♻️';
 
   @override
-  String get notifBio18hBody => 'Cellular cleaning active. Your body is recycling old cells.';
+  String get notifBio18hBody => 'La limpieza celular está activa. Tu cuerpo está reciclando células viejas.';
 
   @override
-  String get notifBio24hTitle => 'HGH Spike 🛡';
+  String get notifBio24hTitle => 'Aumento de HGH 🛡';
 
   @override
-  String get notifBio24hBody => 'Growth hormone levels are up to protect your muscles.';
+  String get notifBio24hBody => 'Los niveles de la hormona del crecimiento aumentan para proteger tus músculos.';
 
   @override
-  String get notifProg50Title => 'Halfway There! 🚀';
+  String get notifProg50Title => '¡Ya vas por la mitad! 🚀';
 
   @override
-  String get notifProg50Body => 'You passed 50% of your goal. Keep going!';
+  String get notifProg50Body => 'Has superado el 50% de tu objetivo. ¡Sigue así!';
 
   @override
-  String get notifProg1hTitle => '1 Hour Left ⏳';
+  String get notifProg1hTitle => 'Queda 1 hora ⏳';
 
   @override
-  String get notifProg1hBody => 'Almost done! You can start preparing your meal.';
+  String get notifProg1hBody => '¡Casi terminas! Ya puedes empezar a preparar tu comida.';
 
   @override
-  String get notifProgFinishTitle => 'Goal Reached! 🏆';
+  String get notifProgFinishTitle => '¡Objetivo alcanzado! 🏆';
 
   @override
-  String get notifProgFinishBody => 'You did it! Don\'t forget to stop the timer.';
+  String get notifProgFinishBody => '¡Lo lograste! No olvides detener el temporizador.';
 
   @override
-  String get notifWaterTitle => 'Drink Water 💧';
+  String get notifWaterTitle => 'Bebe agua 💧';
 
   @override
-  String get notifWaterBody => 'Hydration boosts your metabolism and reduces hunger.';
+  String get notifWaterBody => 'La hidratación acelera tu metabolismo y reduce el hambre.';
 
   @override
-  String get notifWeightTitle => 'Morning Weigh-in ⚖️';
+  String get notifWeightTitle => 'Pesaje matutino ⚖️';
 
   @override
-  String get notifWeightBody => 'Morning is the best time to track your weight.';
+  String get notifWeightBody => 'La mañana es el mejor momento para registrar tu peso.';
 
   @override
   String get permTitle => 'Activar permisos';
@@ -1356,6 +1356,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lblYesterday => 'Ayer';
 
   @override
+  String get confirmTime => 'Confirmar hora';
+
+  @override
   String get lblFastingTypeCircadian => 'Circadiano';
 
   @override
@@ -1479,6 +1482,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get msgDeleteError => 'Error al eliminar la cuenta';
+
+  @override
+  String get msgDeleteReauthCancelled => 'Se canceló la eliminación de la cuenta.';
+
+  @override
+  String get msgDeleteReauthFailed => 'No pudimos confirmar tu identidad. Inténtalo de nuevo.';
+
+  @override
+  String get msgDeleteReauthUnavailable => 'Vuelve a iniciar sesión con el proveedor original antes de eliminar esta cuenta.';
 
   @override
   String get stepLanguage => 'Seleccionar idioma';
@@ -1621,38 +1633,505 @@ class AppLocalizationsEs extends AppLocalizations {
   String get planExtended => 'Prolongado';
 
   @override
-  String get zoneSugarRises => 'Blood Sugar Rises';
+  String get zoneSugarRises => 'Sube el azúcar en sangre';
 
   @override
-  String get zoneSugarRisesDesc => 'Your body is processing your last meal and storing energy.';
+  String get zoneSugarRisesDesc => 'Tu cuerpo está procesando tu última comida y almacenando energía.';
 
   @override
-  String get zoneSugarDrops => 'Blood Sugar Drops';
+  String get zoneSugarDrops => 'Baja el azúcar en sangre';
 
   @override
-  String get zoneSugarDropsDesc => 'Digestion ends. Blood sugar levels return to normal.';
+  String get zoneSugarDropsDesc => 'La digestión termina. Los niveles de azúcar en sangre vuelven a la normalidad.';
 
   @override
-  String get zoneFatBurning => 'Fat Burning';
+  String get zoneFatBurning => 'Quema de grasa';
 
   @override
-  String get zoneFatBurningDesc => 'Your body starts burning stored fat for energy.';
+  String get zoneFatBurningDesc => 'Tu cuerpo comienza a quemar la grasa almacenada para obtener energía.';
 
   @override
-  String get zoneKetosis => 'Ketosis';
+  String get zoneKetosis => 'Cetosis';
 
   @override
-  String get zoneKetosisDesc => 'Fat burning accelerates. Mental clarity increases.';
+  String get zoneKetosisDesc => 'La quema de grasa se acelera. La claridad mental aumenta.';
 
   @override
-  String get zoneAutophagy => 'Autophagy';
+  String get zoneAutophagy => 'Autofagia';
 
   @override
-  String get zoneAutophagyDesc => 'Cellular repair and recycling begins. Anti-aging effects.';
+  String get zoneAutophagyDesc => 'Comienza la reparación y el reciclaje celular. Hay efectos antienvejecimiento.';
 
   @override
-  String get zoneGrowthHormone => 'Growth Hormone';
+  String get zoneGrowthHormone => 'Hormona del crecimiento';
 
   @override
-  String get zoneGrowthHormoneDesc => 'Peak fat burning, tissue repair, and muscle preservation.';
+  String get zoneGrowthHormoneDesc => 'Pico de quema de grasa, reparación de tejidos y preservación muscular.';
+
+  @override
+  String continueForPrice(String price) {
+    return 'Continuar por $price';
+  }
+
+  @override
+  String get offersUnavailable => 'Las ofertas no están disponibles temporalmente';
+
+  @override
+  String get billedMonthly => 'Cobro mensual';
+
+  @override
+  String get billedAnnually => 'Cobro anual';
+
+  @override
+  String get oneTimePurchase => 'Pago único';
+
+  @override
+  String get goalPriorityTitle => '¿Qué es lo más importante para ti ahora?';
+
+  @override
+  String get goalPriorityDesc => 'Usamos esto para equilibrar velocidad, recuperación y constancia a largo plazo.';
+
+  @override
+  String get goalFatLossTitle => 'Perder grasa más rápido';
+
+  @override
+  String get goalFatLossDesc => 'Priorizamos ventanas más intensas cuando tu perfil puede sostenerlas.';
+
+  @override
+  String get goalHealthTitle => 'Mejorar salud y energía';
+
+  @override
+  String get goalHealthDesc => 'Buscamos un plan equilibrado que apoye enfoque, energía y adherencia.';
+
+  @override
+  String get goalHabitTitle => 'Crear un hábito sostenible';
+
+  @override
+  String get goalHabitDesc => 'Empezamos más fácil para que la rutina realmente se mantenga.';
+
+  @override
+  String get routineTitle => 'Cuéntanos sobre tu rutina';
+
+  @override
+  String get routineDesc => 'Tu sueño y tu experiencia con el ayuno cambian lo agresivo que debería ser tu plan inicial.';
+
+  @override
+  String get fastingExperienceTitle => 'Experiencia con ayuno';
+
+  @override
+  String get experienceBeginnerTitle => 'Principiante';
+
+  @override
+  String get experienceBeginnerDesc => 'Soy nuevo en el ayuno o suelo detenerme antes de tiempo.';
+
+  @override
+  String get experienceIntermediateTitle => 'Algo de experiencia';
+
+  @override
+  String get experienceIntermediateDesc => 'Puedo hacer ayunos de 14-16 horas sin demasiada dificultad.';
+
+  @override
+  String get experienceAdvancedTitle => 'Avanzado';
+
+  @override
+  String get experienceAdvancedDesc => 'Ya hice ayunos más largos y quiero un protocolo más fuerte.';
+
+  @override
+  String get sleepPatternTitle => 'Horario de sueño';
+
+  @override
+  String get sleepRegularTitle => 'Sueño regular';
+
+  @override
+  String get sleepRegularDesc => 'Mi hora de dormir y despertar suele ser bastante constante.';
+
+  @override
+  String get sleepLateTitle => 'Noches tardías';
+
+  @override
+  String get sleepLateDesc => 'A menudo me acuesto tarde o cambio mucho los fines de semana.';
+
+  @override
+  String get sleepIrregularTitle => 'Irregular o turnos';
+
+  @override
+  String get sleepIrregularDesc => 'Mi sueño cambia mucho o trabajo por turnos rotativos.';
+
+  @override
+  String get smartPlanDashboardTitle => 'Tu estrategia actual';
+
+  @override
+  String get smartPlanProfileTitle => 'Tu estrategia de onboarding';
+
+  @override
+  String get smartPlanCurrentPlanLabel => 'Plan actual';
+
+  @override
+  String get smartPlanRecommendedPlanLabel => 'Recomendación inteligente';
+
+  @override
+  String get smartPlanSignalsLabel => 'Señales';
+
+  @override
+  String get smartPlanTitle => 'Recomendación inteligente';
+
+  @override
+  String smartPlanBestMatch(String plan) {
+    return 'Mejor plan inicial: $plan';
+  }
+
+  @override
+  String get smartPlanHint => 'Podrás cambiarlo más tarde en ajustes.';
+
+  @override
+  String get smartPlanWhyRecovery => 'Una ventana más suave es mejor para la recuperación, la constancia y la adaptación.';
+
+  @override
+  String get smartPlanWhyActive => 'Tu nivel de actividad necesita un plan que proteja la energía y la calidad del entrenamiento.';
+
+  @override
+  String get smartPlanWhyBeginner => 'Tu objetivo y tu experiencia indican que conviene empezar con un plan que puedas repetir con constancia.';
+
+  @override
+  String get smartPlanWhyBalanced => 'Te da beneficios de ayuno más fuertes sin volverse demasiado agresivo.';
+
+  @override
+  String get smartPlanWhyAggressive => 'Tu perfil actual puede manejar una ventana más ajustada si buscas un progreso más rápido.';
+
+  @override
+  String get smartPlanWhySleep => 'Tu horario de sueño encaja mejor con un plan más estable y con menos estrés extra.';
+
+  @override
+  String get smartPlanWhySustainable => 'Un comienzo sostenible suele dar una mejor adherencia durante las primeras semanas.';
+
+  @override
+  String smartPlanAlternativeEasier(String plan) {
+    return '$plan es una opción más suave si quieres una adaptación más fácil.';
+  }
+
+  @override
+  String smartPlanAlternativeStronger(String plan) {
+    return '$plan es una opción más intensa si quieres un enfoque más ambicioso.';
+  }
+
+  @override
+  String smartPlanCoachGreeting(String plan, String goal, String experience, String sleep) {
+    return 'Soy Fasty 🥑. Ahora mismo estás en $plan y tu foco principal es $goal. Con tu nivel de $experience y tu patrón de sueño $sleep, puedo ayudarte a mantener la constancia.';
+  }
+
+  @override
+  String get smartPlanUseRecommendation => 'Usar recomendación inteligente';
+
+  @override
+  String get labelAlternative => 'ALTERNATIVA';
+
+  @override
+  String perMonthEquivalent(String price, String period) {
+    return '~$price/$period';
+  }
+
+  @override
+  String get circadianProExclusive => 'EXCLUSIVO PRO';
+
+  @override
+  String get circadianStartFast => 'Iniciar ayuno circadiano';
+
+  @override
+  String get sunriseLabel => 'Amanecer';
+
+  @override
+  String get sunsetLabel => 'Atardecer';
+
+  @override
+  String get lastMeal => 'Última comida';
+
+  @override
+  String get circadianTotalWindow => 'Ventana total de ayuno';
+
+  @override
+  String get hoursLabel => 'horas';
+
+  @override
+  String get basedOnLocalCoordinates => 'Según tus coordenadas locales';
+
+  @override
+  String get locationRequiredTitle => 'Se requiere ubicación';
+
+  @override
+  String get locationRequiredDesc => 'Necesitamos tu ubicación para calcular la hora exacta del atardecer en tu ciudad.';
+
+  @override
+  String get tryAgain => 'Intentar de nuevo';
+
+  @override
+  String get circadianStarted => '¡Ayuno circadiano iniciado! 🌅';
+
+  @override
+  String get planCircadianTitle => 'Ayuno circadiano';
+
+  @override
+  String get planCircadianSubtitle => 'Alinea el ayuno con el sol';
+
+  @override
+  String get planCustomSubtitle => 'Configura tu propia ventana';
+
+  @override
+  String get planPresets => 'PLANES PREDEFINIDOS';
+
+  @override
+  String durationHoursShort(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String durationHoursMinutesShort(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get endFastCongrats => '¡Lo lograste! 🎉';
+
+  @override
+  String endFastTotalTime(String time) {
+    return 'Tiempo total de ayuno: $time';
+  }
+
+  @override
+  String get endFastHowFeel => '¿Cómo te sientes?';
+
+  @override
+  String get endFastSaveEat => 'Guardar y comer';
+
+  @override
+  String get endFastKeepFasting => 'Cancelar, seguir ayunando';
+
+  @override
+  String get proAccessLabel => 'ACCESO PRO';
+
+  @override
+  String get timerEndTitle => '¿Cuándo terminaste tu ayuno?';
+
+  @override
+  String get timerCannotStartFuture => 'No puedes iniciar un ayuno en el futuro.';
+
+  @override
+  String get timerCannotEndFuture => 'No puedes terminar un ayuno en el futuro.';
+
+  @override
+  String get timerEndBeforeStart => 'La hora de finalización no puede ser anterior a la de inicio.';
+
+  @override
+  String get timerGoalReachedExtra => '🔥 Objetivo alcanzado (+ extra)';
+
+  @override
+  String get timerWindowExtended => 'Ventana extendida';
+
+  @override
+  String get timerRemainingInWindow => 'Tiempo restante de la ventana';
+
+  @override
+  String get timerUnknownPlan => 'Plan desconocido';
+
+  @override
+  String get timerLogMoodSymptoms => 'Registrar estado y síntomas';
+
+  @override
+  String get timerBreakAlreadyActive => 'Ya estás en un descanso. ¡Disfruta tu pausa! ☕';
+
+  @override
+  String get timerRestDayStarted => 'La ventana de comida se cerró. ¡Disfruta tu día de descanso! 🏖️';
+
+  @override
+  String get timerTakeBreak => 'Tomar un descanso';
+
+  @override
+  String get timerLogStartEarlier => 'Registrar inicio anterior';
+
+  @override
+  String get timerLogEndEarlier => 'Registrar final anterior';
+
+  @override
+  String get timerLogFastStartEarlier => 'Registrar inicio del ayuno anterior';
+
+  @override
+  String get bodyMeasureChest => 'Pecho';
+
+  @override
+  String get bodyMeasureWaist => 'Cintura';
+
+  @override
+  String get bodyMeasureHips => 'Caderas';
+
+  @override
+  String get bodyMeasureChestTitle => 'Medida de pecho (cm)';
+
+  @override
+  String get bodyMeasureWaistTitle => 'Medida de cintura (cm)';
+
+  @override
+  String get bodyMeasureHipsTitle => 'Medida de caderas (cm)';
+
+  @override
+  String get bodyMeasureAdd => 'Agregar';
+
+  @override
+  String get drinkWater => 'Agua';
+
+  @override
+  String get drinkBlackCoffee => 'Café negro';
+
+  @override
+  String get drinkLatteSweetCoffee => 'Latte / café dulce';
+
+  @override
+  String get drinkGreenBlackTea => 'Té verde / negro';
+
+  @override
+  String get drinkDietSoda => 'Refresco dietético';
+
+  @override
+  String get drinkSweetSoda => 'Refresco azucarado';
+
+  @override
+  String get drinkJuice => 'Jugo';
+
+  @override
+  String get drinkAlcohol => 'Alcohol';
+
+  @override
+  String waterDrinkContainsCalories(String drink) {
+    return '¡$drink contiene calorías!';
+  }
+
+  @override
+  String get waterBreakFastWarning => 'Beber esto romperá tu ayuno actual y abrirá automáticamente tu ventana de comida. ¿Seguro que quieres continuar?';
+
+  @override
+  String get waterConfirmDrinkBreakFast => 'Sí, lo bebí';
+
+  @override
+  String get waterDrinkPrompt => '¿Qué bebiste?';
+
+  @override
+  String waterFastStoppedByDrink(String drink) {
+    return 'El temporizador del ayuno se detuvo porque bebiste $drink.';
+  }
+
+  @override
+  String get waterUndoLastDrink => 'Deshacer última bebida';
+
+  @override
+  String get unitMl => 'ml';
+
+  @override
+  String get healthBadgeSync => 'Sincr.';
+
+  @override
+  String get healthNoData => 'Sin datos';
+
+  @override
+  String get healthSleepLabel => 'Sueño';
+
+  @override
+  String get healthCyclePhaseLabel => 'Fase del ciclo';
+
+  @override
+  String get cyclePhaseMenstruation => 'Menstruación';
+
+  @override
+  String get cyclePhaseFollicular => 'Folicular';
+
+  @override
+  String get cyclePhaseOvulation => 'Ovulación';
+
+  @override
+  String get cyclePhaseLuteal => 'Lútea';
+
+  @override
+  String get learnQuickBites => 'Consejos rápidos';
+
+  @override
+  String get storyFasting101 => 'Ayuno 101';
+
+  @override
+  String get storyAutophagy => 'Autofagia';
+
+  @override
+  String get storyKetoDiet => 'Dieta keto';
+
+  @override
+  String get storyHydration => 'Hidratación';
+
+  @override
+  String get storySleep => 'Sueño';
+
+  @override
+  String storyOpening(String title) {
+    return 'Abriendo historia: $title...';
+  }
+
+  @override
+  String recipeSelected(String title) {
+    return 'Seleccionado: $title';
+  }
+
+  @override
+  String get aiUpdatingConfig => 'La IA está actualizando la configuración. Revisa tu internet y reinicia la app.';
+
+  @override
+  String get aiSessionExpired => 'La sesión del coach expiró. Cierra y vuelve a abrir el chat.';
+
+  @override
+  String get aiEmptyResponse => 'Todavía estoy pensando. Inténtalo de nuevo.';
+
+  @override
+  String get authGoogleFailed => 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+
+  @override
+  String get authAppleUnavailable => 'El inicio de sesión con Apple solo está disponible en iOS.';
+
+  @override
+  String get authAppleFailed => 'No se pudo iniciar sesión con Apple. Inténtalo de nuevo.';
+
+  @override
+  String get journalSymptomsTitle => 'Síntomas y estado';
+
+  @override
+  String get journalSymptomsPrefix => 'Síntomas';
+
+  @override
+  String get journalUpdated => '¡Diario actualizado! 📝';
+
+  @override
+  String get symptomEnergy => 'Energía';
+
+  @override
+  String get symptomFocus => 'Enfoque';
+
+  @override
+  String get symptomHungry => 'Hambre';
+
+  @override
+  String get symptomFatigue => 'Fatiga';
+
+  @override
+  String get symptomHeadache => 'Dolor de cabeza';
+
+  @override
+  String get symptomThirsty => 'Sed';
+
+  @override
+  String get moodTerrible => 'Terrible';
+
+  @override
+  String get moodBad => 'Mal';
+
+  @override
+  String get moodOkay => 'Bien';
+
+  @override
+  String get moodGood => 'Bueno';
+
+  @override
+  String get moodGreat => 'Genial';
 }

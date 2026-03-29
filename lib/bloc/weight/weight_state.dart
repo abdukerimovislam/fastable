@@ -3,7 +3,9 @@ import 'package:fastable/models/weight_entry.dart';
 
 // 1. Enums для персонализации
 enum Gender { male, female }
+
 enum ActivityLevel { sedentary, moderate, active }
+
 enum WeightStatus { initial, loading, success, failure }
 
 class WeightState extends Equatable {
@@ -17,7 +19,7 @@ class WeightState extends Equatable {
 
   // 🔥 НОВЫЕ ПОЛЯ: ЗАМЕРЫ ТЕЛА (в сантиметрах)
   final double? waistCm; // Талия
-  final double? hipsCm;  // Бедра
+  final double? hipsCm; // Бедра
   final double? chestCm; // Грудь (или обхват под грудью)
 
   // Персонализация
@@ -68,9 +70,15 @@ class WeightState extends Equatable {
   double get tdee {
     double multiplier;
     switch (activityLevel) {
-      case ActivityLevel.sedentary: multiplier = 1.2; break;
-      case ActivityLevel.moderate: multiplier = 1.55; break;
-      case ActivityLevel.active: multiplier = 1.725; break;
+      case ActivityLevel.sedentary:
+        multiplier = 1.2;
+        break;
+      case ActivityLevel.moderate:
+        multiplier = 1.55;
+        break;
+      case ActivityLevel.active:
+        multiplier = 1.725;
+        break;
     }
     return bmr * multiplier;
   }
@@ -126,6 +134,6 @@ class WeightState extends Equatable {
     age,
     gender,
     activityLevel,
-    history
+    history,
   ];
 }

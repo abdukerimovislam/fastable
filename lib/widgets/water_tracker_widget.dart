@@ -42,7 +42,7 @@ class WaterTrackerWidget extends StatelessWidget {
             curve: Curves.easeInOut,
             height: fillPercent * cardHeight, // Use the new height
             width: double.infinity,
-            color: Colors.blue.withOpacity(0.5),
+            color: Colors.blue.withValues(alpha: 0.5),
           ),
 
           // --- The Content ---
@@ -64,7 +64,7 @@ class WaterTrackerWidget extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Icon(Icons.water_drop, color: Colors.blueAccent),
+                    const Icon(Icons.water_drop, color: Colors.blueAccent),
                   ],
                 ),
 
@@ -102,7 +102,10 @@ class WaterTrackerWidget extends StatelessWidget {
                               padding: EdgeInsets.zero,
                               side: BorderSide(color: Colors.grey.shade600),
                             ),
-                            child: Icon(Icons.remove, color: Colors.white),
+                            child: const Icon(
+                              Icons.remove,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -117,7 +120,7 @@ class WaterTrackerWidget extends StatelessWidget {
                               padding: EdgeInsets.zero,
                               backgroundColor: Colors.blueAccent,
                             ),
-                            child: Icon(Icons.add, color: Colors.white),
+                            child: const Icon(Icons.add, color: Colors.white),
                           ),
                         ),
                       ],

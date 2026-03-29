@@ -718,10 +718,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get navFood => 'Еда';
 
   @override
-  String get circadianEnabled => 'Circadian mode enabled';
+  String get circadianEnabled => 'Циркадный режим включен';
 
   @override
-  String get circadianDisabled => 'Circadian mode disabled';
+  String get circadianDisabled => 'Циркадный режим отключен';
 
   @override
   String get tabRecipes => 'Рецепты';
@@ -1356,6 +1356,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lblYesterday => 'Вчера';
 
   @override
+  String get confirmTime => 'Подтвердить время';
+
+  @override
   String get lblFastingTypeCircadian => 'Циркадный';
 
   @override
@@ -1479,6 +1482,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get msgDeleteError => 'Ошибка удаления аккаунта';
+
+  @override
+  String get msgDeleteReauthCancelled => 'Удаление аккаунта отменено.';
+
+  @override
+  String get msgDeleteReauthFailed => 'Не удалось подтвердить вашу личность. Попробуйте ещё раз.';
+
+  @override
+  String get msgDeleteReauthUnavailable => 'Перед удалением этого аккаунта войдите снова через исходный способ входа.';
 
   @override
   String get stepLanguage => 'Выберите язык';
@@ -1621,38 +1633,505 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planExtended => 'Длительный';
 
   @override
-  String get zoneSugarRises => 'Blood Sugar Rises';
+  String get zoneSugarRises => 'Рост сахара в крови';
 
   @override
-  String get zoneSugarRisesDesc => 'Your body is processing your last meal and storing energy.';
+  String get zoneSugarRisesDesc => 'Организм перерабатывает последнюю еду и запасает энергию.';
 
   @override
-  String get zoneSugarDrops => 'Blood Sugar Drops';
+  String get zoneSugarDrops => 'Падение сахара в крови';
 
   @override
-  String get zoneSugarDropsDesc => 'Digestion ends. Blood sugar levels return to normal.';
+  String get zoneSugarDropsDesc => 'Пищеварение завершается. Уровень сахара в крови возвращается к норме.';
 
   @override
-  String get zoneFatBurning => 'Fat Burning';
+  String get zoneFatBurning => 'Сжигание жира';
 
   @override
-  String get zoneFatBurningDesc => 'Your body starts burning stored fat for energy.';
+  String get zoneFatBurningDesc => 'Организм начинает использовать накопленный жир как источник энергии.';
 
   @override
-  String get zoneKetosis => 'Ketosis';
+  String get zoneKetosis => 'Кетоз';
 
   @override
-  String get zoneKetosisDesc => 'Fat burning accelerates. Mental clarity increases.';
+  String get zoneKetosisDesc => 'Сжигание жира ускоряется. Повышается ясность мышления.';
 
   @override
-  String get zoneAutophagy => 'Autophagy';
+  String get zoneAutophagy => 'Аутофагия';
 
   @override
-  String get zoneAutophagyDesc => 'Cellular repair and recycling begins. Anti-aging effects.';
+  String get zoneAutophagyDesc => 'Начинается восстановление и переработка клеток. Это даёт омолаживающий эффект.';
 
   @override
-  String get zoneGrowthHormone => 'Growth Hormone';
+  String get zoneGrowthHormone => 'Гормон роста';
 
   @override
-  String get zoneGrowthHormoneDesc => 'Peak fat burning, tissue repair, and muscle preservation.';
+  String get zoneGrowthHormoneDesc => 'Пик жиросжигания, восстановления тканей и сохранения мышц.';
+
+  @override
+  String continueForPrice(String price) {
+    return 'Продолжить за $price';
+  }
+
+  @override
+  String get offersUnavailable => 'Предложения временно недоступны';
+
+  @override
+  String get billedMonthly => 'Списание каждый месяц';
+
+  @override
+  String get billedAnnually => 'Списание раз в год';
+
+  @override
+  String get oneTimePurchase => 'Разовая покупка';
+
+  @override
+  String get goalPriorityTitle => 'Что для вас сейчас важнее всего?';
+
+  @override
+  String get goalPriorityDesc => 'Это помогает нам сбалансировать скорость прогресса, восстановление и долгосрочную стабильность.';
+
+  @override
+  String get goalFatLossTitle => 'Быстрее снизить вес';
+
+  @override
+  String get goalFatLossDesc => 'Смещаем рекомендацию к более сильным окнам голодания, если профиль это допускает.';
+
+  @override
+  String get goalHealthTitle => 'Улучшить здоровье и энергию';
+
+  @override
+  String get goalHealthDesc => 'Выбираем более сбалансированный план для фокуса, энергии и устойчивости.';
+
+  @override
+  String get goalHabitTitle => 'Выстроить устойчивую привычку';
+
+  @override
+  String get goalHabitDesc => 'Начинаем мягче, чтобы режим действительно закрепился.';
+
+  @override
+  String get routineTitle => 'Расскажите о своём режиме';
+
+  @override
+  String get routineDesc => 'Сон и опыт голодания влияют на то, насколько агрессивным должен быть стартовый план.';
+
+  @override
+  String get fastingExperienceTitle => 'Опыт голодания';
+
+  @override
+  String get experienceBeginnerTitle => 'Новичок';
+
+  @override
+  String get experienceBeginnerDesc => 'Я только начинаю или часто срываюсь раньше времени.';
+
+  @override
+  String get experienceIntermediateTitle => 'Есть опыт';
+
+  @override
+  String get experienceIntermediateDesc => 'Я спокойно выдерживаю 14-16 часов без серьёзного дискомфорта.';
+
+  @override
+  String get experienceAdvancedTitle => 'Продвинутый';
+
+  @override
+  String get experienceAdvancedDesc => 'Я уже делал более длинные голодания и хочу более сильный протокол.';
+
+  @override
+  String get sleepPatternTitle => 'Режим сна';
+
+  @override
+  String get sleepRegularTitle => 'Стабильный сон';
+
+  @override
+  String get sleepRegularDesc => 'Я обычно ложусь и встаю примерно в одно и то же время.';
+
+  @override
+  String get sleepLateTitle => 'Поздние ночи';
+
+  @override
+  String get sleepLateDesc => 'Я часто ложусь поздно или сбиваю режим по выходным.';
+
+  @override
+  String get sleepIrregularTitle => 'Нерегулярно или смены';
+
+  @override
+  String get sleepIrregularDesc => 'Мой сон сильно меняется или я работаю по сменам.';
+
+  @override
+  String get smartPlanDashboardTitle => 'Ваша текущая стратегия';
+
+  @override
+  String get smartPlanProfileTitle => 'Ваша стратегия из onboarding';
+
+  @override
+  String get smartPlanCurrentPlanLabel => 'Текущий план';
+
+  @override
+  String get smartPlanRecommendedPlanLabel => 'Умная рекомендация';
+
+  @override
+  String get smartPlanSignalsLabel => 'Сигналы';
+
+  @override
+  String get smartPlanTitle => 'Умная рекомендация';
+
+  @override
+  String smartPlanBestMatch(String plan) {
+    return 'Лучший стартовый план: $plan';
+  }
+
+  @override
+  String get smartPlanHint => 'Позже это можно изменить в настройках.';
+
+  @override
+  String get smartPlanWhyRecovery => 'Более мягкое окно лучше для восстановления, стабильности и адаптации.';
+
+  @override
+  String get smartPlanWhyActive => 'Ваш уровень активности требует плана, который сохраняет энергию и качество тренировок.';
+
+  @override
+  String get smartPlanWhyBeginner => 'Ваша цель и текущий опыт подсказывают, что лучше начать с плана, который легко повторять стабильно.';
+
+  @override
+  String get smartPlanWhyBalanced => 'Этот вариант даёт более сильный эффект голодания, но не становится слишком жёстким.';
+
+  @override
+  String get smartPlanWhyAggressive => 'Ваш текущий профиль допускает более узкое окно питания, если нужен более быстрый прогресс.';
+
+  @override
+  String get smartPlanWhySleep => 'Ваш режим сна лучше сочетается с более ровным планом, который добавляет меньше стресса.';
+
+  @override
+  String get smartPlanWhySustainable => 'Устойчивый старт обычно даёт лучшую дисциплину в первые недели.';
+
+  @override
+  String smartPlanAlternativeEasier(String plan) {
+    return '$plan будет более мягким вариантом, если хотите адаптироваться легче.';
+  }
+
+  @override
+  String smartPlanAlternativeStronger(String plan) {
+    return '$plan будет более сильным вариантом, если хотите более амбициозный режим.';
+  }
+
+  @override
+  String smartPlanCoachGreeting(String plan, String goal, String experience, String sleep) {
+    return 'Я Fasty 🥑. Сейчас у вас план $plan, а главный фокус — $goal. С вашим уровнем $experience и режимом сна $sleep я помогу держать стабильность.';
+  }
+
+  @override
+  String get smartPlanUseRecommendation => 'Вернуться к умной рекомендации';
+
+  @override
+  String get labelAlternative => 'АЛЬТЕРНАТИВА';
+
+  @override
+  String perMonthEquivalent(String price, String period) {
+    return '~$price/$period';
+  }
+
+  @override
+  String get circadianProExclusive => 'ТОЛЬКО В PRO';
+
+  @override
+  String get circadianStartFast => 'Начать циркадное голодание';
+
+  @override
+  String get sunriseLabel => 'Восход';
+
+  @override
+  String get sunsetLabel => 'Закат';
+
+  @override
+  String get lastMeal => 'Последний прием пищи';
+
+  @override
+  String get circadianTotalWindow => 'Общее окно голодания';
+
+  @override
+  String get hoursLabel => 'часов';
+
+  @override
+  String get basedOnLocalCoordinates => 'На основе ваших координат';
+
+  @override
+  String get locationRequiredTitle => 'Нужна геолокация';
+
+  @override
+  String get locationRequiredDesc => 'Нам нужна ваша геолокация, чтобы рассчитать точное время заката в вашем городе.';
+
+  @override
+  String get tryAgain => 'Попробовать снова';
+
+  @override
+  String get circadianStarted => 'Циркадное голодание запущено! 🌅';
+
+  @override
+  String get planCircadianTitle => 'Циркадное голодание';
+
+  @override
+  String get planCircadianSubtitle => 'Синхронизируйте голодание с солнцем';
+
+  @override
+  String get planCustomSubtitle => 'Настройте свое окно';
+
+  @override
+  String get planPresets => 'ГОТОВЫЕ ПЛАНЫ';
+
+  @override
+  String durationHoursShort(int hours) {
+    return '$hoursч';
+  }
+
+  @override
+  String durationHoursMinutesShort(int hours, int minutes) {
+    return '$hoursч $minutesм';
+  }
+
+  @override
+  String get endFastCongrats => 'У вас получилось! 🎉';
+
+  @override
+  String endFastTotalTime(String time) {
+    return 'Общее время голодания: $time';
+  }
+
+  @override
+  String get endFastHowFeel => 'Как вы себя чувствуете?';
+
+  @override
+  String get endFastSaveEat => 'Сохранить и поесть';
+
+  @override
+  String get endFastKeepFasting => 'Отмена, продолжаю голодать';
+
+  @override
+  String get proAccessLabel => 'PRO ДОСТУП';
+
+  @override
+  String get timerEndTitle => 'Когда вы прервали голодание?';
+
+  @override
+  String get timerCannotStartFuture => 'Нельзя начать голодание в будущем.';
+
+  @override
+  String get timerCannotEndFuture => 'Нельзя завершить голодание в будущем.';
+
+  @override
+  String get timerEndBeforeStart => 'Время завершения не может быть раньше времени начала.';
+
+  @override
+  String get timerGoalReachedExtra => '🔥 Цель достигнута (+ бонус)';
+
+  @override
+  String get timerWindowExtended => 'Окно продлено';
+
+  @override
+  String get timerRemainingInWindow => 'Осталось в окне';
+
+  @override
+  String get timerUnknownPlan => 'Неизвестный план';
+
+  @override
+  String get timerLogMoodSymptoms => 'Записать самочувствие и симптомы';
+
+  @override
+  String get timerBreakAlreadyActive => 'У вас уже перерыв. Наслаждайтесь отдыхом! ☕';
+
+  @override
+  String get timerRestDayStarted => 'Окно питания закрыто. Наслаждайтесь днём отдыха! 🏖️';
+
+  @override
+  String get timerTakeBreak => 'Сделать перерыв';
+
+  @override
+  String get timerLogStartEarlier => 'Отметить более ранний старт';
+
+  @override
+  String get timerLogEndEarlier => 'Отметить более раннее завершение';
+
+  @override
+  String get timerLogFastStartEarlier => 'Отметить более ранний старт голодания';
+
+  @override
+  String get bodyMeasureChest => 'Грудь';
+
+  @override
+  String get bodyMeasureWaist => 'Талия';
+
+  @override
+  String get bodyMeasureHips => 'Бёдра';
+
+  @override
+  String get bodyMeasureChestTitle => 'Обхват груди (см)';
+
+  @override
+  String get bodyMeasureWaistTitle => 'Обхват талии (см)';
+
+  @override
+  String get bodyMeasureHipsTitle => 'Обхват бёдер (см)';
+
+  @override
+  String get bodyMeasureAdd => 'Добавить';
+
+  @override
+  String get drinkWater => 'Вода';
+
+  @override
+  String get drinkBlackCoffee => 'Черный кофе';
+
+  @override
+  String get drinkLatteSweetCoffee => 'Латте / сладкий кофе';
+
+  @override
+  String get drinkGreenBlackTea => 'Зеленый / черный чай';
+
+  @override
+  String get drinkDietSoda => 'Диетическая газировка';
+
+  @override
+  String get drinkSweetSoda => 'Сладкая газировка';
+
+  @override
+  String get drinkJuice => 'Сок';
+
+  @override
+  String get drinkAlcohol => 'Алкоголь';
+
+  @override
+  String waterDrinkContainsCalories(String drink) {
+    return '$drink содержит калории!';
+  }
+
+  @override
+  String get waterBreakFastWarning => 'Этот напиток прервет текущее голодание и автоматически запустит окно питания. Продолжить?';
+
+  @override
+  String get waterConfirmDrinkBreakFast => 'Да, я это выпил(а)';
+
+  @override
+  String get waterDrinkPrompt => 'Что вы выпили?';
+
+  @override
+  String waterFastStoppedByDrink(String drink) {
+    return 'Таймер голодания остановлен, потому что вы выпили $drink.';
+  }
+
+  @override
+  String get waterUndoLastDrink => 'Отменить последний напиток';
+
+  @override
+  String get unitMl => 'мл';
+
+  @override
+  String get healthBadgeSync => 'Синхр.';
+
+  @override
+  String get healthNoData => 'Нет данных';
+
+  @override
+  String get healthSleepLabel => 'Сон';
+
+  @override
+  String get healthCyclePhaseLabel => 'Фаза цикла';
+
+  @override
+  String get cyclePhaseMenstruation => 'Менструация';
+
+  @override
+  String get cyclePhaseFollicular => 'Фолликулярная';
+
+  @override
+  String get cyclePhaseOvulation => 'Овуляция';
+
+  @override
+  String get cyclePhaseLuteal => 'Лютеиновая';
+
+  @override
+  String get learnQuickBites => 'Быстрые темы';
+
+  @override
+  String get storyFasting101 => 'Голодание 101';
+
+  @override
+  String get storyAutophagy => 'Аутофагия';
+
+  @override
+  String get storyKetoDiet => 'Кето-диета';
+
+  @override
+  String get storyHydration => 'Гидратация';
+
+  @override
+  String get storySleep => 'Сон';
+
+  @override
+  String storyOpening(String title) {
+    return 'Открываем историю: $title...';
+  }
+
+  @override
+  String recipeSelected(String title) {
+    return 'Выбрано: $title';
+  }
+
+  @override
+  String get aiUpdatingConfig => 'ИИ обновляет конфигурацию. Проверьте интернет и перезапустите приложение.';
+
+  @override
+  String get aiSessionExpired => 'Сессия коуча завершилась. Закройте и снова откройте чат.';
+
+  @override
+  String get aiEmptyResponse => 'Я еще думаю над ответом. Попробуйте еще раз.';
+
+  @override
+  String get authGoogleFailed => 'Не удалось войти через Google. Попробуйте еще раз.';
+
+  @override
+  String get authAppleUnavailable => 'Вход через Apple доступен только на iOS.';
+
+  @override
+  String get authAppleFailed => 'Не удалось войти через Apple. Попробуйте еще раз.';
+
+  @override
+  String get journalSymptomsTitle => 'Симптомы и состояние';
+
+  @override
+  String get journalSymptomsPrefix => 'Симптомы';
+
+  @override
+  String get journalUpdated => 'Журнал обновлен! 📝';
+
+  @override
+  String get symptomEnergy => 'Энергия';
+
+  @override
+  String get symptomFocus => 'Фокус';
+
+  @override
+  String get symptomHungry => 'Голод';
+
+  @override
+  String get symptomFatigue => 'Усталость';
+
+  @override
+  String get symptomHeadache => 'Головная боль';
+
+  @override
+  String get symptomThirsty => 'Жажда';
+
+  @override
+  String get moodTerrible => 'Ужасно';
+
+  @override
+  String get moodBad => 'Плохо';
+
+  @override
+  String get moodOkay => 'Нормально';
+
+  @override
+  String get moodGood => 'Хорошо';
+
+  @override
+  String get moodGreat => 'Отлично';
 }

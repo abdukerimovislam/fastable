@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/ui/app_layout.dart';
 
 class MedicalDisclaimerScreen extends StatelessWidget {
   const MedicalDisclaimerScreen({super.key});
@@ -20,23 +21,35 @@ class MedicalDisclaimerScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: AppLayout.contentPadding(context, vertical: 18),
         children: [
           const Icon(Icons.health_and_safety, color: Colors.amber, size: 60),
           const SizedBox(height: 20),
           Text(
             l10n.medicalDisclaimerHeading,
-            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
             l10n.medicalDisclaimerBody,
-            style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 30),
           Text(
             l10n.scientificSourcesHeading,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 10),
           _buildSourceLink(
@@ -62,8 +75,17 @@ class MedicalDisclaimerScreen extends StatelessWidget {
   Widget _buildSourceLink(String title, String subtitle, String url) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(title, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.amber,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Colors.white54, fontSize: 12),
+      ),
       trailing: const Icon(Icons.open_in_new, color: Colors.white24, size: 16),
       onTap: () async {
         final uri = Uri.parse(url);

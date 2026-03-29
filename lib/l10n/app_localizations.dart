@@ -2745,6 +2745,12 @@ abstract class AppLocalizations {
   /// **'Yesterday'**
   String get lblYesterday;
 
+  /// No description provided for @confirmTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Time'**
+  String get confirmTime;
+
   /// No description provided for @lblFastingTypeCircadian.
   ///
   /// In en, this message translates to:
@@ -2990,6 +2996,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error deleting account'**
   String get msgDeleteError;
+
+  /// No description provided for @msgDeleteReauthCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion cancelled.'**
+  String get msgDeleteReauthCancelled;
+
+  /// No description provided for @msgDeleteReauthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t confirm your identity. Please try again.'**
+  String get msgDeleteReauthFailed;
+
+  /// No description provided for @msgDeleteReauthUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in again with the original provider before deleting this account.'**
+  String get msgDeleteReauthUnavailable;
 
   /// No description provided for @stepLanguage.
   ///
@@ -3338,6 +3362,888 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Peak fat burning, tissue repair, and muscle preservation.'**
   String get zoneGrowthHormoneDesc;
+
+  /// No description provided for @continueForPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue for {price}'**
+  String continueForPrice(String price);
+
+  /// No description provided for @offersUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers are temporarily unavailable'**
+  String get offersUnavailable;
+
+  /// No description provided for @billedMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed monthly'**
+  String get billedMonthly;
+
+  /// No description provided for @billedAnnually.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed annually'**
+  String get billedAnnually;
+
+  /// No description provided for @oneTimePurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase'**
+  String get oneTimePurchase;
+
+  /// No description provided for @goalPriorityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What matters most right now?'**
+  String get goalPriorityTitle;
+
+  /// No description provided for @goalPriorityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We use this to balance speed, recovery, and long-term consistency.'**
+  String get goalPriorityDesc;
+
+  /// No description provided for @goalFatLossTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lose fat faster'**
+  String get goalFatLossTitle;
+
+  /// No description provided for @goalFatLossDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Favor stronger fasting windows when your profile can handle them.'**
+  String get goalFatLossDesc;
+
+  /// No description provided for @goalHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Improve health and energy'**
+  String get goalHealthTitle;
+
+  /// No description provided for @goalHealthDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Aim for a balanced plan that supports focus, energy, and adherence.'**
+  String get goalHealthDesc;
+
+  /// No description provided for @goalHabitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a sustainable habit'**
+  String get goalHabitTitle;
+
+  /// No description provided for @goalHabitDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start easier so the routine actually sticks.'**
+  String get goalHabitDesc;
+
+  /// No description provided for @routineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about your routine'**
+  String get routineTitle;
+
+  /// No description provided for @routineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep and fasting experience change how aggressive your starting plan should be.'**
+  String get routineDesc;
+
+  /// No description provided for @fastingExperienceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting experience'**
+  String get fastingExperienceTitle;
+
+  /// No description provided for @experienceBeginnerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get experienceBeginnerTitle;
+
+  /// No description provided for @experienceBeginnerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'I am new to fasting or I usually stop early.'**
+  String get experienceBeginnerDesc;
+
+  /// No description provided for @experienceIntermediateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some experience'**
+  String get experienceIntermediateTitle;
+
+  /// No description provided for @experienceIntermediateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'I can handle 14-16 hour fasts without much trouble.'**
+  String get experienceIntermediateDesc;
+
+  /// No description provided for @experienceAdvancedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get experienceAdvancedTitle;
+
+  /// No description provided for @experienceAdvancedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'I have done longer fasts and want a stronger protocol.'**
+  String get experienceAdvancedDesc;
+
+  /// No description provided for @sleepPatternTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep schedule'**
+  String get sleepPatternTitle;
+
+  /// No description provided for @sleepRegularTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular sleep'**
+  String get sleepRegularTitle;
+
+  /// No description provided for @sleepRegularDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'My bedtime and wake time are mostly consistent.'**
+  String get sleepRegularDesc;
+
+  /// No description provided for @sleepLateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Late nights'**
+  String get sleepLateTitle;
+
+  /// No description provided for @sleepLateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'I often go to bed late or drift on weekends.'**
+  String get sleepLateDesc;
+
+  /// No description provided for @sleepIrregularTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Irregular or shift work'**
+  String get sleepIrregularTitle;
+
+  /// No description provided for @sleepIrregularDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'My sleep changes a lot or I work rotating shifts.'**
+  String get sleepIrregularDesc;
+
+  /// No description provided for @smartPlanDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current strategy'**
+  String get smartPlanDashboardTitle;
+
+  /// No description provided for @smartPlanProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your onboarding strategy'**
+  String get smartPlanProfileTitle;
+
+  /// No description provided for @smartPlanCurrentPlanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current plan'**
+  String get smartPlanCurrentPlanLabel;
+
+  /// No description provided for @smartPlanRecommendedPlanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart recommendation'**
+  String get smartPlanRecommendedPlanLabel;
+
+  /// No description provided for @smartPlanSignalsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Signals'**
+  String get smartPlanSignalsLabel;
+
+  /// No description provided for @smartPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart recommendation'**
+  String get smartPlanTitle;
+
+  /// No description provided for @smartPlanBestMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Best starting plan: {plan}'**
+  String smartPlanBestMatch(String plan);
+
+  /// No description provided for @smartPlanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this later in settings.'**
+  String get smartPlanHint;
+
+  /// No description provided for @smartPlanWhyRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'A gentler window is better for recovery, consistency, and adaptation.'**
+  String get smartPlanWhyRecovery;
+
+  /// No description provided for @smartPlanWhyActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity level favors a plan that protects energy and training quality.'**
+  String get smartPlanWhyActive;
+
+  /// No description provided for @smartPlanWhyBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your goal and experience suggest starting with a plan you can repeat consistently.'**
+  String get smartPlanWhyBeginner;
+
+  /// No description provided for @smartPlanWhyBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'This gives you stronger fasting benefits without becoming too aggressive.'**
+  String get smartPlanWhyBalanced;
+
+  /// No description provided for @smartPlanWhyAggressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current profile can handle a tighter window if you want faster progress.'**
+  String get smartPlanWhyAggressive;
+
+  /// No description provided for @smartPlanWhySleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sleep schedule favors a steadier plan that adds less stress to your routine.'**
+  String get smartPlanWhySleep;
+
+  /// No description provided for @smartPlanWhySustainable.
+  ///
+  /// In en, this message translates to:
+  /// **'A sustainable start usually leads to better adherence in the first weeks.'**
+  String get smartPlanWhySustainable;
+
+  /// No description provided for @smartPlanAlternativeEasier.
+  ///
+  /// In en, this message translates to:
+  /// **'{plan} is a softer option if you want an easier adjustment.'**
+  String smartPlanAlternativeEasier(String plan);
+
+  /// No description provided for @smartPlanAlternativeStronger.
+  ///
+  /// In en, this message translates to:
+  /// **'{plan} is a stronger option if you want a more ambitious cut.'**
+  String smartPlanAlternativeStronger(String plan);
+
+  /// No description provided for @smartPlanCoachGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m Fasty 🥑. You\'re currently on {plan} and focused on {goal}. With your {experience} background and {sleep} sleep pattern, I can help you stay consistent.'**
+  String smartPlanCoachGreeting(String plan, String goal, String experience, String sleep);
+
+  /// No description provided for @smartPlanUseRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use smart recommendation'**
+  String get smartPlanUseRecommendation;
+
+  /// No description provided for @labelAlternative.
+  ///
+  /// In en, this message translates to:
+  /// **'ALTERNATIVE'**
+  String get labelAlternative;
+
+  /// No description provided for @perMonthEquivalent.
+  ///
+  /// In en, this message translates to:
+  /// **'~{price}/{period}'**
+  String perMonthEquivalent(String price, String period);
+
+  /// No description provided for @circadianProExclusive.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO EXCLUSIVE'**
+  String get circadianProExclusive;
+
+  /// No description provided for @circadianStartFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Circadian Fast'**
+  String get circadianStartFast;
+
+  /// No description provided for @sunriseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get sunriseLabel;
+
+  /// No description provided for @sunsetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get sunsetLabel;
+
+  /// No description provided for @lastMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Meal'**
+  String get lastMeal;
+
+  /// No description provided for @circadianTotalWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Fasting Window'**
+  String get circadianTotalWindow;
+
+  /// No description provided for @hoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get hoursLabel;
+
+  /// No description provided for @basedOnLocalCoordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your local coordinates'**
+  String get basedOnLocalCoordinates;
+
+  /// No description provided for @locationRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Required'**
+  String get locationRequiredTitle;
+
+  /// No description provided for @locationRequiredDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We need your location to calculate the exact sunset time in your city.'**
+  String get locationRequiredDesc;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// No description provided for @circadianStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian Fast Started! 🌅'**
+  String get circadianStarted;
+
+  /// No description provided for @planCircadianTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian Fast'**
+  String get planCircadianTitle;
+
+  /// No description provided for @planCircadianSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Align fasting with the sun'**
+  String get planCircadianSubtitle;
+
+  /// No description provided for @planCustomSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your own window'**
+  String get planCustomSubtitle;
+
+  /// No description provided for @planPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get planPresets;
+
+  /// No description provided for @durationHoursShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h'**
+  String durationHoursShort(int hours);
+
+  /// No description provided for @durationHoursMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String durationHoursMinutesShort(int hours, int minutes);
+
+  /// No description provided for @endFastCongrats.
+  ///
+  /// In en, this message translates to:
+  /// **'You did it! 🎉'**
+  String get endFastCongrats;
+
+  /// No description provided for @endFastTotalTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Total fasting time: {time}'**
+  String endFastTotalTime(String time);
+
+  /// No description provided for @endFastHowFeel.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you feel?'**
+  String get endFastHowFeel;
+
+  /// No description provided for @endFastSaveEat.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Eat'**
+  String get endFastSaveEat;
+
+  /// No description provided for @endFastKeepFasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel, keep fasting'**
+  String get endFastKeepFasting;
+
+  /// No description provided for @proAccessLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO ACCESS'**
+  String get proAccessLabel;
+
+  /// No description provided for @timerEndTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When did you break your fast?'**
+  String get timerEndTitle;
+
+  /// No description provided for @timerCannotStartFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t start a fast in the future.'**
+  String get timerCannotStartFuture;
+
+  /// No description provided for @timerCannotEndFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t end a fast in the future.'**
+  String get timerCannotEndFuture;
+
+  /// No description provided for @timerEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'End time can\'t be earlier than the start time.'**
+  String get timerEndBeforeStart;
+
+  /// No description provided for @timerGoalReachedExtra.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Goal reached (+ extra)'**
+  String get timerGoalReachedExtra;
+
+  /// No description provided for @timerWindowExtended.
+  ///
+  /// In en, this message translates to:
+  /// **'Window extended'**
+  String get timerWindowExtended;
+
+  /// No description provided for @timerRemainingInWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining in window'**
+  String get timerRemainingInWindow;
+
+  /// No description provided for @timerUnknownPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Plan'**
+  String get timerUnknownPlan;
+
+  /// No description provided for @timerLogMoodSymptoms.
+  ///
+  /// In en, this message translates to:
+  /// **'Log mood & symptoms'**
+  String get timerLogMoodSymptoms;
+
+  /// No description provided for @timerBreakAlreadyActive.
+  ///
+  /// In en, this message translates to:
+  /// **'You are already on a break. Enjoy your rest! ☕'**
+  String get timerBreakAlreadyActive;
+
+  /// No description provided for @timerRestDayStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating window closed. Enjoy your rest day! 🏖️'**
+  String get timerRestDayStarted;
+
+  /// No description provided for @timerTakeBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a break'**
+  String get timerTakeBreak;
+
+  /// No description provided for @timerLogStartEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Log start earlier'**
+  String get timerLogStartEarlier;
+
+  /// No description provided for @timerLogEndEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Log end earlier'**
+  String get timerLogEndEarlier;
+
+  /// No description provided for @timerLogFastStartEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Log fast start earlier'**
+  String get timerLogFastStartEarlier;
+
+  /// No description provided for @bodyMeasureChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get bodyMeasureChest;
+
+  /// No description provided for @bodyMeasureWaist.
+  ///
+  /// In en, this message translates to:
+  /// **'Waist'**
+  String get bodyMeasureWaist;
+
+  /// No description provided for @bodyMeasureHips.
+  ///
+  /// In en, this message translates to:
+  /// **'Hips'**
+  String get bodyMeasureHips;
+
+  /// No description provided for @bodyMeasureChestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest Size (cm)'**
+  String get bodyMeasureChestTitle;
+
+  /// No description provided for @bodyMeasureWaistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waist Size (cm)'**
+  String get bodyMeasureWaistTitle;
+
+  /// No description provided for @bodyMeasureHipsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hips Size (cm)'**
+  String get bodyMeasureHipsTitle;
+
+  /// No description provided for @bodyMeasureAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get bodyMeasureAdd;
+
+  /// No description provided for @drinkWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get drinkWater;
+
+  /// No description provided for @drinkBlackCoffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Black Coffee'**
+  String get drinkBlackCoffee;
+
+  /// No description provided for @drinkLatteSweetCoffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Latte / Sweet Coffee'**
+  String get drinkLatteSweetCoffee;
+
+  /// No description provided for @drinkGreenBlackTea.
+  ///
+  /// In en, this message translates to:
+  /// **'Green / Black Tea'**
+  String get drinkGreenBlackTea;
+
+  /// No description provided for @drinkDietSoda.
+  ///
+  /// In en, this message translates to:
+  /// **'Diet Soda'**
+  String get drinkDietSoda;
+
+  /// No description provided for @drinkSweetSoda.
+  ///
+  /// In en, this message translates to:
+  /// **'Sweet Soda'**
+  String get drinkSweetSoda;
+
+  /// No description provided for @drinkJuice.
+  ///
+  /// In en, this message translates to:
+  /// **'Juice'**
+  String get drinkJuice;
+
+  /// No description provided for @drinkAlcohol.
+  ///
+  /// In en, this message translates to:
+  /// **'Alcohol'**
+  String get drinkAlcohol;
+
+  /// No description provided for @waterDrinkContainsCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'{drink} contains calories!'**
+  String waterDrinkContainsCalories(String drink);
+
+  /// No description provided for @waterBreakFastWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Drinking this will break your current fast and automatically start your eating window. Are you sure?'**
+  String get waterBreakFastWarning;
+
+  /// No description provided for @waterConfirmDrinkBreakFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I drank it'**
+  String get waterConfirmDrinkBreakFast;
+
+  /// No description provided for @waterDrinkPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you drink?'**
+  String get waterDrinkPrompt;
+
+  /// No description provided for @waterFastStoppedByDrink.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting timer stopped because you drank {drink}.'**
+  String waterFastStoppedByDrink(String drink);
+
+  /// No description provided for @waterUndoLastDrink.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo last drink'**
+  String get waterUndoLastDrink;
+
+  /// No description provided for @unitMl.
+  ///
+  /// In en, this message translates to:
+  /// **'ml'**
+  String get unitMl;
+
+  /// No description provided for @healthBadgeSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get healthBadgeSync;
+
+  /// No description provided for @healthNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No Data'**
+  String get healthNoData;
+
+  /// No description provided for @healthSleepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get healthSleepLabel;
+
+  /// No description provided for @healthCyclePhaseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle Phase'**
+  String get healthCyclePhaseLabel;
+
+  /// No description provided for @cyclePhaseMenstruation.
+  ///
+  /// In en, this message translates to:
+  /// **'Menstruation'**
+  String get cyclePhaseMenstruation;
+
+  /// No description provided for @cyclePhaseFollicular.
+  ///
+  /// In en, this message translates to:
+  /// **'Follicular'**
+  String get cyclePhaseFollicular;
+
+  /// No description provided for @cyclePhaseOvulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulation'**
+  String get cyclePhaseOvulation;
+
+  /// No description provided for @cyclePhaseLuteal.
+  ///
+  /// In en, this message translates to:
+  /// **'Luteal'**
+  String get cyclePhaseLuteal;
+
+  /// No description provided for @learnQuickBites.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Bites'**
+  String get learnQuickBites;
+
+  /// No description provided for @storyFasting101.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting 101'**
+  String get storyFasting101;
+
+  /// No description provided for @storyAutophagy.
+  ///
+  /// In en, this message translates to:
+  /// **'Autophagy'**
+  String get storyAutophagy;
+
+  /// No description provided for @storyKetoDiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Keto Diet'**
+  String get storyKetoDiet;
+
+  /// No description provided for @storyHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration'**
+  String get storyHydration;
+
+  /// No description provided for @storySleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get storySleep;
+
+  /// No description provided for @storyOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening story: {title}...'**
+  String storyOpening(String title);
+
+  /// No description provided for @recipeSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {title}'**
+  String recipeSelected(String title);
+
+  /// No description provided for @aiUpdatingConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is updating configuration. Please check your internet and restart the app.'**
+  String get aiUpdatingConfig;
+
+  /// No description provided for @aiSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Coach session expired. Close and reopen the chat to continue.'**
+  String get aiSessionExpired;
+
+  /// No description provided for @aiEmptyResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m still thinking. Please try again.'**
+  String get aiEmptyResponse;
+
+  /// No description provided for @authGoogleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In failed. Please try again.'**
+  String get authGoogleFailed;
+
+  /// No description provided for @authAppleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Sign-In is only available on iOS.'**
+  String get authAppleUnavailable;
+
+  /// No description provided for @authAppleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Sign-In failed. Please try again.'**
+  String get authAppleFailed;
+
+  /// No description provided for @journalSymptomsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptoms & State'**
+  String get journalSymptomsTitle;
+
+  /// No description provided for @journalSymptomsPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptoms'**
+  String get journalSymptomsPrefix;
+
+  /// No description provided for @journalUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal updated! 📝'**
+  String get journalUpdated;
+
+  /// No description provided for @symptomEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get symptomEnergy;
+
+  /// No description provided for @symptomFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get symptomFocus;
+
+  /// No description provided for @symptomHungry.
+  ///
+  /// In en, this message translates to:
+  /// **'Hungry'**
+  String get symptomHungry;
+
+  /// No description provided for @symptomFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Fatigue'**
+  String get symptomFatigue;
+
+  /// No description provided for @symptomHeadache.
+  ///
+  /// In en, this message translates to:
+  /// **'Headache'**
+  String get symptomHeadache;
+
+  /// No description provided for @symptomThirsty.
+  ///
+  /// In en, this message translates to:
+  /// **'Thirsty'**
+  String get symptomThirsty;
+
+  /// No description provided for @moodTerrible.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrible'**
+  String get moodTerrible;
+
+  /// No description provided for @moodBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Bad'**
+  String get moodBad;
+
+  /// No description provided for @moodOkay.
+  ///
+  /// In en, this message translates to:
+  /// **'Okay'**
+  String get moodOkay;
+
+  /// No description provided for @moodGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get moodGood;
+
+  /// No description provided for @moodGreat.
+  ///
+  /// In en, this message translates to:
+  /// **'Great'**
+  String get moodGreat;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

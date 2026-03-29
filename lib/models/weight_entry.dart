@@ -69,7 +69,8 @@ class WeightEntry extends Equatable {
   }
 
   /// Алиас для fromJson
-  factory WeightEntry.fromJson(Map<String, dynamic> json) => WeightEntry.fromMap(json);
+  factory WeightEntry.fromJson(Map<String, dynamic> json) =>
+      WeightEntry.fromMap(json);
 
   // --- EQUATABLE ---
   @override

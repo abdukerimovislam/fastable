@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/services/ai_service.dart';
 
 // --- EVENTS ---
@@ -14,18 +13,41 @@ abstract class CoachEvent extends Equatable {
 // 1. ИЗМЕНЕНИЕ: Событие теперь принимает локализованное приветствие
 class InitCoach extends CoachEvent {
   final String greeting;
-  const InitCoach(this.greeting);
+  final String profileContext;
+  final double weight;
+  final double height;
+  final int age;
+  final String gender;
+  final String activity;
+  const InitCoach({
+    required this.greeting,
+    required this.profileContext,
+    required this.weight,
+    required this.height,
+    required this.age,
+    required this.gender,
+    required this.activity,
+  });
 
   @override
-  List<Object> get props => [greeting];
+  List<Object> get props => [
+    greeting,
+    profileContext,
+    weight,
+    height,
+    age,
+    gender,
+    activity,
+  ];
 }
 
 class SendCoachMessage extends CoachEvent {
   final String text;
-  const SendCoachMessage(this.text);
+  final String errorFallbackText;
+  const SendCoachMessage(this.text, this.errorFallbackText);
 
   @override
-  List<Object> get props => [text];
+  List<Object> get props => [text, errorFallbackText];
 }
 
 // --- STATE ---
@@ -34,7 +56,11 @@ class CoachMessage extends Equatable {
   final bool isUser;
   final DateTime timestamp;
 
-  const CoachMessage({required this.text, required this.isUser, required this.timestamp});
+  const CoachMessage({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
   @override
   List<Object> get props => [text, isUser, timestamp];
 }
@@ -62,6 +88,7 @@ class CoachState extends Equatable {
       errorMessage: errorMessage, // null сбросит ошибку
     );
   }
+
   @override
   List<Object?> get props => [messages, isLoading, errorMessage];
 }
@@ -77,28 +104,20 @@ class CoachBloc extends Bloc<CoachEvent, CoachState> {
   }
 
   Future<void> _onInit(InitCoach event, Emitter<CoachState> emit) async {
-    // 1. Загружаем данные пользователя
-    final prefs = await SharedPreferences.getInstance();
-    final weight = prefs.getDouble('user_weight') ?? 70.0;
-    final height = prefs.getDouble('user_height') ?? 170.0;
-    final age = prefs.getInt('user_age') ?? 25;
-    final genderIdx = prefs.getInt('user_gender') ?? 0;
-    final gender = genderIdx == 0 ? "Male" : "Female";
-    final activity = prefs.getString('user_activity') ?? 'Moderate';
-
-    // 2. Инициализируем чат, передавая локализованное приветствие
+    // 1. Инициализируем чат актуальными данными из реактивного state
     _aiService.startChat(
-      weight: weight,
-      height: height,
-      age: age,
-      gender: gender,
-      activity: activity,
-      greeting: event.greeting, // <--- ИСПОЛЬЗУЕМ ТЕКСТ ИЗ EVENT
+      weight: event.weight,
+      height: event.height,
+      age: event.age,
+      gender: event.gender,
+      activity: event.activity,
+      greeting: event.greeting,
+      profileContext: event.profileContext,
     );
 
-    // 3. Добавляем приветствие в список сообщений
+    // 2. Добавляем приветствие в список сообщений
     final welcomeMsg = CoachMessage(
-      text: event.greeting, // <--- ИСПОЛЬЗУЕМ ТЕКСТ ИЗ EVENT
+      text: event.greeting,
       isUser: false,
       timestamp: DateTime.now(),
     );
@@ -106,27 +125,38 @@ class CoachBloc extends Bloc<CoachEvent, CoachState> {
     emit(state.copyWith(messages: [welcomeMsg]));
   }
 
-  Future<void> _onSendMessage(SendCoachMessage event, Emitter<CoachState> emit) async {
+  Future<void> _onSendMessage(
+    SendCoachMessage event,
+    Emitter<CoachState> emit,
+  ) async {
     // Добавляем сообщение юзера
-    final userMsg = CoachMessage(text: event.text, isUser: true, timestamp: DateTime.now());
+    final userMsg = CoachMessage(
+      text: event.text,
+      isUser: true,
+      timestamp: DateTime.now(),
+    );
     final newHistory = List<CoachMessage>.from(state.messages)..add(userMsg);
 
-    emit(state.copyWith(messages: newHistory, isLoading: true, errorMessage: null));
+    emit(
+      state.copyWith(messages: newHistory, isLoading: true, errorMessage: null),
+    );
 
     try {
       // Отправляем в AI
       final responseText = await _aiService.sendMessage(event.text);
 
       // Добавляем ответ AI
-      final aiMsg = CoachMessage(text: responseText, isUser: false, timestamp: DateTime.now());
+      final aiMsg = CoachMessage(
+        text: responseText,
+        isUser: false,
+        timestamp: DateTime.now(),
+      );
       final finalHistory = List<CoachMessage>.from(newHistory)..add(aiMsg);
 
       emit(state.copyWith(messages: finalHistory, isLoading: false));
     } catch (e) {
-      // Если сервис вернул ошибку (например, нет ключа или интернета)
-      // Мы добавляем системное сообщение об ошибке в чат или в state
       final errorMsg = CoachMessage(
-        text: "Connection Error. Please check your internet.", // Тут можно оставить английский или прокидывать код ошибки
+        text: event.errorFallbackText,
         isUser: false,
         timestamp: DateTime.now(),
       );

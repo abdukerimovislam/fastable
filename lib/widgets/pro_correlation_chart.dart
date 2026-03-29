@@ -36,7 +36,11 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
             children: [
               const Text(
                 "Fasting vs Weight",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               _buildTimeframeSelector(),
             ],
@@ -44,7 +48,10 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
           const SizedBox(height: 8),
           Text(
             "Track your metabolic correlation over time.",
-            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 30),
 
@@ -57,24 +64,40 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.05),
+              color: Colors.amber.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.amber.withOpacity(0.1)),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.1)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_circle_rounded, color: Colors.amber, size: 24),
+                const Icon(
+                  Icons.lightbulb_circle_rounded,
+                  color: Colors.amber,
+                  size: 24,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Smart Insight", style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+                      const Text(
+                        "Smart Insight",
+                        style: TextStyle(
+                          color: Colors.amber,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         _getDynamicInsight(),
-                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13, height: 1.4),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
                       ),
                     ],
                   ),
@@ -92,7 +115,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -124,7 +147,9 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
+            color: isSelected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.5),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -139,10 +164,12 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
       builder: (context, historyState) {
         return BlocBuilder<WeightBloc, WeightState>(
           builder: (context, weightState) {
-
             // ГЕНЕРАЦИЯ ДАННЫХ ДЛЯ ВЫБРАННОГО ПЕРИОДА
             final now = DateTime.now();
-            final dates = List.generate(_selectedDays, (i) => now.subtract(Duration(days: _selectedDays - 1 - i)));
+            final dates = List.generate(
+              _selectedDays,
+              (i) => now.subtract(Duration(days: _selectedDays - 1 - i)),
+            );
 
             List<FlSpot> fastingSpots = [];
             List<FlSpot> weightSpots = [];
@@ -151,23 +178,37 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
               final date = dates[i];
 
               // Ищем голодания
-              final recordsForDay = historyState.records.where((r) =>
-              r.startTime.year == date.year && r.startTime.month == date.month && r.startTime.day == date.day);
+              final recordsForDay = historyState.records.where(
+                (r) =>
+                    r.startTime.year == date.year &&
+                    r.startTime.month == date.month &&
+                    r.startTime.day == date.day,
+              );
 
               double fastingHours = 0.0;
               if (recordsForDay.isNotEmpty) {
-                fastingHours = recordsForDay.map((r) => r.duration.inMinutes / 60.0).reduce((a, b) => a > b ? a : b);
+                fastingHours = recordsForDay
+                    .map((r) => r.duration.inMinutes / 60.0)
+                    .reduce((a, b) => a > b ? a : b);
               }
 
               // Ищем вес
-              final weightEntries = weightState.history.where((w) =>
-              w.date.year == date.year && w.date.month == date.month && w.date.day == date.day).toList();
+              final weightEntries = weightState.history
+                  .where(
+                    (w) =>
+                        w.date.year == date.year &&
+                        w.date.month == date.month &&
+                        w.date.day == date.day,
+                  )
+                  .toList();
 
               double weightOfDay = weightState.currentWeight;
               if (weightEntries.isNotEmpty) {
                 weightOfDay = weightEntries.last.weight;
               } else {
-                final pastWeights = weightState.history.where((w) => w.date.isBefore(date)).toList();
+                final pastWeights = weightState.history
+                    .where((w) => w.date.isBefore(date))
+                    .toList();
                 if (pastWeights.isNotEmpty) {
                   pastWeights.sort((a, b) => a.date.compareTo(b.date));
                   weightOfDay = pastWeights.last.weight;
@@ -179,7 +220,9 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
             }
 
             // Целевой вес (Симулируем, если нет в стейте, например -5 кг от текущего)
-            double targetWeight = weightState.currentWeight > 50 ? weightState.currentWeight - 5.0 : 50.0;
+            double targetWeight = weightState.currentWeight > 50
+                ? weightState.currentWeight - 5.0
+                : 50.0;
 
             return Column(
               children: [
@@ -192,15 +235,25 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                         horizontalLines: [
                           HorizontalLine(
                             y: targetWeight,
-                            color: Colors.greenAccent.withOpacity(0.5),
+                            color: Colors.greenAccent.withValues(alpha: 0.5),
                             strokeWidth: 2,
                             dashArray: [5, 5], // Делаем линию пунктирной
                             label: HorizontalLineLabel(
                               show: true,
                               alignment: Alignment.topRight,
-                              padding: const EdgeInsets.only(right: 5, bottom: 5),
-                              style: TextStyle(color: Colors.greenAccent.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.bold),
-                              labelResolver: (line) => 'Goal: ${line.y.toStringAsFixed(1)}kg',
+                              padding: const EdgeInsets.only(
+                                right: 5,
+                                bottom: 5,
+                              ),
+                              style: TextStyle(
+                                color: Colors.greenAccent.withValues(
+                                  alpha: 0.8,
+                                ),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              labelResolver: (line) =>
+                                  'Goal: ${line.y.toStringAsFixed(1)}kg',
                             ),
                           ),
                         ],
@@ -209,42 +262,88 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                         show: true,
                         drawVerticalLine: false,
                         horizontalInterval: 2,
-                        getDrawingHorizontalLine: (value) => FlLine(color: Colors.white.withOpacity(0.05), strokeWidth: 1),
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          strokeWidth: 1,
+                        ),
                       ),
                       borderData: FlBorderData(show: false),
                       titlesData: FlTitlesData(
                         show: true,
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                         leftTitles: AxisTitles(
-                          axisNameWidget: const Text("Hours", style: TextStyle(color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                          axisNameWidget: const Text(
+                            "Hours",
+                            style: TextStyle(
+                              color: Colors.blueAccent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           axisNameSize: 20,
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 30,
-                            getTitlesWidget: (value, meta) => Text("${value.toInt()}h", style: TextStyle(color: Colors.blueAccent.withOpacity(0.7), fontSize: 10)),
+                            getTitlesWidget: (value, meta) => Text(
+                              "${value.toInt()}h",
+                              style: TextStyle(
+                                color: Colors.blueAccent.withValues(alpha: 0.7),
+                                fontSize: 10,
+                              ),
+                            ),
                           ),
                         ),
                         rightTitles: AxisTitles(
-                          axisNameWidget: const Text("Weight", style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                          axisNameWidget: const Text(
+                            "Weight",
+                            style: TextStyle(
+                              color: Colors.greenAccent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           axisNameSize: 20,
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 36,
-                            getTitlesWidget: (value, meta) => Text(value.toStringAsFixed(1), style: TextStyle(color: Colors.greenAccent.withOpacity(0.7), fontSize: 10)),
+                            getTitlesWidget: (value, meta) => Text(
+                              value.toStringAsFixed(1),
+                              style: TextStyle(
+                                color: Colors.greenAccent.withValues(
+                                  alpha: 0.7,
+                                ),
+                                fontSize: 10,
+                              ),
+                            ),
                           ),
                         ),
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 24,
-                            interval: _selectedDays > 7 ? (_selectedDays / 5).ceilToDouble() : 1, // Динамический интервал для осей
+                            interval: _selectedDays > 7
+                                ? (_selectedDays / 5).ceilToDouble()
+                                : 1, // Динамический интервал для осей
                             getTitlesWidget: (value, meta) {
-                              if (value.toInt() >= 0 && value.toInt() < dates.length) {
+                              if (value.toInt() >= 0 &&
+                                  value.toInt() < dates.length) {
                                 final date = dates[value.toInt()];
-                                final format = _selectedDays == 7 ? DateFormat('E') : DateFormat('d MMM');
+                                final format = _selectedDays == 7
+                                    ? DateFormat('E')
+                                    : DateFormat('d MMM');
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
-                                  child: Text(format.format(date), style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
+                                  child: Text(
+                                    format.format(date),
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      fontSize: 10,
+                                    ),
+                                  ),
                                 );
                               }
                               return const SizedBox.shrink();
@@ -261,7 +360,10 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                           barWidth: 3,
                           isStrokeCapRound: true,
                           dotData: const FlDotData(show: false),
-                          belowBarData: BarAreaData(show: true, color: Colors.blueAccent.withOpacity(0.15)),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: Colors.blueAccent.withValues(alpha: 0.15),
+                          ),
                         ),
                         // Линия Веса
                         LineChartBarData(
@@ -271,8 +373,16 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                           barWidth: 3,
                           isStrokeCapRound: true,
                           dotData: FlDotData(
-                            show: _selectedDays == 7, // Показываем точки только на масштабе 1 недели, чтобы не было "каши"
-                            getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(radius: 4, color: Colors.greenAccent, strokeWidth: 2, strokeColor: const Color(0xFF1E1E1E)),
+                            show:
+                                _selectedDays ==
+                                7, // Показываем точки только на масштабе 1 недели, чтобы не было "каши"
+                            getDotPainter: (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                                  radius: 4,
+                                  color: Colors.greenAccent,
+                                  strokeWidth: 2,
+                                  strokeColor: const Color(0xFF1E1E1E),
+                                ),
                           ),
                           belowBarData: BarAreaData(show: false),
                         ),
@@ -301,9 +411,22 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
   Widget _buildLegendItem(Color color, String text) {
     return Row(
       children: [
-        Container(width: 12, height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+        Container(
+          width: 12,
+          height: 4,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
         const SizedBox(width: 8),
-        Text(text, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+        Text(
+          text,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }

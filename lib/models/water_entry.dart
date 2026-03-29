@@ -5,10 +5,7 @@ class WaterEntry extends Equatable {
   final DateTime date;
   final int cupCount;
 
-  const WaterEntry({
-    required this.date,
-    required this.cupCount,
-  });
+  const WaterEntry({required this.date, required this.cupCount});
 
   /// Универсальный конструктор (JSON + Firestore)
   factory WaterEntry.fromMap(Map<String, dynamic> map) {
@@ -32,7 +29,8 @@ class WaterEntry extends Equatable {
   }
 
   // Алиасы для старого кода
-  factory WaterEntry.fromJson(Map<String, dynamic> json) => WaterEntry.fromMap(json);
+  factory WaterEntry.fromJson(Map<String, dynamic> json) =>
+      WaterEntry.fromMap(json);
   Map<String, dynamic> toJson() => toMap();
 
   @override

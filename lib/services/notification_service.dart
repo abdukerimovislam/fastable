@@ -6,17 +6,25 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:injectable/injectable.dart';
 import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/bloc/fasting/fasting_state.dart';
+import 'package:fastable/models/fasting_plan.dart';
 import 'dart:io'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт dart:io для проверки платформы
 
 const String kNotifyWaterKey = 'notify_water';
 const String kNotifyWeightKey = 'notify_weight';
+const String kNotifyFastingStartKey = 'notify_fasting_start';
+const String kNotificationsEnabledKey = 'notifications_enabled';
+const String kDailyInsightEnabledKey = 'daily_insight_enabled';
 
 @lazySingleton
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   static const int _idWeight = 400;
   static const int _idDailyInsight = 888;
+  static const List<int> _waterReminderIds = [3000, 3001, 3002];
+  static const List<int> _waterReminderHours = [10, 14, 18];
 
   bool _isInitialized = false;
 
@@ -36,18 +44,20 @@ class NotificationService {
     }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const DarwinInitializationSettings initializationSettingsIOS =
-    DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true);
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
 
     await _notificationsPlugin.initialize(initializationSettings);
     _isInitialized = true;
@@ -58,7 +68,8 @@ class NotificationService {
     if (Platform.isIOS) {
       final iosImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
+            IOSFlutterLocalNotificationsPlugin
+          >();
       if (iosImplementation != null) {
         await iosImplementation.requestPermissions(
           alert: true,
@@ -70,7 +81,8 @@ class NotificationService {
     } else if (Platform.isAndroid) {
       final androidImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidImplementation != null) {
         await androidImplementation.requestNotificationsPermission();
         debugPrint("✅ Android Notification Permissions Requested");
@@ -80,8 +92,20 @@ class NotificationService {
 
   // --- 🥑 DAILY AI INSIGHT NOTIFICATIONS ---
 
-  Future<void> scheduleDailyInsight(AppLocalizations l10n) async {
+  Future<void> scheduleDailyInsight(
+    AppLocalizations l10n, {
+    bool markEnabled = true,
+  }) async {
+    await init();
+    final prefs = await SharedPreferences.getInstance();
+    if (markEnabled) {
+      await prefs.setBool(kDailyInsightEnabledKey, true);
+    }
     await cancelDailyInsight();
+
+    if (!await _areNotificationsEnabled(prefs)) {
+      return;
+    }
 
     await _notificationsPlugin.zonedSchedule(
       _idDailyInsight,
@@ -99,59 +123,89 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
-  Future<void> cancelDailyInsight() async {
+  Future<void> cancelDailyInsight({bool clearPreference = false}) async {
     await _notificationsPlugin.cancel(_idDailyInsight);
+    if (clearPreference) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(kDailyInsightEnabledKey, false);
+    }
   }
 
   // --- SMART & CARING NOTIFICATIONS (FASTING) ---
 
   // --- 🔥 МЕТОД ДЛЯ ПЕРЕВОДА УВЕДОМЛЕНИЙ ПРИ СМЕНЕ ЯЗЫКА ---
   Future<void> rescheduleAll(AppLocalizations l10n) async {
+    await init();
     final prefs = await SharedPreferences.getInstance();
+    final shouldRestoreDailyInsight =
+        prefs.getBool(kDailyInsightEnabledKey) ?? false;
+    final shouldRestoreWeightReminder =
+        prefs.getBool(kNotifyWeightKey) ?? false;
+    final shouldRestoreWaterReminders = prefs.getBool(kNotifyWaterKey) ?? false;
 
     // 1. Отменяем всё старое
     await cancelAllFastingNotifications();
     await cancelDailyInsight();
+    await cancelWeightReminder();
+    await cancelWaterReminders();
 
-    // 2. Восстанавливаем Daily Insight
-    await scheduleDailyInsight(l10n);
+    if (!await _areNotificationsEnabled(prefs)) {
+      return;
+    }
+
+    // 2. Восстанавливаем только реально активные ежедневные уведомления
+    if (shouldRestoreDailyInsight) {
+      await scheduleDailyInsight(l10n, markEnabled: false);
+    }
+
+    if (shouldRestoreWeightReminder) {
+      await scheduleDailyWeightReminder(l10n);
+    }
+
+    if (shouldRestoreWaterReminders) {
+      await scheduleDailyWaterReminders(l10n);
+    }
 
     // 3. Восстанавливаем таймеры голодания/окна еды (если они активны)
-    String stateStr = prefs.getString('app_state') ?? 'stopped';
-    String? startStr = prefs.getString('cycle_start_time');
+    final stateStr = prefs.getString('app_state') ?? 'stopped';
+    final startStr = prefs.getString('cycle_start_time');
 
     if (stateStr != 'stopped' && startStr != null) {
-      DateTime startTime = DateTime.tryParse(startStr) ?? DateTime.now();
-
-      // Нужно понять, какая сейчас цель (в часах)
-      int planIdx = prefs.getInt('fast_plan_index') ?? 0;
-      int customHours = prefs.getInt('custom_target_hours') ?? 14;
-
-      Duration goal;
-      if (planIdx == -1) { // -1 это Custom Plan
-        goal = stateStr == 'fasting'
-            ? Duration(hours: customHours)
-            : Duration(hours: (24 - customHours).clamp(1, 23));
-      } else {
-        // Для дефолтных планов (0: 14/10, 1: 16/8, etc)
-        // Это немного костыльно читать так без Bloc, но для сервиса сойдет
-        List<int> fastHours = [14, 16, 18, 20, 24]; // Массив из FastingPlan.defaultPlans
-        int fastH = (planIdx >= 0 && planIdx < fastHours.length) ? fastHours[planIdx] : 16;
-        goal = stateStr == 'fasting'
-            ? Duration(hours: fastH)
-            : Duration(hours: 24 - fastH);
-      }
+      final startTime = DateTime.tryParse(startStr) ?? DateTime.now();
+      final phase = stateStr == FastingPhase.fasting.name
+          ? FastingPhase.fasting
+          : FastingPhase.eating;
+      final planIdx = prefs.getInt('fast_plan_index') ?? 0;
+      final customHours = prefs.getInt('custom_target_hours') ?? 14;
+      final circadianTargetMinutes =
+          prefs.getInt('circadian_target_minutes') ??
+          const Duration(hours: 14).inMinutes;
+      final goal = _resolvePhaseDuration(
+        phase: phase,
+        planIndex: planIdx,
+        customHours: customHours,
+        circadianTargetMinutes: circadianTargetMinutes,
+      );
 
       // Планируем заново с новым языком!
-      if (stateStr == 'fasting') {
-        await scheduleFastingNotifications(startTime: startTime, duration: goal, l10n: l10n);
+      if (phase == FastingPhase.fasting) {
+        await scheduleFastingNotifications(
+          startTime: startTime,
+          duration: goal,
+          l10n: l10n,
+        );
       } else if (stateStr == 'eating') {
-        await scheduleEatingNotifications(startTime: startTime, duration: goal, l10n: l10n);
+        await scheduleEatingNotifications(
+          startTime: startTime,
+          duration: goal,
+          l10n: l10n,
+        );
       }
     }
   }
@@ -161,24 +215,33 @@ class NotificationService {
     required Duration duration,
     required AppLocalizations l10n,
   }) async {
+    await init();
+    if (!await _areNotificationsEnabled()) {
+      await cancelFastingNotifications();
+      return;
+    }
+
     final endTime = startTime.add(duration);
     final now = DateTime.now();
 
-    await cancelFastingNotifications();
+    await cancelCycleNotifications();
 
     final stages = _getLocalizedStages(l10n);
 
-    stages.forEach((hour, content) {
+    for (final entry in stages.entries) {
+      final hour = entry.key;
+      final content = entry.value;
       final stageTime = startTime.add(Duration(hours: hour));
-      if (stageTime.isAfter(now) && stageTime.isBefore(endTime.add(const Duration(minutes: 15)))) {
-        _scheduleOneShot(
+      if (stageTime.isAfter(now) &&
+          stageTime.isBefore(endTime.add(const Duration(minutes: 15)))) {
+        await _scheduleOneShot(
           id: 1000 + hour, // ID от 1000 до 1024
           title: content.title,
           body: content.body,
           scheduledTime: stageTime,
         );
       }
-    });
+    }
 
     final halfTime = startTime.add(duration ~/ 2);
     if (halfTime.isAfter(now) && halfTime.isBefore(endTime)) {
@@ -219,8 +282,20 @@ class NotificationService {
     required Duration duration,
     required AppLocalizations l10n,
   }) async {
+    await init();
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsEnabled = await _areNotificationsEnabled(prefs);
+    final notifyFastingStart = prefs.getBool(kNotifyFastingStartKey) ?? false;
+
+    if (!notificationsEnabled || !notifyFastingStart) {
+      await cancelEatingNotifications();
+      return;
+    }
+
     final endTime = startTime.add(duration);
     final now = DateTime.now();
+
+    await cancelCycleNotifications();
 
     if (endTime.isAfter(now)) {
       await _scheduleOneShot(
@@ -245,10 +320,11 @@ class NotificationService {
   // --- OTHER REMINDERS ---
 
   Future<void> scheduleDailyWeightReminder(AppLocalizations l10n) async {
+    await init();
     final prefs = await SharedPreferences.getInstance();
-    bool isWeightEnabled = prefs.getBool(kNotifyWeightKey) ?? false;
+    final isWeightEnabled = prefs.getBool(kNotifyWeightKey) ?? false;
 
-    if (!isWeightEnabled) {
+    if (!isWeightEnabled || !await _areNotificationsEnabled(prefs)) {
       await cancelWeightReminder();
       return;
     }
@@ -267,9 +343,45 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
+  }
+
+  Future<void> scheduleDailyWaterReminders(AppLocalizations l10n) async {
+    await init();
+    final prefs = await SharedPreferences.getInstance();
+    final isWaterEnabled = prefs.getBool(kNotifyWaterKey) ?? false;
+
+    if (!isWaterEnabled || !await _areNotificationsEnabled(prefs)) {
+      await cancelWaterReminders();
+      return;
+    }
+
+    await cancelWaterReminders();
+
+    for (int index = 0; index < _waterReminderIds.length; index++) {
+      await _notificationsPlugin.zonedSchedule(
+        _waterReminderIds[index],
+        l10n.notifWaterTitle,
+        l10n.notifWaterBody,
+        _nextInstanceOfTime(_waterReminderHours[index]),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'water_reminder_channel',
+            'Water Reminders',
+            channelDescription: 'Daily reminders to stay hydrated',
+            importance: Importance.low,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
   }
 
   // --- CANCELLATION ---
@@ -288,12 +400,60 @@ class NotificationService {
     }
   }
 
+  Future<void> cancelEatingNotifications() async {
+    await _notificationsPlugin.cancel(2000);
+    await _notificationsPlugin.cancel(2001);
+  }
+
+  Future<void> cancelCycleNotifications() async {
+    await cancelFastingNotifications();
+    await cancelEatingNotifications();
+  }
+
   Future<void> cancelWeightReminder() async {
     await _notificationsPlugin.cancel(_idWeight);
   }
 
+  Future<void> cancelWaterReminders() async {
+    for (final id in _waterReminderIds) {
+      await _notificationsPlugin.cancel(id);
+    }
+  }
+
   Future<void> cancelAllFastingNotifications() async {
-    await cancelFastingNotifications();
+    await cancelCycleNotifications();
+  }
+
+  Duration _resolvePhaseDuration({
+    required FastingPhase phase,
+    required int planIndex,
+    required int customHours,
+    required int circadianTargetMinutes,
+  }) {
+    if (planIndex == FastingState.customPlanIndex) {
+      final fastingDuration = Duration(hours: customHours.clamp(1, 23));
+      final eatingDuration = Duration(hours: (24 - customHours).clamp(1, 23));
+      return phase == FastingPhase.fasting ? fastingDuration : eatingDuration;
+    }
+
+    if (planIndex == FastingState.circadianPlanIndex) {
+      final fastingMinutes = circadianTargetMinutes.clamp(60, 23 * 60);
+      final fastingDuration = Duration(minutes: fastingMinutes);
+      final eatingDuration = const Duration(hours: 24) - fastingDuration;
+      return phase == FastingPhase.fasting ? fastingDuration : eatingDuration;
+    }
+
+    final plan = planIndex >= 0 && planIndex < FastingPlan.defaultPlans.length
+        ? FastingPlan.defaultPlans[planIndex]
+        : FastingPlan.defaultPlans.first;
+    return phase == FastingPhase.fasting
+        ? plan.fastingDuration
+        : plan.eatingDuration;
+  }
+
+  Future<bool> _areNotificationsEnabled([SharedPreferences? prefs]) async {
+    final resolvedPrefs = prefs ?? await SharedPreferences.getInstance();
+    return resolvedPrefs.getBool(kNotificationsEnabledKey) ?? true;
   }
 
   // --- HELPERS ---
@@ -328,7 +488,8 @@ class NotificationService {
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
       debugPrint("Error scheduling notification $id: $e");
@@ -337,7 +498,13 @@ class NotificationService {
 
   tz.TZDateTime _nextInstanceOfTime(int hour) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+    );
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
@@ -346,7 +513,9 @@ class NotificationService {
 
   // --- DATA MAPPING (LOCALIZED) ---
 
-  Map<int, ({String title, String body})> _getLocalizedStages(AppLocalizations l10n) {
+  Map<int, ({String title, String body})> _getLocalizedStages(
+    AppLocalizations l10n,
+  ) {
     return {
       2: (title: l10n.stage2Title, body: l10n.stage2Body),
       4: (title: l10n.stage4Title, body: l10n.stage4Body),

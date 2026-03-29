@@ -8,10 +8,14 @@ class FirestoreService {
   // 🔥 ИСПРАВЛЕНИЕ: Храним время последнего обращения к серверу (в памяти текущей сессии)
   DateTime? _lastFetchTime;
 
-  Future<List<Article>> getArticles(String languageCode, {int limit = 50}) async {
+  Future<List<Article>> getArticles(
+    String languageCode, {
+    int limit = 50,
+  }) async {
     // 🔥 ЗАЩИТА 1: Ограничиваем максимальное количество документов (limit),
     // чтобы случайно не выкачать 1000+ статей и не разориться на квотах
-    final articlesRef = _db.collection('articles')
+    final articlesRef = _db
+        .collection('articles')
         .orderBy('order', descending: false)
         .limit(limit);
 
@@ -30,19 +34,24 @@ class FirestoreService {
 
       if (shouldFetchFromServer) {
         // Читаем с сервера и обновляем кэш
-        snapshot = await articlesRef.get(const GetOptions(source: Source.serverAndCache));
+        snapshot = await articlesRef.get(
+          const GetOptions(source: Source.serverAndCache),
+        );
         _lastFetchTime = DateTime.now();
       } else {
         // Читаем только из локального кэша (0 затрат квот Firestore)
-        snapshot = await articlesRef.get(const GetOptions(source: Source.cache));
+        snapshot = await articlesRef.get(
+          const GetOptions(source: Source.cache),
+        );
 
         // Подстраховка: если кэш по какой-то причине пуст, делаем фоллбэк на сервер
         if (snapshot.docs.isEmpty) {
-          snapshot = await articlesRef.get(const GetOptions(source: Source.serverAndCache));
+          snapshot = await articlesRef.get(
+            const GetOptions(source: Source.serverAndCache),
+          );
           _lastFetchTime = DateTime.now();
         }
       }
-
     } catch (e) {
       debugPrint("⚠️ Firestore getArticles error (falling back to cache): $e");
       // Если нет интернета или ошибка сети, принудительно отдаем то, что есть в кэше
@@ -56,7 +65,9 @@ class FirestoreService {
 
       // Функция для безопасного получения перевода
       String getTranslatedField(String field) {
-        return data['${field}_$languageCode'] ?? data['${field}_en'] ?? 'No Content';
+        return data['${field}_$languageCode'] ??
+            data['${field}_en'] ??
+            'No Content';
       }
 
       articles.add(

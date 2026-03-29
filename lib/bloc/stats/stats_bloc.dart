@@ -4,13 +4,16 @@ import 'package:injectable/injectable.dart';
 import 'package:fastable/bloc/stats/stats_event.dart';
 import 'package:fastable/bloc/stats/stats_state.dart';
 import 'package:fastable/repositories/history_repository.dart';
+import 'package:fastable/services/achievement_service.dart';
 
 @injectable
 class StatsBloc extends Bloc<StatsEvent, StatsState> {
   final HistoryRepository _historyRepository;
+  final AchievementService _achievementService;
   StreamSubscription? _historySubscription;
 
-  StatsBloc(this._historyRepository) : super(const StatsState()) {
+  StatsBloc(this._historyRepository, this._achievementService)
+    : super(const StatsState()) {
     on<LoadStats>(_onLoadStats);
     on<StatsUpdated>(_onStatsUpdated);
   }
@@ -18,27 +21,44 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
   Future<void> _onLoadStats(LoadStats event, Emitter<StatsState> emit) async {
     emit(state.copyWith(status: StatsStatus.loading));
     await _historySubscription?.cancel();
-    _historySubscription = _historyRepository.getRecordsStream().listen((records) {
+    _historySubscription = _historyRepository.getRecordsStream().listen((
+      records,
+    ) {
       add(const StatsUpdated());
     });
   }
 
-  Future<void> _onStatsUpdated(StatsUpdated event, Emitter<StatsState> emit) async {
+  Future<void> _onStatsUpdated(
+    StatsUpdated event,
+    Emitter<StatsState> emit,
+  ) async {
     final records = _historyRepository.currentRecords;
 
     if (records.isEmpty) {
-      emit(state.copyWith(status: StatsStatus.success));
+      emit(
+        const StatsState(
+          status: StatsStatus.success,
+          weeklyChartData: [0, 0, 0, 0, 0, 0, 0],
+          maxChartValue: 24.0,
+          unlockedAchievements: [],
+        ),
+      );
       return;
     }
 
     // --- МАТЕМАТИКА ---
     final totalFasts = records.length;
-    final totalDuration = records.fold(Duration.zero, (prev, e) => prev + e.duration);
+    final totalDuration = records.fold(
+      Duration.zero,
+      (prev, e) => prev + e.duration,
+    );
     final totalHours = totalDuration.inMinutes / 60.0;
     final avgHours = totalFasts > 0 ? totalHours / totalFasts : 0.0;
 
     final successCount = records.where((r) => r.duration.inHours >= 16).length;
-    final successRate = totalFasts > 0 ? (successCount / totalFasts) * 100 : 0.0;
+    final successRate = totalFasts > 0
+        ? (successCount / totalFasts) * 100
+        : 0.0;
 
     // График (7 дней)
     final now = DateTime.now();
@@ -65,18 +85,24 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
     // 🔥 ИСПРАВЛЕНИЕ: Берем железобетонные стрики из репозитория
     final currentStreak = _historyRepository.calculateStreak();
     final longestStreak = _historyRepository.calculateLongestStreak();
+    final unlockedAchievements = _achievementService.getUnlockedAchievements(
+      records,
+    );
 
-    emit(state.copyWith(
-      status: StatsStatus.success,
-      totalFasts: totalFasts,
-      totalHours: totalHours,
-      averageDuration: avgHours,
-      successRate: successRate,
-      currentStreak: currentStreak,
-      longestStreak: longestStreak,
-      weeklyChartData: chartData,
-      maxChartValue: maxVal,
-    ));
+    emit(
+      state.copyWith(
+        status: StatsStatus.success,
+        totalFasts: totalFasts,
+        totalHours: totalHours,
+        averageDuration: avgHours,
+        successRate: successRate,
+        currentStreak: currentStreak,
+        longestStreak: longestStreak,
+        weeklyChartData: chartData,
+        maxChartValue: maxVal,
+        unlockedAchievements: unlockedAchievements,
+      ),
+    );
   }
 
   @override

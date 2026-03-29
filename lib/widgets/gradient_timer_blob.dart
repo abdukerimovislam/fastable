@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class GradientTimerBlob extends StatefulWidget {
@@ -20,7 +19,8 @@ class GradientTimerBlob extends StatefulWidget {
   State<GradientTimerBlob> createState() => _GradientTimerBlobState();
 }
 
-class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTickerProviderStateMixin {
+class _GradientTimerBlobState extends State<GradientTimerBlob>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -42,15 +42,17 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
   Widget build(BuildContext context) {
     // 🔥 Если цвета передали извне (из FastingTimerCard) — берем их.
     // Если нет — используем дефолтные градиенты.
-    final List<Color> displayColors = widget.colors ?? (widget.isFasting
-        ? [
-      const Color(0xFFFF4E50), // Red Orange
-      const Color(0xFFF9D423), // Warm Yellow
-    ]
-        : [
-      const Color(0xFF43C6AC), // Teal
-      const Color(0xFFF8FFAE), // Lime
-    ]);
+    final List<Color> displayColors =
+        widget.colors ??
+        (widget.isFasting
+            ? [
+                const Color(0xFFFF4E50), // Red Orange
+                const Color(0xFFF9D423), // Warm Yellow
+              ]
+            : [
+                const Color(0xFF43C6AC), // Teal
+                const Color(0xFFF8FFAE), // Lime
+              ]);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -66,18 +68,18 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
                 shape: BoxShape.circle,
                 gradient: SweepGradient(
                   colors: [
-                    displayColors.first.withOpacity(0.15),
-                    displayColors.last.withOpacity(0.15),
-                    displayColors.first.withOpacity(0.15),
+                    displayColors.first.withValues(alpha: 0.15),
+                    displayColors.last.withValues(alpha: 0.15),
+                    displayColors.first.withValues(alpha: 0.15),
                   ],
                   transform: GradientRotation(_controller.value * 2 * pi),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: displayColors.first.withOpacity(0.2),
+                    color: displayColors.first.withValues(alpha: 0.2),
                     blurRadius: 40,
                     spreadRadius: 2,
-                  )
+                  ),
                 ],
               ),
             ),
@@ -98,9 +100,9 @@ class _GradientTimerBlobState extends State<GradientTimerBlob> with SingleTicker
                     height: 180,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Theme.of(context).cardColor.withOpacity(0.9),
+                      color: Theme.of(context).cardColor.withValues(alpha: 0.9),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         width: 1,
                       ),
                     ),
@@ -134,7 +136,7 @@ class _GradientArcPainter extends CustomPainter {
 
     // Фон (трек)
     final bgPaint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = Colors.white.withValues(alpha: 0.05)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = strokeWidth;
@@ -158,13 +160,7 @@ class _GradientArcPainter extends CustomPainter {
 
     final drawPercent = percent < 0.001 ? 0.001 : percent;
 
-    canvas.drawArc(
-      rect,
-      -pi / 2,
-      2 * pi * drawPercent,
-      false,
-      paint,
-    );
+    canvas.drawArc(rect, -pi / 2, 2 * pi * drawPercent, false, paint);
 
     // Свечение на конце (Knob)
     if (percent > 0.01) {
@@ -175,9 +171,11 @@ class _GradientArcPainter extends CustomPainter {
       canvas.drawCircle(Offset(knobX, knobY), 5, Paint()..color = Colors.white);
 
       canvas.drawCircle(
-          Offset(knobX, knobY),
-          10,
-          Paint()..color = colors.last.withOpacity(0.5)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
+        Offset(knobX, knobY),
+        10,
+        Paint()
+          ..color = colors.last.withValues(alpha: 0.5)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
       );
     }
   }

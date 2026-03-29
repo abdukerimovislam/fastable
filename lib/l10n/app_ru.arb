@@ -596,9 +596,10 @@
                                                    "lblHours": "Часов",
                                                    "lblDayStreak": "Дней подряд",
                                                    "msgStartJourney": "Начните свой путь сегодня",
-                                                   "lblToday": "Сегодня",
-                                                   "lblYesterday": "Вчера",
-                                                   "lblFastingTypeCircadian": "Циркадный",
+                                                           "lblToday": "Сегодня",
+                                                           "lblYesterday": "Вчера",
+                                                           "confirmTime": "Подтвердить время",
+                                                           "lblFastingTypeCircadian": "Циркадный",
                                                    "lblFastingTypeWarrior": "Воин",
                                                    "lblFastingTypeOmad": "OMAD",
                                                    "lblHistoryFor": "История за {date}",
@@ -652,6 +653,9 @@
                                                          "msgLoginFailed": "Ошибка входа: {error}",
                                                          "msgAppleLoginFailed": "Ошибка входа Apple: {error}",
                                                          "msgDeleteError": "Ошибка удаления аккаунта",
+                                                         "msgDeleteReauthCancelled": "Удаление аккаунта отменено.",
+                                                         "msgDeleteReauthFailed": "Не удалось подтвердить вашу личность. Попробуйте ещё раз.",
+                                                         "msgDeleteReauthUnavailable": "Перед удалением этого аккаунта войдите снова через исходный способ входа.",
                                                          "stepLanguage": "Выберите язык",
                                                            "stepBodyMetrics": "Параметры тела",
                                                            "stepBodyMetricsDesc": "Помогите нам рассчитать ваш ИМТ и цели",
@@ -714,7 +718,274 @@
                                                            "deleteAccountContent": "Это действие необратимо. Вся ваша история голоданий и локальные данные будут удалены навсегда.",
                                                            "cancelButton": "Отмена",
                                                            "deleteButton": "Удалить",
-                                                           "planExtended": "Длительный"
+                                                           "planExtended": "Длительный",
+                                                           "circadianProExclusive": "ТОЛЬКО В PRO",
+                                                           "circadianStartFast": "Начать циркадное голодание",
+                                                           "sunriseLabel": "Восход",
+                                                           "sunsetLabel": "Закат",
+                                                           "lastMeal": "Последний прием пищи",
+                                                           "circadianTotalWindow": "Общее окно голодания",
+                                                           "hoursLabel": "часов",
+                                                           "basedOnLocalCoordinates": "На основе ваших координат",
+                                                           "locationRequiredTitle": "Нужна геолокация",
+                                                           "locationRequiredDesc": "Нам нужна ваша геолокация, чтобы рассчитать точное время заката в вашем городе.",
+                                                           "tryAgain": "Попробовать снова",
+                                                           "circadianStarted": "Циркадное голодание запущено! 🌅",
+                                                           "planCircadianTitle": "Циркадное голодание",
+                                                           "planCircadianSubtitle": "Синхронизируйте голодание с солнцем",
+                                                           "planCustomSubtitle": "Настройте свое окно",
+                                                           "planPresets": "ГОТОВЫЕ ПЛАНЫ",
+                                                           "durationHoursShort": "{hours}ч",
+                                                           "@durationHoursShort": {
+                                                             "placeholders": {
+                                                               "hours": {
+                                                                 "type": "int"
+                                                               }
+                                                             }
+                                                           },
+                                                           "durationHoursMinutesShort": "{hours}ч {minutes}м",
+                                                           "@durationHoursMinutesShort": {
+                                                             "placeholders": {
+                                                               "hours": {
+                                                                 "type": "int"
+                                                               },
+                                                               "minutes": {
+                                                                 "type": "int"
+                                                               }
+                                                             }
+                                                           },
+                                                           "endFastCongrats": "У вас получилось! 🎉",
+                                                           "endFastTotalTime": "Общее время голодания: {time}",
+                                                           "@endFastTotalTime": {
+                                                             "placeholders": {
+                                                               "time": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "endFastHowFeel": "Как вы себя чувствуете?",
+                                                           "endFastSaveEat": "Сохранить и поесть",
+                                                           "endFastKeepFasting": "Отмена, продолжаю голодать",
+                                                           "proAccessLabel": "PRO ДОСТУП",
+                                                           "continueForPrice": "Продолжить за {price}",
+                                                           "@continueForPrice": {
+                                                             "placeholders": {
+                                                               "price": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "offersUnavailable": "Предложения временно недоступны",
+                                                           "billedMonthly": "Списание каждый месяц",
+                                                           "billedAnnually": "Списание раз в год",
+                                                           "oneTimePurchase": "Разовая покупка",
+                                                           "goalPriorityTitle": "Что для вас сейчас важнее всего?",
+                                                           "goalPriorityDesc": "Это помогает нам сбалансировать скорость прогресса, восстановление и долгосрочную стабильность.",
+                                                           "goalFatLossTitle": "Быстрее снизить вес",
+                                                           "goalFatLossDesc": "Смещаем рекомендацию к более сильным окнам голодания, если профиль это допускает.",
+                                                           "goalHealthTitle": "Улучшить здоровье и энергию",
+                                                           "goalHealthDesc": "Выбираем более сбалансированный план для фокуса, энергии и устойчивости.",
+                                                           "goalHabitTitle": "Выстроить устойчивую привычку",
+                                                           "goalHabitDesc": "Начинаем мягче, чтобы режим действительно закрепился.",
+                                                           "routineTitle": "Расскажите о своём режиме",
+                                                           "routineDesc": "Сон и опыт голодания влияют на то, насколько агрессивным должен быть стартовый план.",
+                                                           "fastingExperienceTitle": "Опыт голодания",
+                                                           "experienceBeginnerTitle": "Новичок",
+                                                           "experienceBeginnerDesc": "Я только начинаю или часто срываюсь раньше времени.",
+                                                           "experienceIntermediateTitle": "Есть опыт",
+                                                           "experienceIntermediateDesc": "Я спокойно выдерживаю 14-16 часов без серьёзного дискомфорта.",
+                                                           "experienceAdvancedTitle": "Продвинутый",
+                                                           "experienceAdvancedDesc": "Я уже делал более длинные голодания и хочу более сильный протокол.",
+                                                           "sleepPatternTitle": "Режим сна",
+                                                           "sleepRegularTitle": "Стабильный сон",
+                                                           "sleepRegularDesc": "Я обычно ложусь и встаю примерно в одно и то же время.",
+                                                           "sleepLateTitle": "Поздние ночи",
+                                                           "sleepLateDesc": "Я часто ложусь поздно или сбиваю режим по выходным.",
+                                                           "sleepIrregularTitle": "Нерегулярно или смены",
+                                                           "sleepIrregularDesc": "Мой сон сильно меняется или я работаю по сменам.",
+                                                           "smartPlanDashboardTitle": "Ваша текущая стратегия",
+                                                           "smartPlanProfileTitle": "Ваша стратегия из onboarding",
+                                                           "smartPlanCurrentPlanLabel": "Текущий план",
+                                                           "smartPlanRecommendedPlanLabel": "Умная рекомендация",
+                                                           "smartPlanSignalsLabel": "Сигналы",
+                                                           "smartPlanTitle": "Умная рекомендация",
+                                                           "smartPlanBestMatch": "Лучший стартовый план: {plan}",
+                                                           "@smartPlanBestMatch": {
+                                                             "placeholders": {
+                                                               "plan": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "smartPlanHint": "Позже это можно изменить в настройках.",
+                                                           "smartPlanWhyRecovery": "Более мягкое окно лучше для восстановления, стабильности и адаптации.",
+                                                           "smartPlanWhyActive": "Ваш уровень активности требует плана, который сохраняет энергию и качество тренировок.",
+                                                           "smartPlanWhyBeginner": "Ваша цель и текущий опыт подсказывают, что лучше начать с плана, который легко повторять стабильно.",
+                                                           "smartPlanWhyBalanced": "Этот вариант даёт более сильный эффект голодания, но не становится слишком жёстким.",
+                                                           "smartPlanWhyAggressive": "Ваш текущий профиль допускает более узкое окно питания, если нужен более быстрый прогресс.",
+                                                           "smartPlanWhySleep": "Ваш режим сна лучше сочетается с более ровным планом, который добавляет меньше стресса.",
+                                                           "smartPlanWhySustainable": "Устойчивый старт обычно даёт лучшую дисциплину в первые недели.",
+                                                           "smartPlanAlternativeEasier": "{plan} будет более мягким вариантом, если хотите адаптироваться легче.",
+                                                           "@smartPlanAlternativeEasier": {
+                                                             "placeholders": {
+                                                               "plan": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "smartPlanAlternativeStronger": "{plan} будет более сильным вариантом, если хотите более амбициозный режим.",
+                                                           "@smartPlanAlternativeStronger": {
+                                                             "placeholders": {
+                                                               "plan": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "smartPlanCoachGreeting": "Я Fasty 🥑. Сейчас у вас план {plan}, а главный фокус — {goal}. С вашим уровнем {experience} и режимом сна {sleep} я помогу держать стабильность.",
+                                                           "@smartPlanCoachGreeting": {
+                                                             "placeholders": {
+                                                               "plan": {
+                                                                 "type": "String"
+                                                               },
+                                                               "goal": {
+                                                                 "type": "String"
+                                                               },
+                                                               "experience": {
+                                                                 "type": "String"
+                                                               },
+                                                               "sleep": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "smartPlanUseRecommendation": "Вернуться к умной рекомендации",
+                                                           "labelAlternative": "АЛЬТЕРНАТИВА",
+                                                           "perMonthEquivalent": "~{price}/{period}",
+                                                           "@perMonthEquivalent": {
+                                                             "placeholders": {
+                                                               "price": {
+                                                                 "type": "String"
+                                                               },
+                                                               "period": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "circadianEnabled": "Циркадный режим включен",
+                                                           "circadianDisabled": "Циркадный режим отключен",
+                                                           "zoneSugarRises": "Рост сахара в крови",
+                                                           "zoneSugarRisesDesc": "Организм перерабатывает последнюю еду и запасает энергию.",
+                                                           "zoneSugarDrops": "Падение сахара в крови",
+                                                           "zoneSugarDropsDesc": "Пищеварение завершается. Уровень сахара в крови возвращается к норме.",
+                                                           "zoneFatBurning": "Сжигание жира",
+                                                           "zoneFatBurningDesc": "Организм начинает использовать накопленный жир как источник энергии.",
+                                                           "zoneKetosis": "Кетоз",
+                                                           "zoneKetosisDesc": "Сжигание жира ускоряется. Повышается ясность мышления.",
+                                                           "zoneAutophagy": "Аутофагия",
+                                                           "zoneAutophagyDesc": "Начинается восстановление и переработка клеток. Это даёт омолаживающий эффект.",
+                                                           "zoneGrowthHormone": "Гормон роста",
+                                                           "zoneGrowthHormoneDesc": "Пик жиросжигания, восстановления тканей и сохранения мышц.",
+                                                           "timerEndTitle": "Когда вы прервали голодание?",
+                                                           "timerCannotStartFuture": "Нельзя начать голодание в будущем.",
+                                                           "timerCannotEndFuture": "Нельзя завершить голодание в будущем.",
+                                                           "timerEndBeforeStart": "Время завершения не может быть раньше времени начала.",
+                                                           "timerGoalReachedExtra": "🔥 Цель достигнута (+ бонус)",
+                                                           "timerWindowExtended": "Окно продлено",
+                                                           "timerRemainingInWindow": "Осталось в окне",
+                                                           "timerUnknownPlan": "Неизвестный план",
+                                                           "timerLogMoodSymptoms": "Записать самочувствие и симптомы",
+                                                           "timerBreakAlreadyActive": "У вас уже перерыв. Наслаждайтесь отдыхом! ☕",
+                                                           "timerRestDayStarted": "Окно питания закрыто. Наслаждайтесь днём отдыха! 🏖️",
+                                                           "timerTakeBreak": "Сделать перерыв",
+                                                           "timerLogStartEarlier": "Отметить более ранний старт",
+                                                           "timerLogEndEarlier": "Отметить более раннее завершение",
+                                                           "timerLogFastStartEarlier": "Отметить более ранний старт голодания",
+                                                           "bodyMeasureChest": "Грудь",
+                                                           "bodyMeasureWaist": "Талия",
+                                                           "bodyMeasureHips": "Бёдра",
+                                                           "bodyMeasureChestTitle": "Обхват груди (см)",
+                                                           "bodyMeasureWaistTitle": "Обхват талии (см)",
+                                                           "bodyMeasureHipsTitle": "Обхват бёдер (см)",
+                                                           "bodyMeasureAdd": "Добавить",
+                                                           "drinkWater": "Вода",
+                                                           "drinkBlackCoffee": "Черный кофе",
+                                                           "drinkLatteSweetCoffee": "Латте / сладкий кофе",
+                                                           "drinkGreenBlackTea": "Зеленый / черный чай",
+                                                           "drinkDietSoda": "Диетическая газировка",
+                                                           "drinkSweetSoda": "Сладкая газировка",
+                                                           "drinkJuice": "Сок",
+                                                           "drinkAlcohol": "Алкоголь",
+                                                           "waterDrinkContainsCalories": "{drink} содержит калории!",
+                                                           "@waterDrinkContainsCalories": {
+                                                             "placeholders": {
+                                                               "drink": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "waterBreakFastWarning": "Этот напиток прервет текущее голодание и автоматически запустит окно питания. Продолжить?",
+                                                           "waterConfirmDrinkBreakFast": "Да, я это выпил(а)",
+                                                           "waterDrinkPrompt": "Что вы выпили?",
+                                                           "waterFastStoppedByDrink": "Таймер голодания остановлен, потому что вы выпили {drink}.",
+                                                           "@waterFastStoppedByDrink": {
+                                                             "placeholders": {
+                                                               "drink": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "waterUndoLastDrink": "Отменить последний напиток",
+                                                           "unitMl": "мл",
+                                                           "healthBadgeSync": "Синхр.",
+                                                           "healthNoData": "Нет данных",
+                                                           "healthSleepLabel": "Сон",
+                                                           "healthCyclePhaseLabel": "Фаза цикла",
+                                                           "cyclePhaseMenstruation": "Менструация",
+                                                           "cyclePhaseFollicular": "Фолликулярная",
+                                                           "cyclePhaseOvulation": "Овуляция",
+                                                           "cyclePhaseLuteal": "Лютеиновая",
+                                                           "learnQuickBites": "Быстрые темы",
+                                                           "storyFasting101": "Голодание 101",
+                                                           "storyAutophagy": "Аутофагия",
+                                                           "storyKetoDiet": "Кето-диета",
+                                                           "storyHydration": "Гидратация",
+                                                           "storySleep": "Сон",
+                                                           "storyOpening": "Открываем историю: {title}...",
+                                                           "@storyOpening": {
+                                                             "placeholders": {
+                                                               "title": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "recipeSelected": "Выбрано: {title}",
+                                                           "@recipeSelected": {
+                                                             "placeholders": {
+                                                               "title": {
+                                                                 "type": "String"
+                                                               }
+                                                             }
+                                                           },
+                                                           "aiUpdatingConfig": "ИИ обновляет конфигурацию. Проверьте интернет и перезапустите приложение.",
+                                                           "aiSessionExpired": "Сессия коуча завершилась. Закройте и снова откройте чат.",
+                                                           "aiEmptyResponse": "Я еще думаю над ответом. Попробуйте еще раз.",
+                                                           "authGoogleFailed": "Не удалось войти через Google. Попробуйте еще раз.",
+                                                           "authAppleUnavailable": "Вход через Apple доступен только на iOS.",
+                                                           "authAppleFailed": "Не удалось войти через Apple. Попробуйте еще раз.",
+                                                           "journalSymptomsTitle": "Симптомы и состояние",
+                                                           "journalSymptomsPrefix": "Симптомы",
+                                                           "journalUpdated": "Журнал обновлен! 📝",
+                                                           "symptomEnergy": "Энергия",
+                                                           "symptomFocus": "Фокус",
+                                                           "symptomHungry": "Голод",
+                                                           "symptomFatigue": "Усталость",
+                                                           "symptomHeadache": "Головная боль",
+                                                           "symptomThirsty": "Жажда",
+                                                           "moodTerrible": "Ужасно",
+                                                           "moodBad": "Плохо",
+                                                           "moodOkay": "Нормально",
+                                                           "moodGood": "Хорошо",
+                                                           "moodGreat": "Отлично"
 
 
 

@@ -64,6 +64,9 @@ dependencies:
   upgrader: ^12.5.0
   flutter_timezone: ^5.0.2
   live_activities: ^2.4.7
+  flutter_dotenv: ^6.0.0
+  google_fonts: ^8.0.2
+  flutter_staggered_grid_view: ^0.7.0
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +86,7 @@ flutter:
   assets:
     - assets/sounds/
     - assets/icon/
+    - .env
 
 flutter_launcher_icons:
   android: "ic_launcher"

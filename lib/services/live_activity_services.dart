@@ -7,23 +7,26 @@ import 'package:permission_handler/permission_handler.dart';
 
 @lazySingleton
 class LiveActivityService {
+  static const String _iosAppGroupId = String.fromEnvironment(
+    'FASTABLE_IOS_APP_GROUP',
+    defaultValue: '',
+  );
   final _liveActivitiesPlugin = LiveActivities();
   final _localNotifications = FlutterLocalNotificationsPlugin();
 
   String? _currentIosActivityId;
   static const int _androidNotificationId = 888;
+  bool _isIosReady = false;
+  bool _hasLoggedIosUnavailable = false;
 
   Future<void> init() async {
     if (Platform.isIOS) {
-      try {
-        await _liveActivitiesPlugin.init(appGroupId: 'group.your.app.fastable');
-        await _liveActivitiesPlugin.endAllActivities();
-      } catch (e) {
-        debugPrint("LiveActivityService init iOS error: $e");
-      }
+      await _initIos();
     } else if (Platform.isAndroid) {
       try {
-        const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+        const androidInit = AndroidInitializationSettings(
+          '@mipmap/ic_launcher',
+        );
         const initSettings = InitializationSettings(android: androidInit);
 
         await _localNotifications.initialize(
@@ -43,6 +46,43 @@ class LiveActivityService {
     }
   }
 
+  Future<void> _initIos() async {
+    if (_iosAppGroupId.isEmpty) {
+      _disableIosLiveActivities(
+        'LiveActivityService iOS disabled: FASTABLE_IOS_APP_GROUP is not configured.',
+      );
+      return;
+    }
+
+    try {
+      await _liveActivitiesPlugin.init(appGroupId: _iosAppGroupId);
+      final supported = await _liveActivitiesPlugin.areActivitiesSupported();
+      final enabled = supported
+          ? await _liveActivitiesPlugin.areActivitiesEnabled()
+          : false;
+
+      if (!supported || !enabled) {
+        _disableIosLiveActivities(
+          'LiveActivityService iOS unavailable: supported=$supported enabled=$enabled',
+        );
+        return;
+      }
+
+      _isIosReady = true;
+      await _liveActivitiesPlugin.endAllActivities();
+    } catch (e) {
+      _disableIosLiveActivities("LiveActivityService init iOS error: $e");
+    }
+  }
+
+  void _disableIosLiveActivities(String message) {
+    _isIosReady = false;
+    _currentIosActivityId = null;
+    if (_hasLoggedIosUnavailable) return;
+    _hasLoggedIosUnavailable = true;
+    debugPrint(message);
+  }
+
   Future<void> startFastingActivity({
     required DateTime startTime,
     required Duration goalDuration,
@@ -51,6 +91,8 @@ class LiveActivityService {
     final endTime = startTime.add(goalDuration);
 
     if (Platform.isIOS) {
+      if (!_isIosReady) return;
+
       // --- 🍏 ЛОГИКА ДЛЯ IOS (Dynamic Island) ---
       try {
         if (_currentIosActivityId != null) await stopActivity();
@@ -62,12 +104,16 @@ class LiveActivityService {
           'progress': 0.0,
           'isFasting': phaseName.toLowerCase().contains("fast"),
         };
-        final String customId = 'fasting_timer_${DateTime.now().millisecondsSinceEpoch}';
-        _currentIosActivityId = await _liveActivitiesPlugin.createActivity(customId, activityData);
+        final String customId =
+            'fasting_timer_${DateTime.now().millisecondsSinceEpoch}';
+        _currentIosActivityId = await _liveActivitiesPlugin.createActivity(
+          customId,
+          activityData,
+          iOSEnableRemoteUpdates: false,
+        );
       } catch (e) {
-        debugPrint("LiveActivityService iOS start error: $e");
+        _disableIosLiveActivities("LiveActivityService iOS start error: $e");
       }
-
     } else if (Platform.isAndroid) {
       // --- 🤖 ЛОГИКА ДЛЯ ANDROID (Закрепленное уведомление) ---
       try {
@@ -84,16 +130,18 @@ class LiveActivityService {
           channelDescription: 'Ongoing fasting timer',
           importance: Importance.low,
           priority: Priority.low,
-          ongoing: true,              // Делаем несмахиваемым
+          ongoing: true, // Делаем несмахиваемым
           autoCancel: false,
-          usesChronometer: true,      // Включаем нативный таймер
+          usesChronometer: true, // Включаем нативный таймер
           when: startTime.millisecondsSinceEpoch,
           showWhen: true,
           color: const Color(0xFF00FA9A),
           icon: '@mipmap/ic_launcher',
 
           // 🔥 НОВЫЕ ФИЧИ СТИЛИЗАЦИИ:
-          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'), // Логотип справа
+          largeIcon: const DrawableResourceAndroidBitmap(
+            '@mipmap/ic_launcher',
+          ), // Логотип справа
           subText: '🔥 Fastable', // Премиальный подзаголовок
           category: AndroidNotificationCategory.stopwatch, // Хинт для системы
           onlyAlertOnce: true,
@@ -104,14 +152,16 @@ class LiveActivityService {
               'end_fast_action',
               '🏁 END FAST',
               cancelNotification: false,
-              showsUserInterface: true, // Мгновенно открывает приложение при нажатии
+              showsUserInterface:
+                  true, // Мгновенно открывает приложение при нажатии
             ),
           ],
         );
 
         final details = NotificationDetails(android: androidDetails);
 
-        final timeStr = '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
+        final timeStr =
+            '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
 
         await _localNotifications.show(
           _androidNotificationId,
@@ -127,10 +177,14 @@ class LiveActivityService {
   }
 
   Future<void> updateProgress(double progress) async {
-    if (Platform.isIOS && _currentIosActivityId != null) {
+    if (Platform.isIOS && _isIosReady && _currentIosActivityId != null) {
       try {
-        await _liveActivitiesPlugin.updateActivity(_currentIosActivityId!, {'progress': progress});
-      } catch (e) {}
+        await _liveActivitiesPlugin.updateActivity(_currentIosActivityId!, {
+          'progress': progress,
+        });
+      } catch (e) {
+        _disableIosLiveActivities("LiveActivityService iOS update error: $e");
+      }
     }
   }
 
@@ -140,12 +194,18 @@ class LiveActivityService {
         await _liveActivitiesPlugin.endActivity(_currentIosActivityId!);
         _currentIosActivityId = null;
         debugPrint("⏹ iOS Live Activity Stopped");
-      } catch (e) {}
+      } catch (e) {
+        _disableIosLiveActivities("LiveActivityService iOS stop error: $e");
+      }
     } else if (Platform.isAndroid) {
       try {
-        await _localNotifications.cancel(_androidNotificationId); // Убираем шторку
+        await _localNotifications.cancel(
+          _androidNotificationId,
+        ); // Убираем шторку
         debugPrint("⏹ Android Notification Stopped");
-      } catch (e) {}
+      } catch (e) {
+        debugPrint("LiveActivityService Android stop error: $e");
+      }
     }
   }
 }

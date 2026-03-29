@@ -1,7 +1,10 @@
+import 'dart:ui';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:injectable/injectable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fastable/l10n/app_localizations.dart';
 
 @lazySingleton
 class AiService {
@@ -30,7 +33,9 @@ class AiService {
       );
       debugPrint('✅ AI Service initialized with Remote Config key.');
     } else {
-      debugPrint('⚠️ AI Service Warning: Key not found in Remote Config. AI disabled.');
+      debugPrint(
+        '⚠️ AI Service Warning: Key not found in Remote Config. AI disabled.',
+      );
     }
   }
 
@@ -44,12 +49,14 @@ class AiService {
     required String gender,
     required String activity,
     required String greeting,
+    required String profileContext,
   }) {
     if (!_isModelReady()) return;
 
     final systemPrompt = Content.text('''
       You are "Fasty", a professional Intermittent Fasting & Keto Diet Coach.
       USER PROFILE: Weight: $weight kg, Height: $height cm, Age: $age, Gender: $gender, Activity: $activity
+      ONBOARDING CONTEXT: $profileContext
       GUIDELINES:
       1. Keep answers concise (max 3-4 sentences).
       2. Be motivating and friendly. Use emojis: 🥑🔥💧.
@@ -58,35 +65,39 @@ class AiService {
     ''');
 
     try {
-      _chat = _model!.startChat(history: [
-        systemPrompt,
-        Content.model([TextPart(greeting)]),
-      ]);
+      _chat = _model!.startChat(
+        history: [
+          systemPrompt,
+          Content.model([TextPart(greeting)]),
+        ],
+      );
     } catch (e) {
       debugPrint('❌ Error starting chat: $e');
     }
   }
 
   Future<String> sendMessage(String message) async {
+    final l10n = await _loadAppLocalizations();
+
     if (!_isModelReady()) {
       _initModel();
       if (!_isModelReady()) {
-        return "AI is updating configuration. Please check internet and restart app.";
+        return l10n.aiUpdatingConfig;
       }
     }
 
     // 🔥 ИСПРАВЛЕНИЕ 2: Запрещаем слать сообщения от "dummy" юзера.
     if (_chat == null) {
-      return "Coach session expired. Please close and reopen the chat to continue.";
+      return l10n.aiSessionExpired;
     }
 
     try {
       final response = await _chat!.sendMessage(Content.text(message));
       final text = response.text;
-      return (text == null || text.isEmpty) ? "I'm thinking... (Empty response)" : text;
+      return (text == null || text.isEmpty) ? l10n.aiEmptyResponse : text;
     } catch (e) {
       debugPrint('❌ AI Connection Error: $e');
-      return "Connection error. Please try again later.";
+      return l10n.aiConnectionError;
     }
   }
 
@@ -101,10 +112,13 @@ class AiService {
   }) async {
     if (!_isModelReady()) return fallbackText;
 
-    final historyString = historyData.map((e) => "${e['day']}: ${e['hours']}h (Mood: ${e['mood']})").join(", ");
+    final historyString = historyData
+        .map((e) => "${e['day']}: ${e['hours']}h (Mood: ${e['mood']})")
+        .join(", ");
     final trend = (startWeight - currentWeight) > 0 ? "Lost" : "Stable/Gained";
 
-    final prompt = '''
+    final prompt =
+        '''
       Act as a Fasting Coach. Analyze: [$historyString]. Weight trend: $trend.
       Generate ONE insightful, actionable sentence (max 25 words) in $languageCode.
       Look for patterns: Weekend slip-ups, Mood correlation, Consistency streak.
@@ -117,5 +131,11 @@ class AiService {
     } catch (e) {
       return fallbackText;
     }
+  }
+
+  Future<AppLocalizations> _loadAppLocalizations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final languageCode = prefs.getString('locale_code') ?? 'en';
+    return lookupAppLocalizations(Locale(languageCode));
   }
 }

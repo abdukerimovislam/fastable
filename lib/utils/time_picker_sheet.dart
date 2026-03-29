@@ -1,26 +1,25 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/ui/app_layout.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/roulette_picker.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/injection.dart';
+import 'package:fastable/widgets/premium_bottom_sheet_scaffold.dart';
 
 Future<DateTime?> showTimePickerSheet({
   required BuildContext context,
   required String title,
   DateTime? initialTime,
 }) {
+  final l10n = AppLocalizations.of(context)!;
   final now = DateTime.now();
-  // По умолчанию берем текущее время
   DateTime selected = initialTime ?? now;
-
-  // Определяем начальные индексы
-  // 0 = Вчера, 1 = Сегодня
   int dayIndex = selected.day == now.day ? 1 : 0;
   int hour = selected.hour;
   int minute = selected.minute;
 
-  final days = ["Yesterday", "Today"];
+  final days = [l10n.lblYesterday, l10n.lblToday];
   final hours = List.generate(24, (i) => i);
   final minutes = List.generate(60, (i) => i);
 
@@ -29,79 +28,140 @@ Future<DateTime?> showTimePickerSheet({
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (ctx) {
-      return BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          height: 450,
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E).withOpacity(0.95),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15))),
-          ),
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-          child: Column(
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 24),
-              Text(title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 30),
+      return StatefulBuilder(
+        builder: (context, setState) {
+          final cardPadding = AppLayout.cardPadding(context);
+          final selectedLabel =
+              '${days[dayIndex]} · ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
-              // --- 3 КОЛОНКИ: ДЕНЬ | ЧАСЫ | МИНУТЫ ---
-              Expanded(
-                child: Row(
-                  children: [
-                    // ДЕНЬ
-                    Expanded(
-                      flex: 3,
-                      child: RoulettePicker<String>(
-                        items: days,
-                        initialIndex: dayIndex,
-                        textMapper: (val) => val,
-                        onSelectedItemChanged: (idx) => dayIndex = idx,
+          return PremiumBottomSheetScaffold(
+            maxHeightFactor: 0.82,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                GlassCard(
+                  padding: EdgeInsets.all(cardPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    // ЧАСЫ
-                    Expanded(
-                      flex: 2,
-                      child: RoulettePicker<int>(
-                        items: hours,
-                        initialIndex: hour,
-                        textMapper: (h) => h.toString().padLeft(2, '0'),
-                        onSelectedItemChanged: (val) => hour = hours[val],
+                      const SizedBox(height: 8),
+                      Text(
+                        selectedLabel,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.66),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const Text(":", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                    // МИНУТЫ
-                    Expanded(
-                      flex: 2,
-                      child: RoulettePicker<int>(
-                        items: minutes,
-                        initialIndex: minute,
-                        textMapper: (m) => m.toString().padLeft(2, '0'),
-                        onSelectedItemChanged: (val) => minute = minutes[val],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 30),
+                const SizedBox(height: 12),
+                GlassCard(
+                  padding: EdgeInsets.all(cardPadding),
+                  child: SizedBox(
+                    height: 250,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: RoulettePicker<String>(
+                            items: days,
+                            initialIndex: dayIndex,
+                            textMapper: (val) => val,
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            onSelectedItemChanged: (idx) {
+                              setState(() => dayIndex = idx);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          flex: 2,
+                          child: RoulettePicker<int>(
+                            items: hours,
+                            initialIndex: hour,
+                            textMapper: (h) => h.toString().padLeft(2, '0'),
+                            onSelectedItemChanged: (index) {
+                              setState(() => hour = hours[index]);
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            ':',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.84),
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: RoulettePicker<int>(
+                            items: minutes,
+                            initialIndex: minute,
+                            textMapper: (m) => m.toString().padLeft(2, '0'),
+                            onSelectedItemChanged: (index) {
+                              setState(() => minute = minutes[index]);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GlassCard(
+                  onTap: () {
+                    getIt<HapticService>().mediumImpact();
+                    final dateBase = DateTime.now().subtract(
+                      Duration(days: dayIndex == 0 ? 1 : 0),
+                    );
+                    final finalTime = DateTime(
+                      dateBase.year,
+                      dateBase.month,
+                      dateBase.day,
+                      hour,
+                      minute,
+                    );
 
-              GlassCard(
-                onTap: () {
-                  getIt<HapticService>().mediumImpact();
-                  // Собираем DateTime
-                  final dateBase = DateTime.now().subtract(Duration(days: dayIndex == 0 ? 1 : 0));
-                  final finalTime = DateTime(dateBase.year, dateBase.month, dateBase.day, hour, minute);
-
-                  Navigator.pop(ctx, finalTime);
-                },
-                color: Colors.blueAccent.withOpacity(0.8),
-                child: const Center(child: Text("Confirm Time", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
-              ),
-            ],
-          ),
-        ),
+                    Navigator.pop(ctx, finalTime);
+                  },
+                  color: Colors.blueAccent.withValues(alpha: 0.18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 18,
+                  ),
+                  child: Center(
+                    child: Text(
+                      l10n.confirmTime,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
     },
   );

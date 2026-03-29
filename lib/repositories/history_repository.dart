@@ -40,6 +40,7 @@ class HistoryRepository {
   }
 
   Future<List<FastingRecord>> getAllRecords() async {
+    final local = await _getLocalRecords();
     final user = _auth.currentUser;
 
     if (user != null) {
@@ -56,26 +57,42 @@ class HistoryRepository {
             final data = doc.data();
 
             if (data['startTime'] is Timestamp) {
-              data['startTime'] = (data['startTime'] as Timestamp).toDate().toIso8601String();
+              data['startTime'] = (data['startTime'] as Timestamp)
+                  .toDate()
+                  .toIso8601String();
             }
             if (data['endTime'] is Timestamp) {
-              data['endTime'] = (data['endTime'] as Timestamp).toDate().toIso8601String();
+              data['endTime'] = (data['endTime'] as Timestamp)
+                  .toDate()
+                  .toIso8601String();
             }
 
             return FastingRecord.fromMap(data);
           }).toList();
 
-          await _saveToLocal(cloudList);
-          _updateStream(cloudList);
+          final mergedMap = <String, FastingRecord>{};
 
-          return cloudList;
+          for (final record in cloudList) {
+            mergedMap[_recordKey(record)] = record;
+          }
+
+          for (final record in local) {
+            mergedMap[_recordKey(record)] = record;
+          }
+
+          final mergedList = mergedMap.values.toList()
+            ..sort((a, b) => b.startTime.compareTo(a.startTime));
+
+          await _saveToLocal(mergedList);
+          _updateStream(mergedList);
+
+          return mergedList;
         }
       } catch (e) {
         debugPrint("⚠️ History sync failed, using local: $e");
       }
     }
 
-    final local = await _getLocalRecords();
     _updateStream(local);
     return local;
   }
@@ -84,6 +101,25 @@ class HistoryRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localKey);
     _updateStream([]);
+  }
+
+  Future<bool> hasLocalData() async {
+    final records = await _getLocalRecords();
+    return records.isNotEmpty;
+  }
+
+  Future<bool> hasCloudData(String uid) async {
+    try {
+      final snapshot = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('fasting_history')
+          .limit(1)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> addRecord(FastingRecord record) async {
@@ -104,11 +140,11 @@ class HistoryRepository {
             .collection('fasting_history')
             .doc(docId)
             .set({
-          ...record.toMap(),
-          'startTime': Timestamp.fromDate(record.startTime),
-          'endTime': Timestamp.fromDate(record.endTime),
-          'createdAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+              ...record.toMap(),
+              'startTime': Timestamp.fromDate(record.startTime),
+              'endTime': Timestamp.fromDate(record.endTime),
+              'createdAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
       } catch (e) {
         debugPrint("❌ Sync error: $e");
       }
@@ -126,7 +162,12 @@ class HistoryRepository {
     if (user != null) {
       try {
         final docId = record.startTime.millisecondsSinceEpoch.toString();
-        await _db.collection('users').doc(user.uid).collection('fasting_history').doc(docId).delete();
+        await _db
+            .collection('users')
+            .doc(user.uid)
+            .collection('fasting_history')
+            .doc(docId)
+            .delete();
       } catch (e) {
         debugPrint("❌ Delete error: $e");
       }
@@ -135,12 +176,17 @@ class HistoryRepository {
 
   // --- 🎯 ИДЕАЛЬНЫЙ АЛГОРИТМ ПОДСЧЕТА СТРИКОВ ---
 
-  String _dateToStr(DateTime d) => "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+  String _dateToStr(DateTime d) =>
+      "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
   Set<String> _getActiveDaysString(List<FastingRecord> records) {
     final Set<String> activeDays = {};
     for (var r in records) {
-      DateTime current = DateTime(r.startTime.year, r.startTime.month, r.startTime.day);
+      DateTime current = DateTime(
+        r.startTime.year,
+        r.startTime.month,
+        r.startTime.day,
+      );
       final endDay = DateTime(r.endTime.year, r.endTime.month, r.endTime.day);
 
       while (!current.isAfter(endDay)) {
@@ -163,7 +209,9 @@ class HistoryRepository {
     DateTime checkDate = DateTime(now.year, now.month, now.day);
 
     String todayStr = _dateToStr(checkDate);
-    String yesterdayStr = _dateToStr(DateTime(checkDate.year, checkDate.month, checkDate.day - 1));
+    String yesterdayStr = _dateToStr(
+      DateTime(checkDate.year, checkDate.month, checkDate.day - 1),
+    );
 
     // Если нет записи ни за сегодня, ни за вчера — стрик разорван
     if (!activeDays.contains(todayStr) && !activeDays.contains(yesterdayStr)) {
@@ -198,15 +246,25 @@ class HistoryRepository {
 
     for (int i = 0; i < sortedDaysStr.length - 1; i++) {
       final partsA = sortedDaysStr[i].split('-');
-      final dateA = DateTime(int.parse(partsA[0]), int.parse(partsA[1]), int.parse(partsA[2]));
+      final dateA = DateTime(
+        int.parse(partsA[0]),
+        int.parse(partsA[1]),
+        int.parse(partsA[2]),
+      );
 
-      final partsB = sortedDaysStr[i+1].split('-');
-      final dateB = DateTime(int.parse(partsB[0]), int.parse(partsB[1]), int.parse(partsB[2]));
+      final partsB = sortedDaysStr[i + 1].split('-');
+      final dateB = DateTime(
+        int.parse(partsB[0]),
+        int.parse(partsB[1]),
+        int.parse(partsB[2]),
+      );
 
       final expectedPrevDay = DateTime(dateA.year, dateA.month, dateA.day - 1);
 
       // Проверяем, идут ли дни подряд
-      if (expectedPrevDay.year == dateB.year && expectedPrevDay.month == dateB.month && expectedPrevDay.day == dateB.day) {
+      if (expectedPrevDay.year == dateB.year &&
+          expectedPrevDay.month == dateB.month &&
+          expectedPrevDay.day == dateB.day) {
         tempStreak++;
         if (tempStreak > longestStreak) longestStreak = tempStreak;
       } else {
@@ -224,7 +282,11 @@ class HistoryRepository {
     final batch = _db.batch();
     for (var record in localData) {
       final docId = record.startTime.millisecondsSinceEpoch.toString();
-      final ref = _db.collection('users').doc(uid).collection('fasting_history').doc(docId);
+      final ref = _db
+          .collection('users')
+          .doc(uid)
+          .collection('fasting_history')
+          .doc(docId);
       batch.set(ref, {
         ...record.toMap(),
         'startTime': Timestamp.fromDate(record.startTime),
@@ -236,17 +298,26 @@ class HistoryRepository {
   }
 
   Future<void> clearAllData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_localKey);
-    _updateStream([]);
+    await clearLocalCache();
 
     final user = _auth.currentUser;
     if (user != null) {
       final batch = _db.batch();
-      final snap = await _db.collection('users').doc(user.uid).collection('fasting_history').get();
-      for (var doc in snap.docs) batch.delete(doc.reference);
+      final snap = await _db
+          .collection('users')
+          .doc(user.uid)
+          .collection('fasting_history')
+          .get();
+      for (var doc in snap.docs) {
+        batch.delete(doc.reference);
+      }
       await batch.commit();
     }
+  }
+
+  Future<void> discardLocalAndUseCloud(String _) async {
+    await clearLocalCache();
+    await getAllRecords();
   }
 
   void _updateStream(List<FastingRecord> records) {
@@ -254,6 +325,10 @@ class HistoryRepository {
     if (!_recordsController.isClosed) {
       _recordsController.add(records);
     }
+  }
+
+  String _recordKey(FastingRecord record) {
+    return record.startTime.millisecondsSinceEpoch.toString();
   }
 
   Future<List<FastingRecord>> _getLocalRecords() async {

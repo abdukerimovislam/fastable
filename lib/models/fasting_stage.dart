@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 
 enum FastingZone {
-  sugarRises,   // 0 - 2 ч
-  sugarDrops,   // 2 - 8 ч
-  fatBurning,   // 8 - 14 ч
-  ketosis,      // 14 - 16 ч
-  autophagy,    // 16 - 24 ч
-  growthHormone // 24+ ч
+  sugarRises, // 0 - 2 ч
+  sugarDrops, // 2 - 8 ч
+  fatBurning, // 8 - 14 ч
+  ketosis, // 14 - 16 ч
+  autophagy, // 16 - 24 ч
+  growthHormone, // 24+ ч
 }
 
 class FastingStage {
@@ -28,24 +28,36 @@ class FastingStage {
   // Получить название фазы из локализации
   String getTitle(AppLocalizations l10n) {
     switch (zone) {
-      case FastingZone.sugarRises: return l10n.zoneSugarRises ?? "Blood Sugar Rises";
-      case FastingZone.sugarDrops: return l10n.zoneSugarDrops ?? "Blood Sugar Drops";
-      case FastingZone.fatBurning: return l10n.zoneFatBurning ?? "Fat Burning";
-      case FastingZone.ketosis: return l10n.zoneKetosis ?? "Ketosis";
-      case FastingZone.autophagy: return l10n.zoneAutophagy ?? "Autophagy";
-      case FastingZone.growthHormone: return l10n.zoneGrowthHormone ?? "Growth Hormone";
+      case FastingZone.sugarRises:
+        return l10n.zoneSugarRises;
+      case FastingZone.sugarDrops:
+        return l10n.zoneSugarDrops;
+      case FastingZone.fatBurning:
+        return l10n.zoneFatBurning;
+      case FastingZone.ketosis:
+        return l10n.zoneKetosis;
+      case FastingZone.autophagy:
+        return l10n.zoneAutophagy;
+      case FastingZone.growthHormone:
+        return l10n.zoneGrowthHormone;
     }
   }
 
   // Получить описание фазы
   String getDescription(AppLocalizations l10n) {
     switch (zone) {
-      case FastingZone.sugarRises: return l10n.zoneSugarRisesDesc ?? "Your body is processing your last meal.";
-      case FastingZone.sugarDrops: return l10n.zoneSugarDropsDesc ?? "Blood sugar normalizes, digestion ends.";
-      case FastingZone.fatBurning: return l10n.zoneFatBurningDesc ?? "Your body starts burning stored fat for energy.";
-      case FastingZone.ketosis: return l10n.zoneKetosisDesc ?? "Fat burning accelerates. Mental clarity increases.";
-      case FastingZone.autophagy: return l10n.zoneAutophagyDesc ?? "Cellular recycling begins. Anti-aging effects.";
-      case FastingZone.growthHormone: return l10n.zoneGrowthHormoneDesc ?? "Peak fat burning and muscle preservation.";
+      case FastingZone.sugarRises:
+        return l10n.zoneSugarRisesDesc;
+      case FastingZone.sugarDrops:
+        return l10n.zoneSugarDropsDesc;
+      case FastingZone.fatBurning:
+        return l10n.zoneFatBurningDesc;
+      case FastingZone.ketosis:
+        return l10n.zoneKetosisDesc;
+      case FastingZone.autophagy:
+        return l10n.zoneAutophagyDesc;
+      case FastingZone.growthHormone:
+        return l10n.zoneGrowthHormoneDesc;
     }
   }
 
@@ -62,7 +74,9 @@ class FastingStage {
   // Рассчитать прогресс ВНУТРИ текущей стадии (от 0.0 до 1.0)
   static double getStageProgress(double elapsedHours) {
     final stage = getCurrentStage(elapsedHours);
-    if (stage.endHour == null) return 1.0; // Для последней стадии всегда 100% или можно сделать бесконечный рост
+    if (stage.endHour == null) {
+      return 1.0; // Для последней стадии всегда 100% или можно сделать бесконечный рост
+    }
 
     final stageDuration = stage.endHour! - stage.startHour;
     final hoursInCurrentStage = elapsedHours - stage.startHour;

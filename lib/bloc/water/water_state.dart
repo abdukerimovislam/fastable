@@ -20,7 +20,10 @@ class WaterState extends Equatable {
 
   // Умный подсчет чистой гидратации (с учетом кофе/алкоголя)
   double get totalHydrationMl {
-    return todayDrinks.fold(0.0, (sum, drink) => sum + drink.effectiveHydration);
+    return todayDrinks.fold(
+      0.0,
+      (sum, drink) => sum + drink.effectiveHydration,
+    );
   }
 
   // Общий выпитый объем жидкостей (без учета фактора)
@@ -50,5 +53,11 @@ class WaterState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, todayDrinks, dailyGoal, recommendedGoal, isAutoGoal];
+  List<Object?> get props => [
+    status,
+    todayDrinks,
+    dailyGoal,
+    recommendedGoal,
+    isAutoGoal,
+  ];
 }

@@ -12,7 +12,8 @@ class WeightRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static const String _localKey = 'weight_history';
-  static const String _currentWeightKey = 'user_current_weight';
+  static const String _currentWeightKey = 'user_weight';
+  static const String _legacyCurrentWeightKey = 'user_current_weight';
 
   // 🔥 ИСПРАВЛЕНИЕ: Генерация ID с учетом ЛОКАЛЬНОГО часового пояса (Баг №8)
   String _getDateId(DateTime date) {
@@ -63,6 +64,10 @@ class WeightRepository {
       }
     }
 
+    if (localList.isNotEmpty) {
+      await _saveCurrentWeightLocal(localList.last.weight);
+    }
+
     return localList;
   }
 
@@ -81,10 +86,7 @@ class WeightRepository {
             .doc(user.uid)
             .collection('weight_history')
             .doc(docId)
-            .set({
-          ...entry.toMap(),
-          'date': Timestamp.fromDate(entry.date),
-        });
+            .set({...entry.toMap(), 'date': Timestamp.fromDate(entry.date)});
         debugPrint("☁️ Weight synced to cloud");
       }
     } catch (e) {
@@ -96,22 +98,24 @@ class WeightRepository {
   Future<double?> getCurrentWeight() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getDouble(_currentWeightKey);
+      return prefs.getDouble(_currentWeightKey) ??
+          prefs.getDouble(_legacyCurrentWeightKey);
     } catch (e) {
       return null;
     }
   }
 
   Future<void> clearAllData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_localKey);
-    await prefs.remove(_currentWeightKey);
+    await clearLocalCache();
 
     final user = _auth.currentUser;
     if (user != null) {
       try {
         final batch = _db.batch();
-        final col = _db.collection('users').doc(user.uid).collection('weight_history');
+        final col = _db
+            .collection('users')
+            .doc(user.uid)
+            .collection('weight_history');
         var snaps = await col.get();
         for (var doc in snaps.docs) {
           batch.delete(doc.reference);
@@ -153,7 +157,11 @@ class WeightRepository {
 
     for (var entry in localData) {
       final docId = _getDateId(entry.date);
-      final ref = _db.collection('users').doc(uid).collection('weight_history').doc(docId);
+      final ref = _db
+          .collection('users')
+          .doc(uid)
+          .collection('weight_history')
+          .doc(docId);
 
       batch.set(ref, {
         ...entry.toMap(),
@@ -171,8 +179,14 @@ class WeightRepository {
 
     List<WeightEntry> cloudData = [];
     try {
-      final snapshot = await _db.collection('users').doc(uid).collection('weight_history').get();
-      cloudData = snapshot.docs.map((doc) => WeightEntry.fromMap(doc.data())).toList();
+      final snapshot = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('weight_history')
+          .get();
+      cloudData = snapshot.docs
+          .map((doc) => WeightEntry.fromMap(doc.data()))
+          .toList();
     } catch (_) {}
 
     final Map<String, WeightEntry> mergedMap = {};
@@ -193,7 +207,11 @@ class WeightRepository {
     final batch = _db.batch();
     for (var entry in mergedList) {
       final docId = _getDateId(entry.date);
-      final ref = _db.collection('users').doc(uid).collection('weight_history').doc(docId);
+      final ref = _db
+          .collection('users')
+          .doc(uid)
+          .collection('weight_history')
+          .doc(docId);
       batch.set(ref, {
         ...entry.toMap(),
         'date': Timestamp.fromDate(entry.date),
@@ -209,8 +227,9 @@ class WeightRepository {
     debugPrint("✅ Data Merged Successfully");
   }
 
-  Future<void> discardLocalAndUseCloud(String uid) async {
+  Future<void> discardLocalAndUseCloud(String _) async {
     debugPrint("🗑 Discarding local weight data...");
+    await clearLocalCache();
     await getWeightHistory();
   }
 
@@ -218,6 +237,7 @@ class WeightRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localKey);
     await prefs.remove(_currentWeightKey);
+    await prefs.remove(_legacyCurrentWeightKey);
   }
 
   Future<List<WeightEntry>> _getLocalHistory() async {
@@ -241,11 +261,14 @@ class WeightRepository {
   Future<void> _saveCurrentWeightLocal(double weight) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_currentWeightKey, weight);
+    await prefs.setDouble(_legacyCurrentWeightKey, weight);
   }
 
   void _updateList(List<WeightEntry> history, WeightEntry entry) {
     final entryDateString = _getDateId(entry.date);
-    int existingIndex = history.indexWhere((e) => _getDateId(e.date) == entryDateString);
+    int existingIndex = history.indexWhere(
+      (e) => _getDateId(e.date) == entryDateString,
+    );
 
     if (existingIndex != -1) {
       history[existingIndex] = entry;

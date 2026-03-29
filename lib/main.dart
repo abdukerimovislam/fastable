@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт для Platform
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 🔥 Для настройки статус-бара и ориентации
 import 'package:firebase_core/firebase_core.dart';
@@ -7,7 +6,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart'; // 🔥 И�
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart'; // 🔥 ИСПРАВЛЕНИЕ: Пакет для инициализации форматов дат
-import 'package:purchases_flutter/purchases_flutter.dart'; // 🔥 ИСПРАВЛЕНИЕ: Пакет RevenueCat для подписок
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:fastable/app_theme.dart';
 import 'package:fastable/injection.dart';
@@ -35,11 +34,14 @@ import 'package:fastable/bloc/stats/stats_event.dart';
 
 import 'package:fastable/bloc/pro/pro_bloc.dart';
 import 'package:fastable/bloc/pro/pro_event.dart';
+import 'package:fastable/bloc/onboarding_profile/onboarding_profile_cubit.dart';
 
 // --- СЕРВИСЫ ---
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/services/notification_service.dart';
 import 'package:fastable/services/auth_service.dart';
+import 'package:fastable/services/live_activity_services.dart';
+import 'package:fastable/services/pro_service.dart';
 
 // --- ЭКРАНЫ ---
 import 'package:fastable/screens/splash_screen.dart';
@@ -47,6 +49,7 @@ import 'package:fastable/screens/splash_screen.dart';
 Future<void> main() async {
   // 1. Обязательная инициализация движка Flutter
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   // 🔥 ИСПРАВЛЕНИЕ: Инициализация данных локали ДО отрисовки UI (предотвращает крэш LocaleDataException)
   await initializeDateFormatting();
@@ -58,38 +61,31 @@ Future<void> main() async {
   ]);
 
   // 3. 🔥 Настраиваем стиль статус-бара (прозрачный для Edge-to-Edge)
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent, // Прозрачный статус бар
-    statusBarIconBrightness: Brightness.light, // Белые иконки (для темной темы)
-    systemNavigationBarColor: Colors.black, // Черная полоска навигации снизу
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
-
-  // 4. 🔥 Инициализация Firebase (ДО внедрения зависимостей)
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Прозрачный статус бар
+      statusBarIconBrightness:
+          Brightness.light, // Белые иконки (для темной темы)
+      systemNavigationBarColor: Colors.black, // Черная полоска навигации снизу
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
   );
 
-  // 5. 🔥 ИСПРАВЛЕНИЕ: Инициализация RevenueCat (Подписки и встроенные покупки)
-  // Вставь сюда свои публичные ключи из дашборда RevenueCat (Project Settings -> API Keys)
-  try {
-    if (Platform.isIOS) {
-      await Purchases.configure(PurchasesConfiguration("appl_GshcBpjCuJljIBYIccfLROgoGMW")); // ⚠️ НАПРИМЕР: appl_xxxxxxxxx
-    } else if (Platform.isAndroid) {
-      await Purchases.configure(PurchasesConfiguration("google")); // ⚠️ НАПРИМЕР: goog_xxxxxxxxx
-    }
-  } catch (e) {
-    debugPrint("⚠️ RevenueCat init error: $e");
-  }
+  // 4. 🔥 Инициализация Firebase (ДО внедрения зависимостей)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // 6. 🔥 Инициализация Remote Config (Безопасная загрузка ключей)
+  // 5. 🔥 Инициализация Remote Config (Безопасная загрузка ключей)
   try {
     final remoteConfig = FirebaseRemoteConfig.instance;
 
-    await remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 10), // Безопасный таймаут для самого пакета
-      minimumFetchInterval: const Duration(hours: 12),
-    ));
+    await remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(
+          seconds: 10,
+        ), // Безопасный таймаут для самого пакета
+        minimumFetchInterval: const Duration(hours: 12),
+      ),
+    );
 
     // Устанавливаем дефолтное значение (если нет интернета)
     await remoteConfig.setDefaults(const {
@@ -98,31 +94,40 @@ Future<void> main() async {
 
     // Ограничиваем ожидание сети ровно 2 секундами.
     // Если интернет очень медленный, мы просто перейдем к запуску UI с дефолтными значениями.
-    await remoteConfig.fetchAndActivate().timeout(
+    remoteConfig.fetchAndActivate().timeout(
       const Duration(seconds: 2),
       onTimeout: () {
-        debugPrint("⚠️ Remote Config fetch timeout. App proceeding with defaults.");
+        debugPrint(
+          "⚠️ Remote Config fetch timeout. App proceeding with defaults.",
+        );
         return false;
       },
-    );
-    debugPrint("✅ Remote Config ready");
+    ).then((_) => debugPrint("✅ Remote Config ready"))
+     .catchError((e) {
+      debugPrint("⚠️ Remote Config fetch failed: $e");
+    });
   } catch (e) {
-    debugPrint("⚠️ Remote Config fetch failed: $e");
-    // Приложение продолжит работать, просто AI может быть недоступен
+    debugPrint("⚠️ Remote Config setup failed: $e");
   }
 
-  // 7. Внедрение зависимостей (GetIt)
+  // 6. Внедрение зависимостей (GetIt)
   await configureDependencies();
+
+  // 7. Инициализация подписок единым путем через сервис
+  getIt<ProService>().init().catchError((e) {
+    debugPrint("RevenueCat Init Error: $e");
+  });
 
   // 8. Инициализация рекламы (фоном)
   MobileAds.instance.initialize();
 
-  // 9. Инициализация уведомлений
-  try {
-    await getIt<NotificationService>().init();
-  } catch (e) {
+  // 9. Инициализация уведомлений и live activities
+  getIt<NotificationService>().init().catchError((e) {
     debugPrint("Notification Init Error: $e");
-  }
+  });
+  getIt<LiveActivityService>().init().catchError((e) {
+    debugPrint("Live Activity Init Error: $e");
+  });
 
   // 10. Авто-вход (Анонимный)
   final auth = getIt<AuthService>();
@@ -147,31 +152,22 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         // 1. Настройки и Подписка (Базовые)
-        BlocProvider(
-          create: (_) => getIt<SettingsBloc>()..add(LoadSettings()),
-        ),
-        BlocProvider(
-          create: (_) => getIt<ProBloc>()..add(CheckProStatus()),
-        ),
+        BlocProvider(create: (_) => getIt<SettingsBloc>()..add(LoadSettings())),
+        BlocProvider(create: (_) => getIt<ProBloc>()..add(CheckProStatus())),
 
         // 2. Основной функционал (Трекеры)
         BlocProvider(
           create: (_) => getIt<FastingBloc>()..add(CheckFastingState()),
         ),
-        BlocProvider(
-          create: (_) => getIt<WaterBloc>()..add(LoadWaterData()),
-        ),
-        BlocProvider(
-          create: (_) => getIt<WeightBloc>()..add(LoadWeightData()),
-        ),
+        BlocProvider(create: (_) => getIt<WaterBloc>()..add(LoadWaterData())),
+        BlocProvider(create: (_) => getIt<WeightBloc>()..add(LoadWeightData())),
 
         // 3. Данные и Статистика
         BlocProvider(
           create: (_) => getIt<HistoryBloc>()..add(SubscribeHistory()),
         ),
-        BlocProvider(
-          create: (_) => getIt<StatsBloc>()..add(LoadStats()),
-        ),
+        BlocProvider(create: (_) => getIt<StatsBloc>()..add(LoadStats())),
+        BlocProvider(create: (_) => OnboardingProfileCubit()..load()),
       ],
       // Слушаем настройки, чтобы менять тему и язык на лету
       child: BlocBuilder<SettingsBloc, SettingsState>(
@@ -179,12 +175,10 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'Fastable', // Название приложения в "недавних"
             debugShowCheckedModeBanner: false, // Убираем ленточку DEBUG
-
             // --- ТЕМЫ ---
             theme: AppTheme.darkTheme, // Дефолтная (или светлая, если есть)
             darkTheme: AppTheme.darkTheme,
             themeMode: settingsState.themeMode, // Переключение темы
-
             // --- ЛОКАЛИЗАЦИЯ ---
             locale: settingsState.locale, // Текущий язык из настроек
             localizationsDelegates: AppLocalizations.localizationsDelegates,

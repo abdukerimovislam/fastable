@@ -25,16 +25,22 @@ class Article {
 
   static IconData getIconFromString(String iconName) {
     switch (iconName) {
-      case 'local_fire_department': return Icons.local_fire_department;
-      case 'recycling': return Icons.recycling;
-      case 'restaurant': return Icons.restaurant;
-      case 'bolt': return Icons.bolt;
-      case 'handshake': return Icons.handshake;
-      default: return Icons.article;
+      case 'local_fire_department':
+        return Icons.local_fire_department;
+      case 'recycling':
+        return Icons.recycling;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'bolt':
+        return Icons.bolt;
+      case 'handshake':
+        return Icons.handshake;
+      default:
+        return Icons.article;
     }
   }
 
-// Мы не используем здесь fromJson, так как парсинг идет в firestore_service,
-// но если бы использовали, защита была бы такой:
-// order: (json['order'] as num?)?.toInt() ?? 99,
+  // Мы не используем здесь fromJson, так как парсинг идет в firestore_service,
+  // но если бы использовали, защита была бы такой:
+  // order: (json['order'] as num?)?.toInt() ?? 99,
 }

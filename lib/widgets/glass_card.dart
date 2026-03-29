@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import 'package:fastable/ui/app_layout.dart';
+
 class GlassCard extends StatefulWidget {
   final Widget child;
   final double? width;
@@ -33,9 +35,11 @@ class GlassCard extends StatefulWidget {
   State<GlassCard> createState() => _GlassCardState();
 }
 
-class _GlassCardState extends State<GlassCard> with SingleTickerProviderStateMixin {
+class _GlassCardState extends State<GlassCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  bool _isPressed = false;
 
   @override
   void initState() {
@@ -58,17 +62,29 @@ class _GlassCardState extends State<GlassCard> with SingleTickerProviderStateMix
     super.dispose();
   }
 
-  void _onTapDown(TapDownDetails details) => _controller.forward();
+  void _onTapDown(TapDownDetails details) {
+    setState(() => _isPressed = true);
+    _controller.forward();
+  }
+
   void _onTapUp(TapUpDetails details) {
+    setState(() => _isPressed = false);
     _controller.reverse();
     widget.onTap?.call();
   }
-  void _onTapCancel() => _controller.reverse();
+
+  void _onTapCancel() {
+    setState(() => _isPressed = false);
+    _controller.reverse();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final radius = widget.borderRadius ?? BorderRadius.circular(24);
+    final radius = widget.borderRadius ?? AppLayout.cardRadius(context);
     final isInteractive = widget.onTap != null || widget.onLongPress != null;
+    final highlightAlpha = (widget.opacity + 0.08).clamp(0.08, 0.2).toDouble();
+    final midAlpha = (widget.opacity + 0.03).clamp(0.05, 0.16).toDouble();
+    final baseAlpha = (widget.opacity * 0.75).clamp(0.03, 0.1).toDouble();
 
     // 🔥 АРХИТЕКТУРА СТЕКЛА
     Widget glassContent = Container(
@@ -81,39 +97,57 @@ class _GlassCardState extends State<GlassCard> with SingleTickerProviderStateMix
         borderRadius: radius,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 30,
-            spreadRadius: -5,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.24),
+            blurRadius: 42,
+            spreadRadius: -14,
+            offset: const Offset(0, 18),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.03),
+            blurRadius: 10,
+            spreadRadius: -8,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: radius,
         child: BackdropFilter(
-          // 2. УСИЛЕННЫЙ БЛЮР
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            padding: widget.padding ?? const EdgeInsets.all(20),
+          // 2. УСИЛЕННЫЙ БЛЮР (оптимизировано для GPU: снижен sigma и добавлен TileMode)
+          filter: ImageFilter.blur(
+            sigmaX: 16,
+            sigmaY: 16,
+            tileMode: TileMode.clamp,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding:
+                widget.padding ??
+                EdgeInsets.all(AppLayout.cardPadding(context)),
             decoration: BoxDecoration(
               color: widget.color,
               // 3. ГРАДИЕНТНЫЙ БЛИК (Свет падает сверху-слева)
               gradient: widget.color == null
                   ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withOpacity(widget.opacity + 0.04), // Чуть светлее край
-                  Colors.white.withOpacity(widget.opacity),
-                ],
-              )
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: highlightAlpha),
+                        Colors.white.withValues(alpha: midAlpha),
+                        Colors.white.withValues(alpha: baseAlpha),
+                      ],
+                    )
                   : null,
               borderRadius: radius,
-              // 4. ТОНКАЯ РАМКА (Эффект преломления на гранях стекла)
-              border: widget.border ?? Border.all(
-                color: Colors.white.withOpacity(0.12),
-                width: 1.0,
-              ),
+              // 4. ДИНАМИЧЕСКАЯ РАМКА (Эффект свечения при нажатии)
+              border:
+                  widget.border ??
+                  Border.all(
+                    color: _isPressed && isInteractive 
+                      ? const Color(0xFF00F0FF).withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.14),
+                    width: _isPressed && isInteractive ? 1.5 : 1.0,
+                  ),
             ),
             child: widget.child,
           ),
@@ -133,10 +167,7 @@ class _GlassCardState extends State<GlassCard> with SingleTickerProviderStateMix
         _controller.reverse();
         widget.onLongPress?.call();
       },
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: glassContent,
-      ),
+      child: ScaleTransition(scale: _scaleAnimation, child: glassContent),
     );
   }
 }

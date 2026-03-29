@@ -12,19 +12,21 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     on<LoadRecipes>(_onLoadRecipes);
   }
 
-  Future<void> _onLoadRecipes(LoadRecipes event, Emitter<RecipeState> emit) async {
+  Future<void> _onLoadRecipes(
+    LoadRecipes event,
+    Emitter<RecipeState> emit,
+  ) async {
     emit(state.copyWith(status: RecipeStatus.loading));
     try {
       final recipes = await _recipeRepository.getRecipes(event.locale);
-      emit(state.copyWith(
-        status: RecipeStatus.success,
-        recipes: recipes,
-      ));
+      emit(state.copyWith(status: RecipeStatus.success, recipes: recipes));
     } catch (e) {
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           status: RecipeStatus.failure,
-          errorMessage: e.toString()
-      ));
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 }

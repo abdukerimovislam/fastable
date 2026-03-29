@@ -63,9 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '825924884813',
     projectId: 'fastable-cde05',
     storageBucket: 'fastable-cde05.firebasestorage.app',
-    androidClientId: '825924884813-83u4q0jri7jmu9pcp57miehavn4a4gpt.apps.googleusercontent.com',
-    iosClientId: '825924884813-jl425q7cn1n6232u04gcthjer29u898b.apps.googleusercontent.com',
+    androidClientId:
+        '825924884813-83u4q0jri7jmu9pcp57miehavn4a4gpt.apps.googleusercontent.com',
+    iosClientId:
+        '825924884813-jl425q7cn1n6232u04gcthjer29u898b.apps.googleusercontent.com',
     iosBundleId: 'com.midas.fastable',
   );
-
 }

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -16,7 +15,8 @@ class MeshBackground extends StatefulWidget {
   State<MeshBackground> createState() => _MeshBackgroundState();
 }
 
-class _MeshBackgroundState extends State<MeshBackground> with SingleTickerProviderStateMixin {
+class _MeshBackgroundState extends State<MeshBackground>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -36,46 +36,73 @@ class _MeshBackgroundState extends State<MeshBackground> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    // Цвета пятен (Blobs)
     final Color primaryBlob = widget.isFasting
-        ? const Color(0xFFFF4500) // Оранжевый (Голод)
-        : const Color(0xFF00FA9A); // Мятный (Еда)
+        ? const Color(0xFFFF8A3D)
+        : const Color(0xFF52E7C4);
 
     final Color secondaryBlob = widget.isFasting
-        ? const Color(0xFF8B0000) // Темно-красный
-        : const Color(0xFF00CED1); // Бирюзовый
+        ? const Color(0xFFB53A2D)
+        : const Color(0xFF2D9CDB);
+    final Color tertiaryBlob = widget.isFasting
+        ? const Color(0xFFFFD36E)
+        : const Color(0xFF7AB6FF);
 
     return Stack(
       children: [
-        // 1. Глубокий черный фон
-        Container(color: const Color(0xFF050505)),
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0D1017), Color(0xFF090B11), Color(0xFF040507)],
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(-0.75, -0.9),
+                radius: 1.3,
+                colors: [
+                  tertiaryBlob.withValues(alpha: 0.1),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
 
-        // 2. Анимированные пятна
         AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
             return Stack(
               children: [
-                // Пятно 1 (Верхний левый угол)
                 Positioned(
-                  top: -100 + (_controller.value * 50),
-                  left: -100 + (_controller.value * 30),
-                  child: _buildBlob(primaryBlob),
+                  top: -120 + (_controller.value * 52),
+                  left: -100 + (_controller.value * 28),
+                  child: _buildBlob(primaryBlob, size: 320),
                 ),
-                // Пятно 2 (Нижний правый угол)
                 Positioned(
-                  bottom: -100 + (_controller.value * 60),
-                  right: -50 + (_controller.value * 40),
-                  child: _buildBlob(secondaryBlob),
+                  bottom: -130 + (_controller.value * 48),
+                  right: -70 + (_controller.value * 36),
+                  child: _buildBlob(secondaryBlob, size: 340),
                 ),
-                // Пятно 3 (Центр, пульсирует)
                 Positioned(
-                  top: MediaQuery.of(context).size.height / 3,
-                  left: -100,
-                  right: -100,
+                  top: MediaQuery.of(context).size.height * 0.24,
+                  left: -80,
+                  right: -80,
                   child: Opacity(
-                    opacity: 0.3,
-                    child: _buildBlob(Colors.blueAccent, size: 400),
+                    opacity: 0.24,
+                    child: _buildBlob(tertiaryBlob, size: 380),
+                  ),
+                ),
+                Positioned(
+                  bottom: MediaQuery.of(context).size.height * 0.18,
+                  left: MediaQuery.of(context).size.width * 0.55,
+                  child: Opacity(
+                    opacity: 0.18,
+                    child: _buildBlob(Colors.white, size: 180),
                   ),
                 ),
               ],
@@ -83,14 +110,28 @@ class _MeshBackgroundState extends State<MeshBackground> with SingleTickerProvid
           },
         ),
 
-        // 3. Размытие поверх пятен (Mesh effect)
-        // Это превращает круги в мягкий туман
         BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+          filter: ImageFilter.blur(sigmaX: 72, sigmaY: 72),
           child: Container(color: Colors.transparent),
         ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.02),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.08),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
 
-        // 4. Контент приложения
         widget.child,
       ],
     );
@@ -102,7 +143,7 @@ class _MeshBackgroundState extends State<MeshBackground> with SingleTickerProvid
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withOpacity(0.4), // Полупрозрачность
+        color: color.withValues(alpha: 0.4), // Полупрозрачность
       ),
     );
   }

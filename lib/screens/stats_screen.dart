@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 // --- DI & BLOCS ---
 import 'package:fastable/injection.dart';
@@ -15,6 +16,7 @@ import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/widgets/pro_correlation_chart.dart'; // 🔥 ИМПОРТ НАШЕГО ГРАФИКА
+import 'package:fastable/ui/app_layout.dart';
 
 class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key});
@@ -28,17 +30,26 @@ class StatsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final haptic = getIt<HapticService>();
+    final sectionGap = AppLayout.sectionGap(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: AnimationLimiter(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: AppLayout.screenPadding(context, top: 18, bottom: 96),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: AnimationConfiguration.toStaggeredList(
+                duration: const Duration(milliseconds: 375),
+                childAnimationBuilder: (widget) => SlideAnimation(
+                  verticalOffset: 40.0,
+                  curve: Curves.easeOutCubic,
+                  child: FadeInAnimation(child: widget),
+                ),
+                children: [
               // ЗАГОЛОВОК
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 20),
@@ -56,98 +67,31 @@ class StatsScreen extends StatelessWidget {
               // 1. ГЛАВНАЯ КАРТОЧКА: BMI & ВЕС
               _buildBodyCompositionCard(context, l10n, haptic),
 
-              const SizedBox(height: 12),
+              SizedBox(height: sectionGap),
 
               // 2. ЭНЕРГИЯ (BMR / TDEE)
               _buildEnergyCard(context, l10n),
 
-              const SizedBox(height: 24),
+              SizedBox(height: sectionGap + 10),
               _sectionHeader("INSIGHTS & TRENDS"),
 
               // 🔥 3. НАШ НОВЫЙ PRO-ГРАФИК (Advanced Charts)
               const ProCorrelationChart(),
 
-              const SizedBox(height: 24),
+              SizedBox(height: sectionGap + 10),
               _sectionHeader(l10n.fastingPhase),
 
               // 4. СТАТИСТИКА ГОЛОДАНИЯ
               BlocBuilder<HistoryBloc, HistoryState>(
                 builder: (context, state) {
-                  return Column(
-                    children: [
-                      // Streak (Hero Card)
-                      GlassCard(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF9D423).withOpacity(0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF9D423), size: 32),
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.fastingStatsCurrentStreak,
-                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
-                                ),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(
-                                      "${state.currentStreak}",
-                                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      l10n.valStreakDays(state.currentStreak).replaceAll(RegExp(r'[0-9]'), '').trim(),
-                                      style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Grid: Total Fasts & Total Hours
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatBox(
-                              state.records.length.toString(),
-                              l10n.statsTotalFasts,
-                              Icons.all_inclusive_rounded,
-                              Colors.purpleAccent,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildStatBox(
-                              "${state.totalFastingTime.inHours}",
-                              l10n.lblTotalHours,
-                              Icons.hourglass_bottom_rounded,
-                              Colors.cyanAccent,
-                              unit: l10n.unitHoursShort,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
+                  return _buildFastingRingsCard(context, state, l10n);
                 },
               ),
 
-              const SizedBox(height: 100), // Отступ снизу для навигации
-            ],
+              const SizedBox(height: 12),
+              ],
+             ),
+            ),
           ),
         ),
       ),
@@ -156,7 +100,11 @@ class StatsScreen extends StatelessWidget {
 
   // --- WIDGETS ---
 
-  Widget _buildBodyCompositionCard(BuildContext context, AppLocalizations l10n, HapticService haptic) {
+  Widget _buildBodyCompositionCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    HapticService haptic,
+  ) {
     return BlocBuilder<WeightBloc, WeightState>(
       builder: (context, state) {
         Color bmiColor = const Color(0xFF43C6AC); // Green/Teal
@@ -174,7 +122,7 @@ class StatsScreen extends StatelessWidget {
         }
 
         return GlassCard(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(AppLayout.cardPadding(context)),
           child: Column(
             children: [
               Row(
@@ -183,8 +131,21 @@ class StatsScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.metabolicProfile, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text("${state.age} y.o • ${_getGenderName(state.gender, l10n).toUpperCase()}", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                      Text(
+                        l10n.metabolicProfile,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        "${state.age} y.o • ${_getGenderName(state.gender, l10n).toUpperCase()}",
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                   GestureDetector(
@@ -194,8 +155,15 @@ class StatsScreen extends StatelessWidget {
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
-                      child: const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.info_outline_rounded,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -213,7 +181,7 @@ class StatsScreen extends StatelessWidget {
                         child: CircularProgressIndicator(
                           value: 1.0,
                           strokeWidth: 8,
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                         ),
                       ),
                       SizedBox(
@@ -229,13 +197,24 @@ class StatsScreen extends StatelessWidget {
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("BMI", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold)),
+                          Text(
+                            "BMI",
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           Text(
                             state.bmi.toStringAsFixed(1),
-                            style: TextStyle(color: bmiColor, fontSize: 22, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: bmiColor,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(width: 24),
@@ -244,7 +223,13 @@ class StatsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.lblCurrentWeight, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                        Text(
+                          l10n.lblCurrentWeight,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 12,
+                          ),
+                        ),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
@@ -252,30 +237,49 @@ class StatsScreen extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 state.currentWeight.toStringAsFixed(1),
-                                style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Text(l10n.unitKg, style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                            Text(
+                              l10n.unitKg,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: bmiColor.withOpacity(0.15),
+                            color: bmiColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: bmiColor.withOpacity(0.3)),
+                            border: Border.all(
+                              color: bmiColor.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Text(
                             bmiStatus,
-                            style: TextStyle(color: bmiColor, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: bmiColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ],
@@ -289,7 +293,10 @@ class StatsScreen extends StatelessWidget {
     return BlocBuilder<WeightBloc, WeightState>(
       builder: (context, state) {
         return GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppLayout.cardPadding(context),
+            vertical: AppLayout.compactCardPadding(context),
+          ),
           child: Row(
             children: [
               _buildEnergyItem(
@@ -299,7 +306,14 @@ class StatsScreen extends StatelessWidget {
                 Colors.blueAccent,
                 Icons.bed_rounded,
               ),
-              Container(width: 1, height: 40, color: Colors.white10, margin: const EdgeInsets.symmetric(horizontal: 20)),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.white10,
+                margin: EdgeInsets.symmetric(
+                  horizontal: AppLayout.cardPadding(context),
+                ),
+              ),
               _buildEnergyItem(
                 l10n.lblActiveTdee,
                 "${state.tdee.toInt()}",
@@ -314,13 +328,22 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEnergyItem(String title, String value, String unit, Color color, IconData icon) {
+  Widget _buildEnergyItem(
+    String title,
+    String value,
+    String unit,
+    Color color,
+    IconData icon,
+  ) {
     return Expanded(
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 12),
@@ -330,7 +353,10 @@ class StatsScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 11,
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
@@ -341,12 +367,22 @@ class StatsScreen extends StatelessWidget {
                     Flexible(
                       child: Text(
                         value,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 2),
-                    Text(unit, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
+                    Text(
+                      unit,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 10,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -357,45 +393,130 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatBox(String value, String title, IconData icon, Color color, {String? unit}) {
+  Widget _buildFastingRingsCard(BuildContext context, HistoryState state, AppLocalizations l10n) {
+    final streak = state.currentStreak;
+    final totalFasts = state.records.length;
+    final totalHours = state.totalFastingTime.inHours;
+
+    // Outer ring: Streak (max 30 days)
+    final double p1 = streak > 0 ? (streak / 30).clamp(0.05, 1.0) : 0.0;
+    const Color c1 = Color(0xFFFF2A5F); // Pink/Red
+
+    // Middle ring: Total Fasts (max 50)
+    final double p2 = totalFasts > 0 ? (totalFasts / 50).clamp(0.05, 1.0) : 0.0;
+    const Color c2 = Color(0xFFB5FF00); // Neon Green
+
+    // Inner ring: Total Hours (max 500)
+    final double p3 = totalHours > 0 ? (totalHours / 500).clamp(0.05, 1.0) : 0.0;
+    const Color c3 = Color(0xFF00E5FF); // Cyan
+
     return GlassCard(
-      height: 110,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: EdgeInsets.symmetric(vertical: 24, horizontal: AppLayout.cardPadding(context)),
+      child: Row(
         children: [
-          Icon(icon, color: color.withOpacity(0.8), size: 24),
-          Column(
+          // THE RINGS
+          SizedBox(
+            width: 130,
+            height: 130,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Background rings
+                SizedBox(width: 130, height: 130, child: CircularProgressIndicator(value: 1, strokeWidth: 12, color: c1.withValues(alpha: 0.15))),
+                SizedBox(width: 98, height: 98, child: CircularProgressIndicator(value: 1, strokeWidth: 12, color: c2.withValues(alpha: 0.15))),
+                SizedBox(width: 66, height: 66, child: CircularProgressIndicator(value: 1, strokeWidth: 12, color: c3.withValues(alpha: 0.15))),
+                
+                // Foreground rings
+                SizedBox(
+                  width: 130, height: 130,
+                  child: CircularProgressIndicator(value: p1, strokeWidth: 12, color: c1, strokeCap: StrokeCap.round),
+                ),
+                SizedBox(
+                  width: 98, height: 98,
+                  child: CircularProgressIndicator(value: p2, strokeWidth: 12, color: c2, strokeCap: StrokeCap.round),
+                ),
+                SizedBox(
+                  width: 66, height: 66,
+                  child: CircularProgressIndicator(value: p3, strokeWidth: 12, color: c3, strokeCap: StrokeCap.round),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 28),
+          
+          // LEGEND
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildRingLegend(
+                  color: c1,
+                  title: l10n.fastingStatsCurrentStreak,
+                  value: "$streak",
+                  unit: l10n.valStreakDays(streak).replaceAll(RegExp(r'[0-9]'), '').trim(),
+                ),
+                const SizedBox(height: 16),
+                _buildRingLegend(
+                  color: c2,
+                  title: l10n.statsTotalFasts,
+                  value: "$totalFasts",
+                ),
+                const SizedBox(height: 16),
+                _buildRingLegend(
+                  color: c3,
+                  title: l10n.lblTotalHours,
+                  value: "$totalHours",
+                  unit: l10n.unitHoursShort,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRingLegend({required Color color, required String title, required String value, String? unit}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          margin: const EdgeInsets.only(top: 4, right: 10),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                title,
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13, height: 1.2),
+              ),
+              const SizedBox(height: 2),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Flexible(
-                    child: Text(
-                      value,
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Text(
+                    value,
+                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   if (unit != null) ...[
-                    const SizedBox(width: 2),
-                    Text(unit, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14)),
+                    const SizedBox(width: 4),
+                    Text(
+                      unit,
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
                   ],
                 ],
               ),
-              Text(
-                title,
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -405,7 +526,7 @@ class StatsScreen extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: Colors.white.withOpacity(0.4),
+          color: Colors.white.withValues(alpha: 0.4),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -420,20 +541,34 @@ class StatsScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.metabolicProfile, style: const TextStyle(color: Colors.white)),
+        title: Text(
+          l10n.metabolicProfile,
+          style: const TextStyle(color: Colors.white),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow(l10n.metricBmrTitle, l10n.metricBmrDesc, Colors.blueAccent),
+            _buildInfoRow(
+              l10n.metricBmrTitle,
+              l10n.metricBmrDesc,
+              Colors.blueAccent,
+            ),
             const SizedBox(height: 20),
-            _buildInfoRow(l10n.metricTdeeTitle, l10n.metricTdeeDesc, Colors.greenAccent),
+            _buildInfoRow(
+              l10n.metricTdeeTitle,
+              l10n.metricTdeeDesc,
+              Colors.greenAccent,
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.btnGotIt, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              l10n.btnGotIt,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -448,11 +583,25 @@ class StatsScreen extends StatelessWidget {
           children: [
             Icon(Icons.circle, size: 8, color: color),
             const SizedBox(width: 8),
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 6),
-        Text(desc, style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4)),
+        Text(
+          desc,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+            height: 1.4,
+          ),
+        ),
       ],
     );
   }

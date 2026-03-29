@@ -5,7 +5,6 @@ import 'package:injectable/injectable.dart';
 /// Придает приложению ощущение физического взаимодействия (Apple-feel).
 @lazySingleton
 class HapticService {
-
   /// Легкий удар (например, при переключении табов или нажатии небольших кнопок)
   Future<void> lightImpact() async {
     await HapticFeedback.lightImpact();

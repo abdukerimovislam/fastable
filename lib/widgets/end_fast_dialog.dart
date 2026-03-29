@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mood_selector.dart';
 import 'package:fastable/models/fasting_record.dart';
-import 'package:fastable/l10n/app_localizations.dart'; // Не забудь про локализацию
+import 'package:fastable/ui/app_layout.dart';
+import 'package:fastable/widgets/premium_bottom_sheet_scaffold.dart';
 
 class EndFastDialog extends StatefulWidget {
   final Duration duration;
@@ -17,72 +19,127 @@ class _EndFastDialogState extends State<EndFastDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Форматируем время (например: 16h 20m)
+    final l10n = AppLocalizations.of(context)!;
+    final sectionGap = AppLayout.sectionGap(context);
+    final cardPadding = AppLayout.cardPadding(context);
     final hours = widget.duration.inHours;
     final minutes = widget.duration.inMinutes.remainder(60);
-    final timeString = "${hours}h ${minutes}m";
+    final timeString = l10n.durationHoursMinutesShort(hours, minutes);
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E2C), // Темный фон или используй тему
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
+    return PremiumBottomSheetScaffold(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Полоска для свайпа
-          Container(
-            width: 40, height: 4,
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-                color: Colors.white24, borderRadius: BorderRadius.circular(2)
-            ),
-          ),
-
-          const Text(
-              "You did it! 🎉",
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Total fasting time: $timeString",
-            style: const TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Выбор настроения
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text("How do you feel?", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(height: 16),
-          MoodSelector(
-            selectedMood: _selectedMood,
-            onSelect: (mood) => setState(() => _selectedMood = mood),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Кнопка сохранения
           GlassCard(
-            onTap: () {
-              // Возвращаем выбранное настроение
-              Navigator.pop(context, _selectedMood);
-            },
-            color: Colors.greenAccent.withOpacity(0.2),
-            child: const Center(
-              child: Text("Save & Eat", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            padding: EdgeInsets.all(cardPadding),
+            child: Column(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.greenAccent.withValues(alpha: 0.28),
+                        Colors.tealAccent.withValues(alpha: 0.18),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.celebration_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.endFastCongrats,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  l10n.endFastTotalTime(timeString),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontSize: 15,
+                    height: 1.35,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          // Кнопка отмены (если случайно нажал)
-          TextButton(
-            onPressed: () => Navigator.pop(context, null), // null = отмена
-            child: const Text("Cancel, keep fasting", style: TextStyle(color: Colors.white54)),
+          SizedBox(height: sectionGap + 2),
+          GlassCard(
+            padding: EdgeInsets.all(cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.endFastHowFeel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.journalSymptomsTitle,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.58),
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: sectionGap + 4),
+                MoodSelector(
+                  selectedMood: _selectedMood,
+                  onSelect: (mood) => setState(() => _selectedMood = mood),
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
+          SizedBox(height: sectionGap + 2),
+          GlassCard(
+            onTap: () => Navigator.pop(context, _selectedMood),
+            color: Colors.greenAccent.withValues(alpha: 0.2),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            child: Center(
+              child: Text(
+                l10n.endFastSaveEat,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: Text(
+              l10n.endFastKeepFasting,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.58),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );

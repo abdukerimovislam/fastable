@@ -4,10 +4,10 @@ import 'package:equatable/equatable.dart';
 /// Перечисление настроения (5 уровней)
 enum FastingMood {
   terrible, // 😫
-  bad,      // 😐
-  neutral,  // 🙂
-  good,     // 😁
-  great     // 🔥
+  bad, // 😐
+  neutral, // 🙂
+  good, // 😁
+  great, // 🔥
 }
 
 class FastingRecord extends Equatable {
@@ -45,7 +45,6 @@ class FastingRecord extends Equatable {
   // --- 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ: fromMap ---
   // Умеет читать и локальный JSON (String), и Firestore (Timestamp)
   factory FastingRecord.fromMap(Map<String, dynamic> map) {
-
     // Хелпер: Превращает String или Timestamp в DateTime
     DateTime parseDate(dynamic val) {
       if (val is Timestamp) return val.toDate();
@@ -95,15 +94,18 @@ class FastingRecord extends Equatable {
     return {
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
-      'durationMinutes': duration.inMinutes, // Унифицируем (минуты надежнее для истории)
-      'durationSeconds': duration.inSeconds, // Оставляем для совместимости со старым кодом
+      'durationMinutes':
+          duration.inMinutes, // Унифицируем (минуты надежнее для истории)
+      'durationSeconds':
+          duration.inSeconds, // Оставляем для совместимости со старым кодом
       'note': note,
       'mood': mood?.name,
     };
   }
 
   // Алиасы для старого кода (если где-то используется fromJson/toJson)
-  factory FastingRecord.fromJson(Map<String, dynamic> json) => FastingRecord.fromMap(json);
+  factory FastingRecord.fromJson(Map<String, dynamic> json) =>
+      FastingRecord.fromMap(json);
   Map<String, dynamic> toJson() => toMap();
 
   @override

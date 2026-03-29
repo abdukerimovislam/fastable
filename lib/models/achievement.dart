@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 
-enum AchievementType {
-  firstFast,
-  streak3,
-  streak7,
-  total10,
-  totalHours100,
-}
+enum AchievementType { firstFast, streak3, streak7, total10, totalHours100 }
 
 class Achievement {
   final String id;
   final String titleKey; // Ключ для l10n
-  final String descKey;  // Ключ для l10n
+  final String descKey; // Ключ для l10n
   final IconData icon;
   final Color color;
-  final bool Function(int totalFasts, int totalHours, int currentStreak) condition;
+  final bool Function(int totalFasts, int totalHours, int currentStreak)
+  condition;
 
   Achievement({
     required this.id,
