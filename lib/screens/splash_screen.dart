@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// 🔥 ИСПРАВЛЕНИЕ: Добавлены импорты для безопасной авторизации
+import 'package:fastable/core/app_prefs_keys.dart';
 import 'package:fastable/injection.dart';
 import 'package:fastable/services/auth_service.dart';
 
@@ -98,7 +98,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
-    final bool seenOnboarding = prefs.getBool('onboarding_complete') ?? false;
+    final bool seenOnboarding = prefs.getBool(AppPrefsKeys.onboardingComplete) ?? false;
 
     if (mounted) {
       if (seenOnboarding) {

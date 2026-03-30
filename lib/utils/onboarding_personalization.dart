@@ -1,6 +1,7 @@
 import 'package:fastable/bloc/fasting/fasting_state.dart';
 import 'package:fastable/bloc/onboarding_profile/onboarding_profile_cubit.dart';
 import 'package:fastable/bloc/weight/weight_state.dart';
+import 'package:fastable/core/app_prefs_keys.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/models/fasting_plan.dart';
 import 'package:fastable/utils/onboarding_plan_recommender.dart';
@@ -33,32 +34,32 @@ class OnboardingPersonalizationSnapshot {
   }
 
   factory OnboardingPersonalizationSnapshot.fromPrefs(SharedPreferences prefs) {
-    final age = prefs.getInt('user_age') ?? 25;
-    final weight = prefs.getDouble('user_weight') ?? 70.0;
-    final height = prefs.getDouble('user_height') ?? 170.0;
-    final activityIndex = prefs.getInt('user_activity') ?? 1;
+    final age = prefs.getInt(AppPrefsKeys.userAge) ?? 25;
+    final weight = prefs.getDouble(AppPrefsKeys.userWeight) ?? 70.0;
+    final height = prefs.getDouble(AppPrefsKeys.userHeight) ?? 170.0;
+    final activityIndex = prefs.getInt(AppPrefsKeys.userActivity) ?? 1;
     final activity =
         ActivityLevel.values.asMap()[activityIndex] ?? ActivityLevel.moderate;
 
     final primaryGoal = _parsePrimaryGoal(
-      prefs.getString('onboarding_primary_goal'),
+      prefs.getString(AppPrefsKeys.onboardingPrimaryGoal),
     );
     final fastingExperience = _parseExperience(
-      prefs.getString('onboarding_fasting_experience'),
+      prefs.getString(AppPrefsKeys.onboardingFastingExperience),
     );
     final sleepPattern = _parseSleepPattern(
-      prefs.getString('onboarding_sleep_pattern'),
+      prefs.getString(AppPrefsKeys.onboardingSleepPattern),
     );
 
     return OnboardingPersonalizationSnapshot(
-      hasCompletedOnboarding: prefs.getBool('onboarding_complete') ?? false,
+      hasCompletedOnboarding: prefs.getBool(AppPrefsKeys.onboardingComplete) ?? false,
       primaryGoal: primaryGoal,
       fastingExperience: fastingExperience,
       sleepPattern: sleepPattern,
-      currentPlanIndex: prefs.getInt('fast_plan_index') ?? 0,
-      customTargetHours: prefs.getInt('custom_target_hours') ?? 14,
+      currentPlanIndex: prefs.getInt(AppPrefsKeys.fastPlanIndex) ?? 0,
+      customTargetHours: prefs.getInt(AppPrefsKeys.customTargetHours) ?? 14,
       circadianTargetMinutes:
-          prefs.getInt('circadian_target_minutes') ?? 14 * 60,
+          prefs.getInt(AppPrefsKeys.circadianTargetMinutes) ?? 14 * 60,
       recommendation: OnboardingPlanRecommender.recommend(
         age: age,
         weightKg: weight,

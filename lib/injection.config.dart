@@ -70,14 +70,17 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i78.ProService>(() => _i78.ProService());
     gh.lazySingleton<_i743.SoundService>(() => _i743.SoundService());
+    gh.factory<_i1055.FastingBloc>(
+      () => _i1055.FastingBloc(
+        gh<_i98.NotificationService>(),
+        gh<_i419.HapticService>(),
+        gh<_i427.HistoryRepository>(),
+        gh<_i37.LiveActivityService>(),
+        gh<_i773.CircadianService>(),
+      ),
+    );
     gh.factory<_i1037.HistoryBloc>(
       () => _i1037.HistoryBloc(gh<_i427.HistoryRepository>()),
-    );
-    gh.factory<_i764.StatsBloc>(
-      () => _i764.StatsBloc(
-        gh<_i427.HistoryRepository>(),
-        gh<_i552.AchievementService>(),
-      ),
     );
     gh.factory<_i257.WaterBloc>(
       () => _i257.WaterBloc(
@@ -95,19 +98,16 @@ extension GetItInjectableX on _i174.GetIt {
       ),
     );
     gh.factory<_i618.ProBloc>(() => _i618.ProBloc(gh<_i78.ProService>()));
+    gh.factory<_i764.StatsBloc>(
+      () => _i764.StatsBloc(
+        gh<_i427.HistoryRepository>(),
+        gh<_i552.AchievementService>(),
+      ),
+    );
     gh.factory<_i325.WeightBloc>(
       () => _i325.WeightBloc(
         gh<_i459.WeightRepository>(),
         gh<_i1007.HealthService>(),
-      ),
-    );
-    gh.factory<_i1055.FastingBloc>(
-      () => _i1055.FastingBloc(
-        gh<_i98.NotificationService>(),
-        gh<_i419.HapticService>(),
-        gh<_i427.HistoryRepository>(),
-        gh<_i37.LiveActivityService>(),
-        gh<_i773.CircadianService>(),
       ),
     );
     gh.factory<_i159.InsightBloc>(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fastable/core/app_prefs_keys.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/widgets/mood_selector.dart';
@@ -15,7 +16,7 @@ Future<void> showLogMoodSheet(BuildContext parentContext) async {
   final prefs = await SharedPreferences.getInstance();
 
   FastingMood? selectedMood;
-  final savedMoodStr = prefs.getString('current_fast_mood');
+  final savedMoodStr = prefs.getString(AppPrefsKeys.currentFastMood);
   if (savedMoodStr != null) {
     try {
       selectedMood = FastingMood.values.firstWhere(
@@ -25,7 +26,7 @@ Future<void> showLogMoodSheet(BuildContext parentContext) async {
   }
 
   List<String> selectedSymptoms = FastingSymptoms.normalizeStoredValues(
-    prefs.getStringList('current_fast_symptoms') ?? const <String>[],
+    prefs.getStringList(AppPrefsKeys.currentFastSymptoms) ?? const <String>[],
   );
 
   if (!parentContext.mounted) return;
@@ -234,12 +235,12 @@ Future<void> showLogMoodSheet(BuildContext parentContext) async {
 
                     if (selectedMood != null) {
                       await prefs.setString(
-                        'current_fast_mood',
+                        AppPrefsKeys.currentFastMood,
                         selectedMood!.name,
                       );
                     }
                     await prefs.setStringList(
-                      'current_fast_symptoms',
+                      AppPrefsKeys.currentFastSymptoms,
                       selectedSymptoms,
                     );
 

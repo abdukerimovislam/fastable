@@ -2134,4 +2134,83 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get moodGreat => 'Отлично';
+
+  // --- Medical Disclaimer ---
+  @override
+  String get disclaimerCheckboxPrefix => 'Я согласен(а) с ';
+  @override
+  String get disclaimerCheckboxLink => 'Медицинским отказом и Политикой конфиденциальности';
+
+  // --- PDF Medical Report ---
+  @override
+  String get pdfReportTitle => 'Медицинский отчёт';
+  @override
+  String get pdfReportSubtitle => 'Сводка по интервальному голоданию';
+  @override
+  String get pdfReportGenerating => 'Генерирую отчёт...';
+  @override
+  String get pdfReportGenerate => 'Создать PDF-отчёт';
+  @override
+  String get pdfReportShare => 'Поделиться отчётом';
+  @override
+  String get pdfReportPreview => 'Предпросмотр отчёта';
+  @override
+  String get pdfReportPeriod => 'Период отчёта';
+  @override
+  String get pdfReportPeriod7 => 'Последние 7 дней';
+  @override
+  String get pdfReportPeriod30 => 'Последние 30 дней';
+  @override
+  String get pdfReportPeriodAll => 'За всё время';
+  @override
+  String get pdfReportProOnly => 'PDF-отчёты — функция PRO';
+  @override
+  String get pdfReportProDesc => 'Перейдите на PRO, чтобы создавать и делиться персональными отчётами о голодании.';
+  @override
+  String get pdfReportSectionProfile => 'Личный профиль';
+  @override
+  String get pdfReportSectionStats => 'Статистика голодания';
+  @override
+  String get pdfReportSectionHistory => 'История голоданий';
+  @override
+  String get pdfReportSectionDisclaimer => 'Медицинский отказ от ответственности';
+  @override
+  String get pdfReportLabelAge => 'Возраст';
+  @override
+  String get pdfReportLabelGender => 'Пол';
+  @override
+  String get pdfReportLabelWeight => 'Вес';
+  @override
+  String get pdfReportLabelHeight => 'Рост';
+  @override
+  String get pdfReportLabelBmi => 'ИМТ';
+  @override
+  String get pdfReportLabelTotalFasts => 'Всего голоданий';
+  @override
+  String get pdfReportLabelTotalHours => 'Всего часов';
+  @override
+  String get pdfReportLabelAvgDuration => 'Средняя длительность';
+  @override
+  String get pdfReportLabelLongest => 'Самое длинное голодание';
+  @override
+  String get pdfReportLabelStreak => 'Лучшая серия';
+  @override
+  String get pdfReportLabelDate => 'Дата';
+  @override
+  String get pdfReportLabelDuration => 'Длительность';
+  @override
+  String get pdfReportLabelCompleted => 'Завершено';
+  @override
+  String get pdfReportDisclaimerText =>
+      'Этот отчёт создан Fastable исключительно для личного отслеживания. Он не является медицинской консультацией. Перед принятием решений о здоровье проконсультируйтесь с квалифицированным специалистом.';
+  @override
+  String get pdfReportGeneratedBy => 'Создано Fastable';
+  @override
+  String get pdfReportGenderMale => 'Мужской';
+  @override
+  String get pdfReportGenderFemale => 'Женский';
+  @override
+  String get pdfReportNoData => 'Записей о голодании за выбранный период не найдено.';
+  @override
+  String pdfReportHours(int hours, int minutes) => '${hours}ч ${minutes}м';
 }

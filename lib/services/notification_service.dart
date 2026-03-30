@@ -8,13 +8,15 @@ import 'package:injectable/injectable.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/bloc/fasting/fasting_state.dart';
 import 'package:fastable/models/fasting_plan.dart';
-import 'dart:io'; // 🔥 ИСПРАВЛЕНИЕ: Добавлен импорт dart:io для проверки платформы
+import 'package:fastable/core/app_prefs_keys.dart';
+import 'dart:io'; // Для проверки платформы
 
-const String kNotifyWaterKey = 'notify_water';
-const String kNotifyWeightKey = 'notify_weight';
-const String kNotifyFastingStartKey = 'notify_fasting_start';
-const String kNotificationsEnabledKey = 'notifications_enabled';
-const String kDailyInsightEnabledKey = 'daily_insight_enabled';
+// Backward-compatible aliases — use AppPrefsKeys.* directly in new code
+const String kNotifyWaterKey = AppPrefsKeys.notifyWater;
+const String kNotifyWeightKey = AppPrefsKeys.notifyWeight;
+const String kNotifyFastingStartKey = AppPrefsKeys.notifyFastingStart;
+const String kNotificationsEnabledKey = AppPrefsKeys.notificationsEnabled;
+const String kDailyInsightEnabledKey = AppPrefsKeys.dailyInsightEnabled;
 
 @lazySingleton
 class NotificationService {
@@ -173,18 +175,18 @@ class NotificationService {
     }
 
     // 3. Восстанавливаем таймеры голодания/окна еды (если они активны)
-    final stateStr = prefs.getString('app_state') ?? 'stopped';
-    final startStr = prefs.getString('cycle_start_time');
+    final stateStr = prefs.getString(AppPrefsKeys.appState) ?? 'stopped';
+    final startStr = prefs.getString(AppPrefsKeys.cycleStartTime);
 
     if (stateStr != 'stopped' && startStr != null) {
       final startTime = DateTime.tryParse(startStr) ?? DateTime.now();
       final phase = stateStr == FastingPhase.fasting.name
           ? FastingPhase.fasting
           : FastingPhase.eating;
-      final planIdx = prefs.getInt('fast_plan_index') ?? 0;
-      final customHours = prefs.getInt('custom_target_hours') ?? 14;
+      final planIdx = prefs.getInt(AppPrefsKeys.fastPlanIndex) ?? 0;
+      final customHours = prefs.getInt(AppPrefsKeys.customTargetHours) ?? 14;
       final circadianTargetMinutes =
-          prefs.getInt('circadian_target_minutes') ??
+          prefs.getInt(AppPrefsKeys.circadianTargetMinutes) ??
           const Duration(hours: 14).inMinutes;
       final goal = _resolvePhaseDuration(
         phase: phase,

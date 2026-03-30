@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:fastable/core/app_prefs_keys.dart';
 import 'package:fastable/services/notification_service.dart';
 import 'package:fastable/utils/health_sync_preferences.dart';
 
@@ -11,45 +12,46 @@ class UserSessionPreferences {
   static const String _snapshotPrefix = 'user_session_snapshot_';
 
   static const List<String> _stringKeys = <String>[
-    'onboarding_primary_goal',
-    'onboarding_fasting_experience',
-    'onboarding_sleep_pattern',
-    'app_state',
-    'cycle_start_time',
-    'current_fast_mood',
-    'today_drinks_json',
-    'water_last_date',
-    'weight_history',
-    'fasting_history_v2',
-    'water_history_log',
+    AppPrefsKeys.onboardingPrimaryGoal,
+    AppPrefsKeys.onboardingFastingExperience,
+    AppPrefsKeys.onboardingSleepPattern,
+    AppPrefsKeys.appState,
+    AppPrefsKeys.cycleStartTime,
+    AppPrefsKeys.currentFastMood,
+    AppPrefsKeys.todayDrinksJson,
+    AppPrefsKeys.waterLastDate,
+    AppPrefsKeys.weightHistory,
+    AppPrefsKeys.fastingHistoryV2,
+    AppPrefsKeys.waterHistory,
   ];
 
   static const List<String> _intKeys = <String>[
-    'user_age',
-    'user_gender',
-    'user_activity',
-    'fast_plan_index',
-    'custom_target_hours',
-    'circadian_target_minutes',
-    'water_goal',
-    'water_goal_ml',
-    'water_recommended',
-    'water_recommended_ml',
+    AppPrefsKeys.userAge,
+    AppPrefsKeys.userGender,
+    AppPrefsKeys.userActivity,
+    AppPrefsKeys.fastPlanIndex,
+    AppPrefsKeys.customTargetHours,
+    AppPrefsKeys.circadianTargetMinutes,
+    AppPrefsKeys.waterGoal,
+    AppPrefsKeys.waterGoalMl,
+    AppPrefsKeys.waterRecommended,
+    AppPrefsKeys.waterRecommendedMl,
   ];
 
   static const List<String> _doubleKeys = <String>[
-    'user_weight',
-    'user_current_weight',
-    'user_height',
-    'user_chest',
-    'user_waist',
-    'user_hips',
-    'health_water_last_liters',
+    AppPrefsKeys.userWeight,
+    AppPrefsKeys.userCurrentWeight,
+    AppPrefsKeys.userHeight,
+    AppPrefsKeys.userChest,
+    AppPrefsKeys.userWaist,
+    AppPrefsKeys.userHips,
+    AppPrefsKeys.healthWaterLastLiters,
   ];
 
   static const List<String> _boolKeys = <String>[
-    'onboarding_complete',
-    'water_is_auto',
+    AppPrefsKeys.onboardingComplete,
+    AppPrefsKeys.disclaimerAccepted,
+    AppPrefsKeys.waterIsAuto,
     kHealthSyncKey,
     kLegacyHealthConnectedKey,
     kNotifyWaterKey,
@@ -59,7 +61,7 @@ class UserSessionPreferences {
     kDailyInsightEnabledKey,
   ];
 
-  static const List<String> _stringListKeys = <String>['current_fast_symptoms'];
+  static const List<String> _stringListKeys = <String>[AppPrefsKeys.currentFastSymptoms];
 
   static const List<String> _allKeys = <String>[
     ..._stringKeys,

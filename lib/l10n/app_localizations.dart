@@ -4244,7 +4244,49 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Great'**
   String get moodGreat;
+
+  // --- Medical Disclaimer ---
+  String get disclaimerCheckboxPrefix;
+  String get disclaimerCheckboxLink;
+
+  // --- PDF Medical Report ---
+  String get pdfReportTitle;
+  String get pdfReportSubtitle;
+  String get pdfReportGenerating;
+  String get pdfReportGenerate;
+  String get pdfReportShare;
+  String get pdfReportPreview;
+  String get pdfReportPeriod;
+  String get pdfReportPeriod7;
+  String get pdfReportPeriod30;
+  String get pdfReportPeriodAll;
+  String get pdfReportProOnly;
+  String get pdfReportProDesc;
+  String get pdfReportSectionProfile;
+  String get pdfReportSectionStats;
+  String get pdfReportSectionHistory;
+  String get pdfReportSectionDisclaimer;
+  String get pdfReportLabelAge;
+  String get pdfReportLabelGender;
+  String get pdfReportLabelWeight;
+  String get pdfReportLabelHeight;
+  String get pdfReportLabelBmi;
+  String get pdfReportLabelTotalFasts;
+  String get pdfReportLabelTotalHours;
+  String get pdfReportLabelAvgDuration;
+  String get pdfReportLabelLongest;
+  String get pdfReportLabelStreak;
+  String get pdfReportLabelDate;
+  String get pdfReportLabelDuration;
+  String get pdfReportLabelCompleted;
+  String get pdfReportDisclaimerText;
+  String get pdfReportGeneratedBy;
+  String get pdfReportGenderMale;
+  String get pdfReportGenderFemale;
+  String get pdfReportNoData;
+  String pdfReportHours(int hours, int minutes);
 }
+
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();

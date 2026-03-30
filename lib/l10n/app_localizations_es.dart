@@ -2134,4 +2134,83 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get moodGreat => 'Genial';
+
+  // --- Medical Disclaimer ---
+  @override
+  String get disclaimerCheckboxPrefix => 'Acepto el ';
+  @override
+  String get disclaimerCheckboxLink => 'Aviso Médico y la Política de Privacidad';
+
+  // --- PDF Medical Report ---
+  @override
+  String get pdfReportTitle => 'Informe Médico';
+  @override
+  String get pdfReportSubtitle => 'Resumen de Ayuno Intermitente';
+  @override
+  String get pdfReportGenerating => 'Generando tu informe...';
+  @override
+  String get pdfReportGenerate => 'Generar Informe PDF';
+  @override
+  String get pdfReportShare => 'Compartir Informe';
+  @override
+  String get pdfReportPreview => 'Vista previa';
+  @override
+  String get pdfReportPeriod => 'Período del informe';
+  @override
+  String get pdfReportPeriod7 => 'Últimos 7 días';
+  @override
+  String get pdfReportPeriod30 => 'Últimos 30 días';
+  @override
+  String get pdfReportPeriodAll => 'Todo el tiempo';
+  @override
+  String get pdfReportProOnly => 'Los informes PDF son una función PRO';
+  @override
+  String get pdfReportProDesc => 'Actualiza a PRO para generar y compartir tus informes de ayuno personalizados.';
+  @override
+  String get pdfReportSectionProfile => 'Perfil personal';
+  @override
+  String get pdfReportSectionStats => 'Estadísticas de ayuno';
+  @override
+  String get pdfReportSectionHistory => 'Historial de ayuno';
+  @override
+  String get pdfReportSectionDisclaimer => 'Aviso médico';
+  @override
+  String get pdfReportLabelAge => 'Edad';
+  @override
+  String get pdfReportLabelGender => 'Género';
+  @override
+  String get pdfReportLabelWeight => 'Peso';
+  @override
+  String get pdfReportLabelHeight => 'Altura';
+  @override
+  String get pdfReportLabelBmi => 'IMC';
+  @override
+  String get pdfReportLabelTotalFasts => 'Total de ayunos';
+  @override
+  String get pdfReportLabelTotalHours => 'Total de horas';
+  @override
+  String get pdfReportLabelAvgDuration => 'Duración media';
+  @override
+  String get pdfReportLabelLongest => 'Ayuno más largo';
+  @override
+  String get pdfReportLabelStreak => 'Mejor racha';
+  @override
+  String get pdfReportLabelDate => 'Fecha';
+  @override
+  String get pdfReportLabelDuration => 'Duración';
+  @override
+  String get pdfReportLabelCompleted => 'Completado';
+  @override
+  String get pdfReportDisclaimerText =>
+      'Este informe fue generado por Fastable con fines de seguimiento personal únicamente. No constituye asesoramiento médico. Consulta a un profesional de la salud cualificado antes de tomar decisiones sobre tu salud.';
+  @override
+  String get pdfReportGeneratedBy => 'Generado por Fastable';
+  @override
+  String get pdfReportGenderMale => 'Masculino';
+  @override
+  String get pdfReportGenderFemale => 'Femenino';
+  @override
+  String get pdfReportNoData => 'No se encontraron registros de ayuno para el período seleccionado.';
+  @override
+  String pdfReportHours(int hours, int minutes) => '${hours}h ${minutes}m';
 }

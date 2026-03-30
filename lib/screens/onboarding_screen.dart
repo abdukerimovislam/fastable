@@ -16,6 +16,7 @@ import 'package:fastable/bloc/settings/settings_state.dart';
 import 'package:fastable/bloc/onboarding_profile/onboarding_profile_cubit.dart';
 
 // --- MODELS & SERVICES ---
+import 'package:fastable/core/app_prefs_keys.dart';
 import 'package:fastable/models/fasting_plan.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/l10n/app_localizations.dart';
@@ -25,6 +26,7 @@ import 'package:fastable/utils/onboarding_plan_recommender.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/screens/permissions_screen.dart';
+import 'package:fastable/screens/medical_disclaimer_screen.dart';
 import 'package:fastable/ui/app_layout.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -50,6 +52,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _planIndex = 0;
   bool _hasManualPlanSelection = false;
 
+  // Medical Disclaimer checkbox — required on first page
+  bool _agreedToDisclaimer = false;
+
   // 🔥 ИСПРАВЛЕНО: Добавлен dispose для предотвращения утечки памяти
   @override
   void dispose() {
@@ -60,6 +65,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // --- ACTIONS ---
 
   void _nextPage() {
+    // Block Continue on page 0 until disclaimer is accepted
+    if (_currentPage == 0 && !_agreedToDisclaimer) {
+      getIt<HapticService>().lightImpact();
+      return;
+    }
     getIt<HapticService>().mediumImpact();
     if (_currentPage < _totalPages - 1) {
       _controller.nextPage(
@@ -93,13 +103,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     context.read<FastingBloc>().add(ChangePlan(selectedPlanIndex));
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboarding_complete', true);
-    await prefs.setString('onboarding_primary_goal', _primaryGoal.name);
+    await prefs.setBool(AppPrefsKeys.onboardingComplete, true);
+    await prefs.setBool(AppPrefsKeys.disclaimerAccepted, true);
+    await prefs.setString(AppPrefsKeys.onboardingPrimaryGoal, _primaryGoal.name);
     await prefs.setString(
-      'onboarding_fasting_experience',
+      AppPrefsKeys.onboardingFastingExperience,
       _fastingExperience.name,
     );
-    await prefs.setString('onboarding_sleep_pattern', _sleepPattern.name);
+    await prefs.setString(AppPrefsKeys.onboardingSleepPattern, _sleepPattern.name);
 
     if (mounted) {
       await context.read<OnboardingProfileCubit>().load();
@@ -282,20 +293,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         _pageEdgePadding(context),
                         20,
                       ),
-                      child: GestureDetector(
-                        onTap: _nextPage,
-                        child: GlassCard(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          color: Colors.blueAccent.withValues(alpha: 0.8),
-                          child: Center(
-                            child: Text(
-                              _currentPage == _totalPages - 1
-                                  ? l10n.btnStart
-                                  : l10n.btnContinue,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: (_currentPage == 0 && !_agreedToDisclaimer)
+                              ? Colors.white12
+                              : Colors.blueAccent.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: GestureDetector(
+                          onTap: _nextPage,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: Text(
+                                _currentPage == _totalPages - 1
+                                    ? l10n.btnStart
+                                    : l10n.btnContinue,
+                                style: TextStyle(
+                                  color: (_currentPage == 0 && !_agreedToDisclaimer)
+                                      ? Colors.white38
+                                      : Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -338,6 +359,82 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _buildLangOption("Español", "es", "🇪🇸", currentLanguageCode),
           const SizedBox(height: 12),
           _buildLangOption("Português", "pt", "🇧🇷", currentLanguageCode),
+          const SizedBox(height: 32),
+          // ─── Medical Disclaimer Checkbox ───────────────────────────
+          GestureDetector(
+            onTap: () {
+              getIt<HapticService>().selectionClick();
+              setState(() => _agreedToDisclaimer = !_agreedToDisclaimer);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: _agreedToDisclaimer
+                    ? Colors.blueAccent.withValues(alpha: 0.15)
+                    : Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _agreedToDisclaimer ? Colors.blueAccent : Colors.white24,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: _agreedToDisclaimer ? Colors.blueAccent : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _agreedToDisclaimer ? Colors.blueAccent : Colors.white38,
+                        width: 2,
+                      ),
+                    ),
+                    child: _agreedToDisclaimer
+                        ? const Icon(Icons.check, color: Colors.white, size: 14)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                        children: [
+                          TextSpan(text: l10n.disclaimerCheckboxPrefix),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const MedicalDisclaimerScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                l10n.disclaimerCheckboxLink,
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 13,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.blueAccent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

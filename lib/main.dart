@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:ui' show PlatformDispatcher;
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 🔥 Для настройки статус-бара и ориентации
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_remote_config/firebase_remote_config.dart'; // 🔥 Импорт Remote Config
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/date_symbol_data_local.dart'; // 🔥 ИСПРАВЛЕНИЕ: Пакет для инициализации форматов дат
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:fastable/app_theme.dart';
@@ -140,6 +143,24 @@ Future<void> main() async {
       return null;
     });
   }
+
+  // 12. 🔥 Crashlytics: Перехватываем ошибки Flutter UI layer
+  // В debug отключаем отправку, чтобы не засорять дашборд
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (kReleaseMode) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    } else {
+      FlutterError.presentError(details);
+    }
+  };
+
+  // 13. 🔥 Crashlytics: Перехватываем асинхронные/нативные ошибки через PlatformDispatcher
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (kReleaseMode) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    }
+    return true;
+  };
 
   runApp(const MyApp());
 }

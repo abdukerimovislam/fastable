@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui'; // Для PlatformDispatcher
+import 'package:fastable/core/app_prefs_keys.dart';
 
-const String kLocaleKey = 'locale_code';
-const String _legacyLocaleKey = 'app_locale';
+// Backward-compatible aliases — use AppPrefsKeys.* directly in new code
+const String kLocaleKey = AppPrefsKeys.localeCode;
+const String _legacyLocaleKey = AppPrefsKeys.legacyLocaleCode;
 
 class LocaleService {
   static final LocaleService _instance = LocaleService._internal();

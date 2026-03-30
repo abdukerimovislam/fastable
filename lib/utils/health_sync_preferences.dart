@@ -1,7 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fastable/core/app_prefs_keys.dart';
 
-const String kHealthSyncKey = 'health_sync';
-const String kLegacyHealthConnectedKey = 'health_connected';
+// Backward-compatible aliases — use AppPrefsKeys.* directly in new code
+const String kHealthSyncKey = AppPrefsKeys.healthSync;
+const String kLegacyHealthConnectedKey = AppPrefsKeys.legacyHealthConnected;
 
 class HealthSyncPreferences {
   const HealthSyncPreferences._();
