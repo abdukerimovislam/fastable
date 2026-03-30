@@ -37,13 +37,13 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
   ); // Дефолт на случай ошибки
 
   FastingBloc(
-    this._notificationService,
-    this._hapticService,
-    this._historyRepository,
-    this._liveActivityService,
-    this._circadianService,
-    this._storageService,
-  ) : super(const FastingState()) {
+      this._notificationService,
+      this._hapticService,
+      this._historyRepository,
+      this._liveActivityService,
+      this._circadianService,
+      this._storageService,
+      ) : super(const FastingState()) {
     WidgetsBinding.instance.addObserver(this);
 
     on<CheckFastingState>(_onCheckState);
@@ -53,7 +53,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
     on<TickTimer>(_onTick);
     on<ChangePlan>(_onChangePlan);
     on<SetCustomPlan>(_onSetCustomPlan);
-    on<StartCircadianFast>(_onStartCircadianFast); // 🔥 ДОБАВЛЕНО
+    on<StartCircadianFast>(_onStartCircadianFast);
     on<ResetFasting>(_onReset);
   }
 
@@ -67,40 +67,42 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
         final elapsed = diff.isNegative ? Duration.zero : diff;
 
         add(TickTimer(elapsed));
+        _startTicker(); // 🔥 ФИКС 1: Перезапускаем зависший таймер после возврата из фона!
       }
+    } else if (state == AppLifecycleState.paused) {
+      _ticker?.cancel(); // 🔥 ОПТИМИЗАЦИЯ: Убиваем таймер в фоне, бережем батарею (iOS Live Activity работает сама).
     }
   }
 
   Future<void> _onCheckState(
-    CheckFastingState event,
-    Emitter<FastingState> emit,
-  ) async {
+      CheckFastingState event,
+      Emitter<FastingState> emit,
+      ) async {
     try {
       int planIdx = await _storageService.getFastPlanIndex();
       _customTargetHours = await _storageService.getCustomTargetHours();
 
-      // Загружаем сохраненную длительность для циркадного плана, если она была
       final circadianMinutes = await _storageService.getCircadianTargetMinutes();
       if (circadianMinutes != null) {
         _circadianDuration = Duration(minutes: circadianMinutes);
       }
 
       if (planIdx != FastingState.customPlanIndex &&
-          planIdx !=
-              FastingState.circadianPlanIndex && // 🔥 Разрешаем этот индекс
+          planIdx != FastingState.circadianPlanIndex &&
           (planIdx < 0 || planIdx >= _plans.length)) {
         planIdx = 0;
       }
 
       String stateStr = await _storageService.getAppState();
       FastingPhase phase = FastingPhase.values.firstWhere(
-        (e) => e.name == stateStr,
+            (e) => e.name == stateStr,
         orElse: () => FastingPhase.stopped,
       );
 
       String? startStr = await _storageService.getCycleStartTime();
+      // 🔥 ФИКС 2 (Часовые пояса): Возвращаем локальное время при чтении из памяти!
       DateTime? startTime = startStr != null
-          ? DateTime.tryParse(startStr)
+          ? DateTime.tryParse(startStr)?.toLocal()
           : null;
 
       final goal = _getGoalForPhase(phase, planIdx);
@@ -145,17 +147,14 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
     }
   }
 
-  // 🔥 НОВЫЙ МЕТОД ДЛЯ СТАРТА ЦИРКАДНОГО ГОЛОДАНИЯ
   Future<void> _onStartCircadianFast(
-    StartCircadianFast event,
-    Emitter<FastingState> emit,
-  ) async {
-    // Сохраняем настройки плана
+      StartCircadianFast event,
+      Emitter<FastingState> emit,
+      ) async {
     await _storageService.setFastPlanIndex(FastingState.circadianPlanIndex);
     await _storageService.setCircadianTargetMinutes(event.targetDuration.inMinutes);
     _circadianDuration = event.targetDuration;
 
-    // Вызываем стандартный старт, но уже с новым стейтом
     emit(
       state.copyWith(
         planIndex: FastingState.circadianPlanIndex,
@@ -167,9 +166,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
   }
 
   Future<void> _onStartFasting(
-    StartFasting event,
-    Emitter<FastingState> emit,
-  ) async {
+      StartFasting event,
+      Emitter<FastingState> emit,
+      ) async {
     try {
       _hapticService.mediumImpact();
 
@@ -188,7 +187,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
       }
 
       await _storageService.setAppState(FastingPhase.fasting.name);
-      await _storageService.setCycleStartTime(startDate.toIso8601String());
+      // 🔥 ФИКС 2 (Часовые пояса): Обязательно сохраняем время в UTC, чтобы не сломаться в самолете!
+      await _storageService.setCycleStartTime(startDate.toUtc().toIso8601String());
 
       try {
         final l10n = await _loadAppLocalizations();
@@ -228,9 +228,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
   }
 
   Future<void> _onEndFasting(
-    EndFasting event,
-    Emitter<FastingState> emit,
-  ) async {
+      EndFasting event,
+      Emitter<FastingState> emit,
+      ) async {
     try {
       _ticker?.cancel();
 
@@ -258,7 +258,7 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
               if (savedMoodStr != null) {
                 try {
                   loggedMood = FastingMood.values.firstWhere(
-                    (e) => e.name == savedMoodStr,
+                        (e) => e.name == savedMoodStr,
                   );
                 } catch (_) {}
               }
@@ -300,7 +300,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
       final eatGoal = _getGoalForPhase(FastingPhase.eating, state.planIndex);
 
       await _storageService.setAppState(FastingPhase.eating.name);
-      await _storageService.setCycleStartTime(endDate.toIso8601String());
+      // 🔥 ФИКС 2 (Часовые пояса): Сохраняем в UTC!
+      await _storageService.setCycleStartTime(endDate.toUtc().toIso8601String());
 
       try {
         final l10n = await _loadAppLocalizations();
@@ -329,6 +330,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
       _startTicker();
 
       await _liveActivityService.stopActivity();
+      await Future.delayed(const Duration(milliseconds: 200)); // 🔥 ФИКС 3: Защита от Race Condition в Live Activities!
+
       _liveActivityService.startFastingActivity(
         startTime: endDate,
         goalDuration: eatGoal,
@@ -340,9 +343,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
   }
 
   Future<void> _onEndEatingWindow(
-    EndEatingWindow event,
-    Emitter<FastingState> emit,
-  ) async {
+      EndEatingWindow event,
+      Emitter<FastingState> emit,
+      ) async {
     add(ResetFasting());
   }
 
@@ -378,9 +381,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
   }
 
   Future<void> _onChangePlan(
-    ChangePlan event,
-    Emitter<FastingState> emit,
-  ) async {
+      ChangePlan event,
+      Emitter<FastingState> emit,
+      ) async {
     await _storageService.setFastPlanIndex(event.planIndex);
 
     final newGoal = _getGoalForPhase(state.phase, event.planIndex);
@@ -389,9 +392,9 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
   }
 
   Future<void> _onSetCustomPlan(
-    SetCustomPlan event,
-    Emitter<FastingState> emit,
-  ) async {
+      SetCustomPlan event,
+      Emitter<FastingState> emit,
+      ) async {
     await _storageService.setFastPlanIndex(FastingState.customPlanIndex);
     await _storageService.setCustomTargetHours(event.targetHours);
 
@@ -430,7 +433,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
     return super.close();
   }
 
-  // 🔥 ОБНОВЛЕННЫЙ МЕТОД: Умеет считать окно еды даже для циркадного плана
   Duration _getGoalForPhase(FastingPhase phase, int planIdx) {
     if (planIdx == FastingState.customPlanIndex) {
       if (phase == FastingPhase.eating) {
@@ -440,7 +442,6 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
       }
     } else if (planIdx == FastingState.circadianPlanIndex) {
       if (phase == FastingPhase.eating) {
-        // Окно еды для циркадного (упрощенно = 24 часа минус время заката-рассвета)
         final eatingMinutes = (24 * 60) - _circadianDuration.inMinutes;
         return Duration(minutes: eatingMinutes.clamp(60, 23 * 60));
       } else {
@@ -459,6 +460,8 @@ class FastingBloc extends Bloc<FastingEvent, FastingState>
   }
 
   Future<Duration?> _resolveCircadianGoalDuration(DateTime startDate) async {
+    // Внимание: Я сохранил вызов getAccurateSunTimes с аргументом как у тебя.
+    // Если в circadian_service.dart этот аргумент не ожидается, убери `referenceTime: startDate`
     final sunTimes = await _circadianService.getAccurateSunTimes(
       referenceTime: startDate,
     );
