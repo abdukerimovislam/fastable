@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
@@ -34,14 +35,14 @@ class LiveActivityService {
           // Обработчик нажатий на шторку и кнопки внутри неё
           onDidReceiveNotificationResponse: (NotificationResponse response) {
             if (response.actionId == 'end_fast_action') {
-              debugPrint("User tapped END FAST from Android notification!");
+              appLog("User tapped END FAST from Android notification!");
               // Приложение выйдет на передний план, где пользователь
               // сможет нажать кнопку завершения и выбрать настроение (Mood)
             }
           },
         );
       } catch (e) {
-        debugPrint("LiveActivityService init Android error: $e");
+        appLog("LiveActivityService init Android error: $e");
       }
     }
   }
@@ -80,7 +81,7 @@ class LiveActivityService {
     _currentIosActivityId = null;
     if (_hasLoggedIosUnavailable) return;
     _hasLoggedIosUnavailable = true;
-    debugPrint(message);
+    appLog(message);
   }
 
   Future<void> startFastingActivity({
@@ -169,9 +170,9 @@ class LiveActivityService {
           'Goal ends at $timeStr', // Описание
           details,
         );
-        debugPrint("✅ Android Ongoing Notification Started!");
+        appLog("✅ Android Ongoing Notification Started!");
       } catch (e) {
-        debugPrint("LiveActivityService Android start error: $e");
+        appLog("LiveActivityService Android start error: $e");
       }
     }
   }
@@ -193,7 +194,7 @@ class LiveActivityService {
       try {
         await _liveActivitiesPlugin.endActivity(_currentIosActivityId!);
         _currentIosActivityId = null;
-        debugPrint("⏹ iOS Live Activity Stopped");
+        appLog("⏹ iOS Live Activity Stopped");
       } catch (e) {
         _disableIosLiveActivities("LiveActivityService iOS stop error: $e");
       }
@@ -202,9 +203,9 @@ class LiveActivityService {
         await _localNotifications.cancel(
           _androidNotificationId,
         ); // Убираем шторку
-        debugPrint("⏹ Android Notification Stopped");
+        appLog("⏹ Android Notification Stopped");
       } catch (e) {
-        debugPrint("LiveActivityService Android stop error: $e");
+        appLog("LiveActivityService Android stop error: $e");
       }
     }
   }

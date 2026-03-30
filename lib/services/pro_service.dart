@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart'; // Для проверки kDebugMode
 import 'package:flutter/services.dart';
@@ -46,7 +47,7 @@ class ProService {
       // Проверяем наличие активного права доступа 'pro'
       return customerInfo.entitlements.all['pro']?.isActive ?? false;
     } on PlatformException catch (e) {
-      debugPrint("RevenueCat Check Status Error: ${e.message}");
+      appLog("RevenueCat Check Status Error: ${e.message}");
       return false;
     }
   }
@@ -60,7 +61,7 @@ class ProService {
       final offerings = await Purchases.getOfferings();
       return offerings.current?.availablePackages ?? [];
     } on PlatformException catch (e) {
-      debugPrint("RevenueCat Fetch Offerings Error: ${e.message}");
+      appLog("RevenueCat Fetch Offerings Error: ${e.message}");
       return [];
     }
   }
@@ -81,9 +82,9 @@ class ProService {
       // Изящная обработка отмены пользователем, чтобы не считать это критической ошибкой
       var errorCode = PurchasesErrorHelper.getErrorCode(e);
       if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
-        debugPrint("User cancelled the purchase");
+        appLog("User cancelled the purchase");
       } else {
-        debugPrint("Purchase Error: ${e.message}");
+        appLog("Purchase Error: ${e.message}");
       }
       return false;
     }
@@ -97,7 +98,7 @@ class ProService {
       final customerInfo = await Purchases.restorePurchases();
       return customerInfo.entitlements.all['pro']?.isActive ?? false;
     } on PlatformException catch (e) {
-      debugPrint("Restore Purchases Error: ${e.message}");
+      appLog("Restore Purchases Error: ${e.message}");
       return false;
     }
   }

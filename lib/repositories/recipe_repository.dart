@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
@@ -23,7 +24,7 @@ class RecipeRepository {
         return RecipeModel.fromSnapshot(doc, languageCode);
       }).toList();
     } catch (e) {
-      debugPrint("Error fetching recipes: $e");
+      appLog("Error fetching recipes: $e");
       try {
         final snapshot = await collection.get(
           const GetOptions(source: Source.cache),

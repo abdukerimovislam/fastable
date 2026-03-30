@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _launchUrl(String urlString) async {
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      debugPrint("Could not launch $url");
+      appLog("Could not launch $url");
     }
   }
 
@@ -617,7 +618,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
 
-              // 4. ЮРИДИЧЕСКАЯ ИНФОРМАЦИЯ И ПОДДЕРЖКА
+              // 4. ПРОИЗВОДИТЕЛЬНОСТЬ
+              _sectionHeader(l10n.settingPerformance),
+              _buildSwitchTile(
+                icon: Icons.bolt_rounded,
+                iconColor: Colors.yellowAccent,
+                title: l10n.simplifiedAnimation,
+                subtitle: l10n.simplifiedAnimationDesc,
+                value: settingsState.reducedAnimations,
+                onChanged: (value) {
+                  getIt<HapticService>().selectionClick();
+                  context.read<SettingsBloc>().add(ToggleReducedAnimations(value));
+                },
+              ),
+
+              // 5. ЮРИДИЧЕСКАЯ ИНФОРМАЦИЯ И ПОДДЕРЖКА
               _sectionHeader(l10n.aboutAndLegal),
               GlassCard(
                 padding: EdgeInsets.zero,

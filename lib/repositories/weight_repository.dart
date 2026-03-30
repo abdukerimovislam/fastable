@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -60,7 +61,7 @@ class WeightRepository {
           return mergedList;
         }
       } catch (e) {
-        debugPrint("⚠️ Cloud fetch failed (using local): $e");
+        appLog("⚠️ Cloud fetch failed (using local): $e");
       }
     }
 
@@ -87,10 +88,10 @@ class WeightRepository {
             .collection('weight_history')
             .doc(docId)
             .set({...entry.toMap(), 'date': Timestamp.fromDate(entry.date)});
-        debugPrint("☁️ Weight synced to cloud");
+        appLog("☁️ Weight synced to cloud");
       }
     } catch (e) {
-      debugPrint("❌ Error saving weight: $e");
+      appLog("❌ Error saving weight: $e");
       throw Exception("Failed to save weight");
     }
   }
@@ -121,9 +122,9 @@ class WeightRepository {
           batch.delete(doc.reference);
         }
         await batch.commit();
-        debugPrint("🔥 Cloud weight data cleared");
+        appLog("🔥 Cloud weight data cleared");
       } catch (e) {
-        debugPrint("Error deleting cloud data: $e");
+        appLog("Error deleting cloud data: $e");
         rethrow;
       }
     }
@@ -152,7 +153,7 @@ class WeightRepository {
     final localData = await _getLocalHistory();
     if (localData.isEmpty) return;
 
-    debugPrint("🚀 Migrating ${localData.length} weight entries...");
+    appLog("🚀 Migrating ${localData.length} weight entries...");
     final batch = _db.batch();
 
     for (var entry in localData) {
@@ -169,11 +170,11 @@ class WeightRepository {
       });
     }
     await batch.commit();
-    debugPrint("✅ Weight migration complete");
+    appLog("✅ Weight migration complete");
   }
 
   Future<void> mergeLocalToCloud(String uid) async {
-    debugPrint("🔄 Start Merging Weight Data...");
+    appLog("🔄 Start Merging Weight Data...");
 
     final localData = await _getLocalHistory();
 
@@ -224,11 +225,11 @@ class WeightRepository {
       await _saveCurrentWeightLocal(mergedList.last.weight);
     }
 
-    debugPrint("✅ Data Merged Successfully");
+    appLog("✅ Data Merged Successfully");
   }
 
   Future<void> discardLocalAndUseCloud(String _) async {
-    debugPrint("🗑 Discarding local weight data...");
+    appLog("🗑 Discarding local weight data...");
     await clearLocalCache();
     await getWeightHistory();
   }

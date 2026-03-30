@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,7 +63,7 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
       try {
         history = await _repository.getWeightHistory();
       } catch (e) {
-        debugPrint("History load failed: $e");
+        appLog("History load failed: $e");
       }
 
       // --- ИНТЕГРАЦИЯ HEALTH (ЧТЕНИЕ И УМНОЕ СОХРАНЕНИЕ) ---
@@ -74,7 +75,7 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
           final healthWeight = await _healthService.getLatestWeight();
 
           if (healthWeight != null && healthWeight != currentWeight) {
-            debugPrint("📱 Found new weight in Health App: $healthWeight");
+            appLog("📱 Found new weight in Health App: $healthWeight");
 
             // 1. Обновляем текущий вес
             currentWeight = healthWeight;
@@ -90,7 +91,7 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
           }
         }
       } catch (e) {
-        debugPrint("Health Sync Read Error: $e");
+        appLog("Health Sync Read Error: $e");
       }
 
       if (history.isNotEmpty) {
@@ -144,9 +145,9 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
       if (isHealthSyncEnabled) {
         _healthService.writeWeight(event.weight).then((success) {
           if (success) {
-            debugPrint("✅ Weight synced to Health App");
+            appLog("✅ Weight synced to Health App");
           } else {
-            debugPrint("⚠️ Weight sync skipped (no permission or error)");
+            appLog("⚠️ Weight sync skipped (no permission or error)");
           }
         });
       }
@@ -157,7 +158,7 @@ class WeightBloc extends Bloc<WeightEvent, WeightState> {
         state.copyWith(currentWeight: event.weight, history: updatedHistory),
       );
     } catch (e) {
-      debugPrint("Error adding weight: $e");
+      appLog("Error adding weight: $e");
     }
   }
 

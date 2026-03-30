@@ -38,6 +38,7 @@ import 'services/live_activity_services.dart' as _i37;
 import 'services/notification_service.dart' as _i98;
 import 'services/pro_service.dart' as _i78;
 import 'services/sound_service.dart' as _i743;
+import 'services/storage_service.dart' as _i318;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -70,15 +71,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i78.ProService>(() => _i78.ProService());
     gh.lazySingleton<_i743.SoundService>(() => _i743.SoundService());
-    gh.factory<_i1055.FastingBloc>(
-      () => _i1055.FastingBloc(
-        gh<_i98.NotificationService>(),
-        gh<_i419.HapticService>(),
-        gh<_i427.HistoryRepository>(),
-        gh<_i37.LiveActivityService>(),
-        gh<_i773.CircadianService>(),
-      ),
-    );
+    gh.lazySingleton<_i318.StorageService>(() => _i318.StorageService());
     gh.factory<_i1037.HistoryBloc>(
       () => _i1037.HistoryBloc(gh<_i427.HistoryRepository>()),
     );
@@ -91,13 +84,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i13.RecipeBloc>(
       () => _i13.RecipeBloc(gh<_i792.RecipeRepository>()),
     );
+    gh.factory<_i618.ProBloc>(() => _i618.ProBloc(gh<_i78.ProService>()));
     gh.factory<_i659.SettingsBloc>(
       () => _i659.SettingsBloc(
         gh<_i1007.HealthService>(),
         gh<_i98.NotificationService>(),
+        gh<_i318.StorageService>(),
       ),
     );
-    gh.factory<_i618.ProBloc>(() => _i618.ProBloc(gh<_i78.ProService>()));
     gh.factory<_i764.StatsBloc>(
       () => _i764.StatsBloc(
         gh<_i427.HistoryRepository>(),
@@ -108,6 +102,16 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i325.WeightBloc(
         gh<_i459.WeightRepository>(),
         gh<_i1007.HealthService>(),
+      ),
+    );
+    gh.factory<_i1055.FastingBloc>(
+      () => _i1055.FastingBloc(
+        gh<_i98.NotificationService>(),
+        gh<_i419.HapticService>(),
+        gh<_i427.HistoryRepository>(),
+        gh<_i37.LiveActivityService>(),
+        gh<_i773.CircadianService>(),
+        gh<_i318.StorageService>(),
       ),
     );
     gh.factory<_i159.InsightBloc>(

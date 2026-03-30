@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/foundation.dart' show kReleaseMode;
@@ -100,17 +101,17 @@ Future<void> main() async {
     remoteConfig.fetchAndActivate().timeout(
       const Duration(seconds: 2),
       onTimeout: () {
-        debugPrint(
+        appLog(
           "⚠️ Remote Config fetch timeout. App proceeding with defaults.",
         );
         return false;
       },
-    ).then((_) => debugPrint("✅ Remote Config ready"))
+    ).then((_) => appLog("✅ Remote Config ready"))
      .catchError((e) {
-      debugPrint("⚠️ Remote Config fetch failed: $e");
+      appLog("⚠️ Remote Config fetch failed: $e");
     });
   } catch (e) {
-    debugPrint("⚠️ Remote Config setup failed: $e");
+    appLog("⚠️ Remote Config setup failed: $e");
   }
 
   // 6. Внедрение зависимостей (GetIt)
@@ -118,7 +119,7 @@ Future<void> main() async {
 
   // 7. Инициализация подписок единым путем через сервис
   getIt<ProService>().init().catchError((e) {
-    debugPrint("RevenueCat Init Error: $e");
+    appLog("RevenueCat Init Error: $e");
   });
 
   // 8. Инициализация рекламы (фоном)
@@ -126,20 +127,20 @@ Future<void> main() async {
 
   // 9. Инициализация уведомлений и live activities
   getIt<NotificationService>().init().catchError((e) {
-    debugPrint("Notification Init Error: $e");
+    appLog("Notification Init Error: $e");
   });
   getIt<LiveActivityService>().init().catchError((e) {
-    debugPrint("Live Activity Init Error: $e");
+    appLog("Live Activity Init Error: $e");
   });
 
   // 10. Авто-вход (Анонимный)
   final auth = getIt<AuthService>();
   if (auth.currentUser == null) {
-    debugPrint("🚀 Attempting anonymous sign-in...");
+    appLog("🚀 Attempting anonymous sign-in...");
     // Убрали 'await'. Теперь авторизация идет в фоне.
     // Это моментально разблокирует запуск runApp и предотвратит ANR.
     auth.signInAnonymously().catchError((e) {
-      debugPrint("❌ Auth Error during background sign-in: $e");
+      appLog("❌ Auth Error during background sign-in: $e");
       return null;
     });
   }

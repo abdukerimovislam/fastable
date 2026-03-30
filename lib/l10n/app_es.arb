@@ -122,6 +122,9 @@
   "notifyWeightDesc": "Recordatorio diario para pesarte",
   "notifyFastingStart": "Inicio de ayuno",
   "notifyFastingStartDesc": "Notificar cuando comience la ventana de ayuno",
+  "simplifiedAnimation": "Animaciones simplificadas",
+  "simplifiedAnimationDesc": "Reduce el desenfoque y los efectos para mejorar la batería y el rendimiento",
+  "settingPerformance": "Rendimiento",
 
   "privacyPolicy": "Política de privacidad",
   "termsOfService": "Términos del servicio",

@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
@@ -57,7 +58,7 @@ class _ProScreenState extends State<ProScreen>
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
-          debugPrint("Could not launch $_termsOfUseUrl");
+          appLog("Could not launch $_termsOfUseUrl");
         }
       };
 
@@ -67,7 +68,7 @@ class _ProScreenState extends State<ProScreen>
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
-          debugPrint("Could not launch $_privacyPolicyUrl");
+          appLog("Could not launch $_privacyPolicyUrl");
         }
       };
   }

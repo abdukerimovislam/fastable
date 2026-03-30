@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -88,7 +89,7 @@ class _HealthMetricsRowState extends State<HealthMetricsRow> {
         // 🔥 ВОТ ОНА - ЗАЩИТА ОТ КРАШЕЙ!
         // Если Android говорит, что прав нет (хотя наш флаг true), значит приложение переустанавливали.
         // Сбрасываем флаг и возвращаем пользователя к состоянию "нужно синхронизировать".
-        debugPrint("HealthMetricsRow Error: $e");
+        appLog("HealthMetricsRow Error: $e");
         final prefs = await SharedPreferences.getInstance();
         await HealthSyncPreferences.setEnabled(false, prefs);
         if (mounted) {

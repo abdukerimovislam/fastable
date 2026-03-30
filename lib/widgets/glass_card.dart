@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:fastable/ui/app_layout.dart';
+import 'package:fastable/bloc/settings/settings_bloc.dart';
 
 class GlassCard extends StatefulWidget {
   final Widget child;
@@ -87,15 +89,47 @@ class _GlassCardState extends State<GlassCard>
     final baseAlpha = (widget.opacity * 0.75).clamp(0.03, 0.1).toDouble();
 
     // 🔥 АРХИТЕКТУРА СТЕКЛА
+    final isReduced = context.watch<SettingsBloc>().state.reducedAnimations;
+
+    Widget coreContainer = AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      padding:
+          widget.padding ??
+          EdgeInsets.all(AppLayout.cardPadding(context)),
+      // Если анимации упрощены, делаем фон более непрозрачным (чтобы компенсировать отсутствие блюра)
+      decoration: BoxDecoration(
+        color: widget.color ?? (isReduced ? const Color(0xFF1E1E1E).withValues(alpha: 0.9) : null),
+        gradient: (widget.color == null && !isReduced)
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: highlightAlpha),
+                  Colors.white.withValues(alpha: midAlpha),
+                  Colors.white.withValues(alpha: baseAlpha),
+                ],
+              )
+            : null,
+        borderRadius: radius,
+        border:
+            widget.border ??
+            Border.all(
+              color: _isPressed && isInteractive 
+                ? const Color(0xFF00F0FF).withValues(alpha: 0.6)
+                : Colors.white.withValues(alpha: 0.14),
+              width: _isPressed && isInteractive ? 1.5 : 1.0,
+            ),
+      ),
+      child: widget.child,
+    );
+
     Widget glassContent = Container(
       width: widget.width,
       height: widget.height,
       margin: widget.margin,
-      // 1. ТЕНЬ СНАРУЖИ (Shadow)
-      // Мы вынесли её ДО ClipRRect, чтобы тень реально падала на фон, а не обрезалась
       decoration: BoxDecoration(
         borderRadius: radius,
-        boxShadow: [
+        boxShadow: isReduced ? null : [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.24),
             blurRadius: 42,
@@ -112,46 +146,16 @@ class _GlassCardState extends State<GlassCard>
       ),
       child: ClipRRect(
         borderRadius: radius,
-        child: BackdropFilter(
-          // 2. УСИЛЕННЫЙ БЛЮР (оптимизировано для GPU: снижен sigma и добавлен TileMode)
-          filter: ImageFilter.blur(
-            sigmaX: 16,
-            sigmaY: 16,
-            tileMode: TileMode.clamp,
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding:
-                widget.padding ??
-                EdgeInsets.all(AppLayout.cardPadding(context)),
-            decoration: BoxDecoration(
-              color: widget.color,
-              // 3. ГРАДИЕНТНЫЙ БЛИК (Свет падает сверху-слева)
-              gradient: widget.color == null
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha: highlightAlpha),
-                        Colors.white.withValues(alpha: midAlpha),
-                        Colors.white.withValues(alpha: baseAlpha),
-                      ],
-                    )
-                  : null,
-              borderRadius: radius,
-              // 4. ДИНАМИЧЕСКАЯ РАМКА (Эффект свечения при нажатии)
-              border:
-                  widget.border ??
-                  Border.all(
-                    color: _isPressed && isInteractive 
-                      ? const Color(0xFF00F0FF).withValues(alpha: 0.6)
-                      : Colors.white.withValues(alpha: 0.14),
-                    width: _isPressed && isInteractive ? 1.5 : 1.0,
-                  ),
-            ),
-            child: widget.child,
-          ),
-        ),
+        child: isReduced
+            ? coreContainer
+            : BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: 16,
+                  sigmaY: 16,
+                  tileMode: TileMode.clamp,
+                ),
+                child: coreContainer,
+              ),
       ),
     );
 

@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,7 +36,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
         add(HistoryUpdated(records));
       },
       onError: (error) {
-        debugPrint("Stream error: $error");
+        appLog("Stream error: $error");
         emit(state.copyWith(status: HistoryStatus.failure));
       },
     );
@@ -67,7 +68,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     try {
       streak = _historyRepository.calculateStreak();
     } catch (e) {
-      debugPrint("Error calc streak in bloc: $e");
+      appLog("Error calc streak in bloc: $e");
     }
 
     emit(

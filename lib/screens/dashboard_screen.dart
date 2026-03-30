@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -103,7 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (mounted) setState(() => _isBannerReady = true);
         },
         onAdFailedToLoad: (ad, err) {
-          debugPrint('Banner failed: $err');
+          appLog('Banner failed: $err');
           ad.dispose();
           _bannerAd = null;
           _isBannerReady = false;
@@ -135,7 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               );
         },
-        onAdFailedToLoad: (err) => debugPrint('Interstitial failed: $err'),
+        onAdFailedToLoad: (err) => appLog('Interstitial failed: $err'),
       ),
     );
   }

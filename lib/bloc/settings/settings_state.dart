@@ -9,6 +9,7 @@ class SettingsState extends Equatable {
   final bool notifyWater;
   final bool notifyWeight;
   final bool notifyFastingStart;
+  final bool reducedAnimations;
 
   const SettingsState({
     this.themeMode = ThemeMode.system,
@@ -18,6 +19,7 @@ class SettingsState extends Equatable {
     this.notifyWater = false,
     this.notifyWeight = false,
     this.notifyFastingStart = false,
+    this.reducedAnimations = false,
   });
 
   SettingsState copyWith({
@@ -28,6 +30,7 @@ class SettingsState extends Equatable {
     bool? notifyWater,
     bool? notifyWeight,
     bool? notifyFastingStart,
+    bool? reducedAnimations,
   }) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
@@ -38,6 +41,7 @@ class SettingsState extends Equatable {
       notifyWater: notifyWater ?? this.notifyWater,
       notifyWeight: notifyWeight ?? this.notifyWeight,
       notifyFastingStart: notifyFastingStart ?? this.notifyFastingStart,
+      reducedAnimations: reducedAnimations ?? this.reducedAnimations,
     );
   }
 
@@ -50,5 +54,6 @@ class SettingsState extends Equatable {
     notifyWater,
     notifyWeight,
     notifyFastingStart,
+    reducedAnimations,
   ];
 }

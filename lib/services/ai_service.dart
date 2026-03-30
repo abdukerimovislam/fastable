@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:ui';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -31,9 +32,9 @@ class AiService {
           maxOutputTokens: 800,
         ),
       );
-      debugPrint('✅ AI Service initialized with Remote Config key.');
+      appLog('✅ AI Service initialized with Remote Config key.');
     } else {
-      debugPrint(
+      appLog(
         '⚠️ AI Service Warning: Key not found in Remote Config. AI disabled.',
       );
     }
@@ -72,7 +73,7 @@ class AiService {
         ],
       );
     } catch (e) {
-      debugPrint('❌ Error starting chat: $e');
+      appLog('❌ Error starting chat: $e');
     }
   }
 
@@ -96,7 +97,7 @@ class AiService {
       final text = response.text;
       return (text == null || text.isEmpty) ? l10n.aiEmptyResponse : text;
     } catch (e) {
-      debugPrint('❌ AI Connection Error: $e');
+      appLog('❌ AI Connection Error: $e');
       return l10n.aiConnectionError;
     }
   }

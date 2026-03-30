@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/widgets.dart';
@@ -87,7 +88,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
         ),
       );
     } catch (e) {
-      debugPrint("WaterBloc Error in _onLoadData: $e");
+      appLog("WaterBloc Error in _onLoadData: $e");
       emit(state.copyWith(status: WaterStatus.failure));
     }
   }
@@ -105,7 +106,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
       emit(state.copyWith(todayDrinks: updatedList));
 
       if (event.type.breaksFast) {
-        debugPrint(
+        appLog(
           "⚠️ WARNING: User drank ${event.type.name}. This breaks the fast!",
         );
       }
@@ -143,7 +144,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
 
       await _repository.saveEntry(DateTime.now(), _toCupCount(updatedList));
     } catch (e) {
-      debugPrint("WaterBloc Error in _onAddDrink: $e");
+      appLog("WaterBloc Error in _onAddDrink: $e");
     }
   }
 
@@ -166,7 +167,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
       // 🔥 Tech Debt: Undo does not remove records from Apple Health.
       // Needs HealthKit UUID mapping in the future.
     } catch (e) {
-      debugPrint("WaterBloc Error in _onRemoveLastDrink: $e");
+      appLog("WaterBloc Error in _onRemoveLastDrink: $e");
     }
   }
 
@@ -182,7 +183,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
 
       emit(state.copyWith(dailyGoal: event.newGoal, isAutoGoal: false));
     } catch (e) {
-      debugPrint("WaterBloc Error in _onUpdateGoal: $e");
+      appLog("WaterBloc Error in _onUpdateGoal: $e");
     }
   }
 
@@ -203,7 +204,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
 
       emit(state.copyWith(isAutoGoal: event.isEnabled, dailyGoal: newGoal));
     } catch (e) {
-      debugPrint("WaterBloc Error in _onToggleAutoGoal: $e");
+      appLog("WaterBloc Error in _onToggleAutoGoal: $e");
     }
   }
 
@@ -224,7 +225,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
 
       emit(state.copyWith(recommendedGoal: event.cups, dailyGoal: currentGoal));
     } catch (e) {
-      debugPrint("WaterBloc Error in _onUpdateRecommendedGoal: $e");
+      appLog("WaterBloc Error in _onUpdateRecommendedGoal: $e");
     }
   }
 
@@ -270,7 +271,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
       await prefs.setString('water_last_date', today);
       return restored;
     } catch (e) {
-      debugPrint("Water history restore error: $e");
+      appLog("Water history restore error: $e");
       return [];
     }
   }

@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -98,7 +99,7 @@ class InsightBloc extends Bloc<InsightEvent, InsightState> {
         }
       } catch (e) {
         // Если ошибка веса, не ломаем блок, просто данные будут 0.0
-        debugPrint("⚠️ InsightBloc: Ошибка получения веса: $e");
+        appLog("⚠️ InsightBloc: Ошибка получения веса: $e");
       }
 
       // 3. ПОДГОТОВКА ДАННЫХ ДЛЯ AI

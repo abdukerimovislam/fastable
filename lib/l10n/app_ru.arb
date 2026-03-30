@@ -122,6 +122,9 @@
   "notifyWeightDesc": "Ежедневное напоминание взвеситься",
   "notifyFastingStart": "Начало голодания",
   "notifyFastingStartDesc": "Уведомлять о начале окна голодания",
+  "simplifiedAnimation": "Упрощенная анимация",
+  "simplifiedAnimationDesc": "Снижает размытие и эффекты для экономии батареи и производительности",
+  "settingPerformance": "Производительность",
 
   "privacyPolicy": "Политика конфиденциальности",
   "termsOfService": "Условия использования",

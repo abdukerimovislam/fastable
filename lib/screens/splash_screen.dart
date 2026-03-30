@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -86,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
       try {
         await authService.signInAnonymously();
       } catch (e) {
-        debugPrint("Splash auth error: $e");
+        appLog("Splash auth error: $e");
         // В случае критической ошибки сети мы все равно пустим юзера дальше,
         // Firebase Auth умеет кэшировать запросы при оффлайне.
       }

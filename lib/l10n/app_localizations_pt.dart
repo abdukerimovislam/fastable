@@ -322,6 +322,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notifyFastingStartDesc => 'Notificar quando a janela de jejum começar';
 
   @override
+  String get simplifiedAnimation => 'Animações Simplificadas';
+
+  @override
+  String get simplifiedAnimationDesc => 'Reduz o desfoque e efeitos para melhorar bateria e desempenho';
+
+  @override
+  String get settingPerformance => 'Desempenho';
+
+  @override
   String get privacyPolicy => 'Política de privacidade';
 
   @override
@@ -2135,82 +2144,116 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get moodGreat => 'Ótimo';
 
-  // --- Medical Disclaimer ---
   @override
-  String get disclaimerCheckboxPrefix => 'Eu concordo com o ';
-  @override
-  String get disclaimerCheckboxLink => 'Aviso Médico e a Política de Privacidade';
+  String get disclaimerCheckboxPrefix => 'I agree to the ';
 
-  // --- PDF Medical Report ---
   @override
-  String get pdfReportTitle => 'Relatório Médico';
+  String get disclaimerCheckboxLink => 'Medical Disclaimer & Privacy Policy';
+
   @override
-  String get pdfReportSubtitle => 'Resumo do Jejum Intermitente';
+  String get pdfReportTitle => 'Medical Report';
+
   @override
-  String get pdfReportGenerating => 'Gerando seu relatório...';
+  String get pdfReportSubtitle => 'Intermittent Fasting Summary';
+
   @override
-  String get pdfReportGenerate => 'Gerar Relatório PDF';
+  String get pdfReportGenerating => 'Generating your report...';
+
   @override
-  String get pdfReportShare => 'Compartilhar Relatório';
+  String get pdfReportGenerate => 'Generate PDF Report';
+
   @override
-  String get pdfReportPreview => 'Pré-visualização';
+  String get pdfReportShare => 'Share Report';
+
   @override
-  String get pdfReportPeriod => 'Período do relatório';
+  String get pdfReportPreview => 'Preview Report';
+
   @override
-  String get pdfReportPeriod7 => 'Últimos 7 dias';
+  String get pdfReportPeriod => 'Report Period';
+
   @override
-  String get pdfReportPeriod30 => 'Últimos 30 dias';
+  String get pdfReportPeriod7 => 'Last 7 days';
+
   @override
-  String get pdfReportPeriodAll => 'Todo o período';
+  String get pdfReportPeriod30 => 'Last 30 days';
+
   @override
-  String get pdfReportProOnly => 'Relatórios PDF são uma função PRO';
+  String get pdfReportPeriodAll => 'All time';
+
   @override
-  String get pdfReportProDesc => 'Atualize para PRO para gerar e compartilhar seus relatórios de jejum personalizados.';
+  String get pdfReportProOnly => 'PDF Reports are a PRO feature';
+
   @override
-  String get pdfReportSectionProfile => 'Perfil pessoal';
+  String get pdfReportProDesc => 'Upgrade to PRO to generate and share your personalized fasting reports.';
+
   @override
-  String get pdfReportSectionStats => 'Estatísticas de jejum';
+  String get pdfReportSectionProfile => 'Personal Profile';
+
   @override
-  String get pdfReportSectionHistory => 'Histórico de jejuns';
+  String get pdfReportSectionStats => 'Fasting Statistics';
+
   @override
-  String get pdfReportSectionDisclaimer => 'Aviso médico';
+  String get pdfReportSectionHistory => 'Fasting History';
+
   @override
-  String get pdfReportLabelAge => 'Idade';
+  String get pdfReportSectionDisclaimer => 'Medical Disclaimer';
+
   @override
-  String get pdfReportLabelGender => 'Gênero';
+  String get pdfReportLabelAge => 'Age';
+
   @override
-  String get pdfReportLabelWeight => 'Peso';
+  String get pdfReportLabelGender => 'Gender';
+
   @override
-  String get pdfReportLabelHeight => 'Altura';
+  String get pdfReportLabelWeight => 'Weight';
+
   @override
-  String get pdfReportLabelBmi => 'IMC';
+  String get pdfReportLabelHeight => 'Height';
+
   @override
-  String get pdfReportLabelTotalFasts => 'Total de jejuns';
+  String get pdfReportLabelBmi => 'BMI';
+
   @override
-  String get pdfReportLabelTotalHours => 'Total de horas';
+  String get pdfReportLabelTotalFasts => 'Total Fasts';
+
   @override
-  String get pdfReportLabelAvgDuration => 'Duração média';
+  String get pdfReportLabelTotalHours => 'Total Hours';
+
   @override
-  String get pdfReportLabelLongest => 'Jejum mais longo';
+  String get pdfReportLabelAvgDuration => 'Avg Duration';
+
   @override
-  String get pdfReportLabelStreak => 'Melhor sequência';
+  String get pdfReportLabelLongest => 'Longest Fast';
+
   @override
-  String get pdfReportLabelDate => 'Data';
+  String get pdfReportLabelStreak => 'Best Streak';
+
   @override
-  String get pdfReportLabelDuration => 'Duração';
+  String get pdfReportLabelDate => 'Date';
+
   @override
-  String get pdfReportLabelCompleted => 'Concluído';
+  String get pdfReportLabelDuration => 'Duration';
+
   @override
-  String get pdfReportDisclaimerText =>
-      'Este relatório foi gerado pelo Fastable e destina-se apenas ao acompanhamento pessoal. Não constitui aconselhamento médico. Consulte um profissional de saúde qualificado antes de tomar decisões sobre sua saúde.';
+  String get pdfReportLabelCompleted => 'Completed';
+
   @override
-  String get pdfReportGeneratedBy => 'Gerado pelo Fastable';
+  String get pdfReportDisclaimerText => 'This report is generated by Fastable and is intended for personal tracking purposes only. It does not constitute medical advice. Please consult a qualified healthcare professional before making any health decisions.';
+
   @override
-  String get pdfReportGenderMale => 'Masculino';
+  String get pdfReportGeneratedBy => 'Generated by Fastable';
+
   @override
-  String get pdfReportGenderFemale => 'Feminino';
+  String get pdfReportGenderMale => 'Male';
+
   @override
-  String get pdfReportNoData => 'Nenhum registro de jejum encontrado para o período selecionado.';
+  String get pdfReportGenderFemale => 'Female';
+
   @override
-  String pdfReportHours(int hours, int minutes) => '${hours}h ${minutes}m';
+  String get pdfReportNoData => 'No fasting records found for the selected period.';
+
+  @override
+  String pdfReportHours(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
 }

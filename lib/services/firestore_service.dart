@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fastable/models/article.dart';
@@ -53,7 +54,7 @@ class FirestoreService {
         }
       }
     } catch (e) {
-      debugPrint("⚠️ Firestore getArticles error (falling back to cache): $e");
+      appLog("⚠️ Firestore getArticles error (falling back to cache): $e");
       // Если нет интернета или ошибка сети, принудительно отдаем то, что есть в кэше
       snapshot = await articlesRef.get(const GetOptions(source: Source.cache));
     }

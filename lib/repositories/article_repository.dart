@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
@@ -17,7 +18,7 @@ class ArticleRepository {
       final docs = snapshot.docs.toList()..sort(_compareDocsByOrderThenId);
       return docs.map((doc) => ArticleModel.fromSnapshot(doc, locale)).toList();
     } catch (e) {
-      debugPrint("Error fetching articles: $e");
+      appLog("Error fetching articles: $e");
       try {
         final snapshot = await collection.get(
           const GetOptions(source: Source.cache),

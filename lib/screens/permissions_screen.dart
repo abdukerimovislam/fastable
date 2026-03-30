@@ -13,6 +13,7 @@ import 'package:fastable/bloc/settings/settings_bloc.dart';
 import 'package:fastable/bloc/settings/settings_event.dart';
 
 import 'package:fastable/widgets/glass_card.dart';
+import 'package:fastable/widgets/health_permission_sheet.dart';
 import 'package:fastable/widgets/mesh_background.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/utils/health_sync_preferences.dart';
@@ -189,6 +190,11 @@ class _PermissionsScreenState extends State<PermissionsScreen>
                       onChanged: (val) async {
                         haptic.selectionClick();
                         if (val) {
+                          final shouldRequest = await HealthPermissionSheet.show(context);
+                          if (shouldRequest != true) return;
+
+                          if (!context.mounted) return;
+                          
                           final success = await getIt<HealthService>()
                               .requestPermissions();
 

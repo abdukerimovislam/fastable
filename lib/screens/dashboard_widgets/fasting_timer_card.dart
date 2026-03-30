@@ -77,10 +77,10 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
   }
 
   void _endFast(
-    BuildContext context,
-    FastingState state, {
-    DateTime? customEndTime,
-  }) async {
+      BuildContext context,
+      FastingState state, {
+        DateTime? customEndTime,
+      }) async {
     getIt<HapticService>().mediumImpact();
     final endTimeToUse = customEndTime ?? DateTime.now();
 
@@ -159,7 +159,7 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
   void _showBodyVisualizerModal(BuildContext context, Color stateColor, bool isFasting) {
     getIt<HapticService>().selectionClick();
     final l10n = AppLocalizations.of(context)!;
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -243,161 +243,116 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
     );
   }
 
-  String _formatDuration(Duration d) =>
-      "${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return BlocBuilder<FastingBloc, FastingState>(
+      buildWhen: (prev, curr) =>
+      prev.phase != curr.phase ||
+          prev.planIndex != curr.planIndex ||
+          prev.goalDuration != curr.goalDuration,
       builder: (context, state) {
 
         final isFasting = state.phase == FastingPhase.fasting;
         final isCircadian =
             state.planIndex ==
-            FastingState.circadianPlanIndex; // 🔥 ПРОВЕРКА ЦИРКАДНОГО ПЛАНА
+                FastingState.circadianPlanIndex;
 
         final currentStage = isFasting
             ? FastingStage.getCurrentStage(state.elapsed.inMinutes / 60.0)
             : FastingStage.allStages[0];
 
-        // Цвета
         final Color stateColor = state.phase == FastingPhase.eating
-            ? const Color(0xFF84FAB0) // Зеленый для еды
+            ? const Color(0xFF84FAB0)
             : (state.phase == FastingPhase.stopped
-                  ? Colors.blueAccent
-                  : (isCircadian
-                        ? Colors.indigoAccent
-                        : currentStage
-                              .color)); // 🔥 Индиго для циркадного фаста
+            ? Colors.blueAccent
+            : (isCircadian
+            ? Colors.indigoAccent
+            : currentStage
+            .color));
 
-        // Иконки
         final IconData stageIcon = state.phase == FastingPhase.eating
             ? Icons.restaurant
             : (isCircadian
-                  ? Icons.nights_stay_rounded
-                  : currentStage.icon); // 🔥 Месяц для циркадного фаста
+            ? Icons.nights_stay_rounded
+            : currentStage.icon);
 
         String stateText = isFasting
             ? l10n.fastingPhase
             : (state.phase == FastingPhase.eating
-                  ? l10n.eatingWindow
-                  : l10n.readyToFast);
+            ? l10n.eatingWindow
+            : l10n.readyToFast);
 
-        Duration displayTime;
-        String timeSubtext;
-        Color subtextColor = Colors.white70;
-        bool isOvertime = false;
-        Color timeColor = Colors.white;
+        bool isOvertime = state.phase != FastingPhase.stopped && state.elapsed >= state.goalDuration;
 
-        if (state.phase == FastingPhase.stopped) {
-          displayTime = state.goalDuration;
-          timeSubtext = l10n.targetGoal;
-        } else {
-          if (state.elapsed >= state.goalDuration) {
-            isOvertime = true;
-            displayTime = state.elapsed;
-
-            if (isFasting) {
-              timeSubtext = l10n.timerGoalReachedExtra;
-              subtextColor = Colors.amber;
-              timeColor = Colors.amberAccent;
-            } else {
-              timeSubtext = l10n.timerWindowExtended;
-              subtextColor = Colors.white54;
-              timeColor = Colors.white.withValues(alpha: 0.9);
-            }
-          } else {
-            displayTime = state.goalDuration - state.elapsed;
-            // 🔥 ОСОБЫЙ ТЕКСТ ДЛЯ ЦИРКАДНОГО ПЛАНА
-            if (isCircadian) {
-              timeSubtext = state.phase == FastingPhase.eating
-                  ? l10n.circadianTargetSunset
-                  : l10n.circadianTargetSunrise;
-            } else {
-              timeSubtext = state.phase == FastingPhase.eating
-                  ? l10n.timerRemainingInWindow
-                  : l10n.remaining;
-            }
-          }
-        }
-
-        final timeString = _formatDuration(displayTime);
-        final double blobPercent = (state.phase == FastingPhase.stopped)
-            ? 0.0
-            : (state.elapsed.inSeconds / state.goalDuration.inSeconds).clamp(
-                0.0,
-                1.0,
-              );
-
-        // 🔥 БЕЗОПАСНОЕ ПОЛУЧЕНИЕ ИМЕНИ ПЛАНА
         String planName;
         if (state.planIndex == FastingState.circadianPlanIndex) {
           planName = "☀️ ${l10n.planCircadianTitle}";
         } else if (state.planIndex == FastingState.customPlanIndex) {
           planName =
-              "${l10n.customPlan} (${l10n.durationHoursShort(state.goalDuration.inHours)})";
+          "${l10n.customPlan} (${l10n.durationHoursShort(state.goalDuration.inHours)})";
         } else if (state.planIndex >= 0 &&
             state.planIndex < FastingPlan.defaultPlans.length) {
           planName =
-              "${FastingPlan.defaultPlans[state.planIndex].fastingDuration.inHours}:${FastingPlan.defaultPlans[state.planIndex].eatingDuration.inHours}";
+          "${FastingPlan.defaultPlans[state.planIndex].fastingDuration.inHours}:${FastingPlan.defaultPlans[state.planIndex].eatingDuration.inHours}";
         } else {
           planName = l10n.timerUnknownPlan;
         }
 
         final Widget? headerBadge = isFasting && !isOvertime
             ? Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: GestureDetector(
-                  onTap: isCircadian
-                      ? null
-                      : () => _showStageDetails(context, state.elapsed),
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 220),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: stateColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: stateColor.withValues(alpha: 0.2),
+          padding: const EdgeInsets.only(top: 8),
+          child: GestureDetector(
+            onTap: isCircadian
+                ? null
+                : () => _showStageDetails(
+                context, context.read<FastingBloc>().state.elapsed),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 220),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: stateColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: stateColor.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(stageIcon, color: stateColor, size: 14),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      isCircadian
+                          ? l10n.circadianManaged
+                          : currentStage.getTitle(l10n),
+                      style: TextStyle(
+                        color: stateColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(stageIcon, color: stateColor, size: 14),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            isCircadian
-                                ? l10n.circadianManaged
-                                : currentStage.getTitle(l10n),
-                            style: TextStyle(
-                              color: stateColor,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (!isCircadian) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: stateColor.withValues(alpha: 0.7),
-                            size: 16,
-                          ),
-                        ],
-                      ],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-              )
+                  if (!isCircadian) ...[
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: stateColor.withValues(alpha: 0.7),
+                      size: 16,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        )
             : null;
 
         final Widget viewToggleButton = GestureDetector(
@@ -519,7 +474,7 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
         );
 
         final Widget startButton = GestureDetector(
-          onTap: () => _startFastNow(context, state),
+          onTap: () => _startFastNow(context, context.read<FastingBloc>().state),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
             decoration: BoxDecoration(
@@ -611,67 +566,13 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                 child: SizedBox(
                   width: 250,
                   height: 250,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 800),
-                          child: GradientTimerBlob(
-                            key: ValueKey<bool>(isFasting),
-                            percent: blobPercent,
-                            isFasting: isFasting,
-                            colors: [
-                              stateColor.withValues(alpha: 0.5),
-                              stateColor,
-                            ],
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      timeString,
-                                      style: TextStyle(
-                                        fontSize: 52,
-                                        fontWeight: FontWeight.w900,
-                                        color: timeColor,
-                                        letterSpacing: -1.0,
-                                        fontFeatures: const [
-                                          FontFeature.tabularFigures(),
-                                        ],
-                                        shadows: const [
-                                          Shadow(
-                                            color: Colors.black26,
-                                            blurRadius: 10,
-                                            offset: Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                  ),
-                                  child: Text(
-                                    timeSubtext,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: subtextColor,
-                                      fontSize: 14,
-                                      fontWeight: isOvertime
-                                          ? FontWeight.bold
-                                          : FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                  child: _TimerDisplay(
+                    phase: state.phase,
+                    isCircadian: isCircadian,
+                    stateColor: stateColor,
+                    goalDuration: state.goalDuration,
+                  ),
+                ),
               ),
               SizedBox(height: sectionGap + 18),
 
@@ -740,7 +641,7 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
               // Главные кнопки (Start / Stop / Break)
               if (isFasting)
                 GestureDetector(
-                  onTap: () => _endFast(context, state),
+                  onTap: () => _endFast(context, context.read<FastingBloc>().state),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 18),
@@ -785,19 +686,19 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
               else
                 useStackedIdleButtons
                     ? Column(
-                        children: [
-                          breakButton,
-                          SizedBox(height: sectionGap),
-                          startButton,
-                        ],
-                      )
+                  children: [
+                    breakButton,
+                    SizedBox(height: sectionGap),
+                    startButton,
+                  ],
+                )
                     : Row(
-                        children: [
-                          Expanded(child: breakButton),
-                          SizedBox(width: sectionGap),
-                          Expanded(child: startButton),
-                        ],
-                      ),
+                  children: [
+                    Expanded(child: breakButton),
+                    SizedBox(width: sectionGap),
+                    Expanded(child: startButton),
+                  ],
+                ),
 
               const SizedBox(height: 8),
 
@@ -834,8 +735,8 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                         state.phase == FastingPhase.stopped
                             ? l10n.timerLogStartEarlier
                             : (isFasting
-                                  ? l10n.timerLogEndEarlier
-                                  : l10n.timerLogFastStartEarlier),
+                            ? l10n.timerLogEndEarlier
+                            : l10n.timerLogFastStartEarlier),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
@@ -845,6 +746,124 @@ class _FastingTimerCardState extends State<FastingTimerCard> {
                     ],
                   ),
                 ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// 🔥 ОПТИМИЗИРОВАННЫЙ ВИДЖЕТ ТАЙМЕРА (Перерисовывается только текст!)
+class _TimerDisplay extends StatelessWidget {
+  final FastingPhase phase;
+  final bool isCircadian;
+  final Color stateColor;
+  final Duration goalDuration;
+
+  const _TimerDisplay({
+    required this.phase,
+    required this.isCircadian,
+    required this.stateColor,
+    required this.goalDuration,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isFasting = phase == FastingPhase.fasting;
+
+    // BlocSelector слушает только изменение elapsed-времени!
+    return BlocSelector<FastingBloc, FastingState, Duration>(
+      selector: (state) => state.elapsed,
+      builder: (context, elapsed) {
+        final l10n = AppLocalizations.of(context)!;
+
+        Duration displayTime;
+        String timeSubtext;
+        Color subtextColor = Colors.white70;
+        bool isOvertime = false;
+        Color timeColor = Colors.white;
+
+        if (phase == FastingPhase.stopped) {
+          displayTime = goalDuration;
+          timeSubtext = l10n.targetGoal;
+        } else {
+          if (elapsed >= goalDuration) {
+            isOvertime = true;
+            displayTime = elapsed;
+
+            if (isFasting) {
+              timeSubtext = l10n.timerGoalReachedExtra;
+              subtextColor = Colors.amber;
+              timeColor = Colors.amberAccent;
+            } else {
+              timeSubtext = l10n.timerWindowExtended;
+              subtextColor = Colors.white54;
+              timeColor = Colors.white.withValues(alpha: 0.9);
+            }
+          } else {
+            displayTime = goalDuration - elapsed;
+            if (isCircadian) {
+              timeSubtext = phase == FastingPhase.eating
+                  ? l10n.circadianTargetSunset
+                  : l10n.circadianTargetSunrise;
+            } else {
+              timeSubtext = phase == FastingPhase.eating
+                  ? l10n.timerRemainingInWindow
+                  : l10n.remaining;
+            }
+          }
+        }
+
+        final String timeString = "${displayTime.inHours.toString().padLeft(2, '0')}:${(displayTime.inMinutes % 60).toString().padLeft(2, '0')}:${(displayTime.inSeconds % 60).toString().padLeft(2, '0')}";
+
+        final double blobPercent = (phase == FastingPhase.stopped)
+            ? 0.0
+            : (elapsed.inSeconds / goalDuration.inSeconds).clamp(0.0, 1.0);
+
+        return GradientTimerBlob(
+          percent: blobPercent,
+          isFasting: isFasting,
+          colors: [
+            stateColor.withValues(alpha: 0.5),
+            stateColor,
+          ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    timeString,
+                    style: TextStyle(
+                      fontSize: 52,
+                      fontWeight: FontWeight.w900,
+                      color: timeColor,
+                      letterSpacing: -1.0,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      shadows: const [
+                        Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Text(
+                  timeSubtext,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: subtextColor,
+                    fontSize: 14,
+                    fontWeight: isOvertime ? FontWeight.bold : FontWeight.w600,
+                  ),
+                ),
+              ),
             ],
           ),
         );

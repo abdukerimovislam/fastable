@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:flutter/foundation.dart'; // Для debugPrint
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -40,9 +41,9 @@ class NotificationService {
       // Вытаскиваем IANA идентификатор из объекта TimezoneInfo
       final String timeZoneName = timeZoneInfo.identifier;
       tz.setLocalLocation(tz.getLocation(timeZoneName));
-      debugPrint("✅ Timezone set to: $timeZoneName");
+      appLog("✅ Timezone set to: $timeZoneName");
     } catch (e) {
-      debugPrint("⚠️ Could not get local timezone: $e");
+      appLog("⚠️ Could not get local timezone: $e");
     }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -78,7 +79,7 @@ class NotificationService {
           badge: true,
           sound: true,
         );
-        debugPrint("✅ iOS Notification Permissions Requested");
+        appLog("✅ iOS Notification Permissions Requested");
       }
     } else if (Platform.isAndroid) {
       final androidImplementation = _notificationsPlugin
@@ -87,7 +88,7 @@ class NotificationService {
           >();
       if (androidImplementation != null) {
         await androidImplementation.requestNotificationsPermission();
-        debugPrint("✅ Android Notification Permissions Requested");
+        appLog("✅ Android Notification Permissions Requested");
       }
     }
   }
@@ -494,7 +495,7 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
-      debugPrint("Error scheduling notification $id: $e");
+      appLog("Error scheduling notification $id: $e");
     }
   }
 

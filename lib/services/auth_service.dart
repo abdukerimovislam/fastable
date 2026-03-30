@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:io'; // Для Platform
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
@@ -7,6 +8,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fastable/injection.dart'; // Для getIt
 import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/services/storage_service.dart';
 
 // Репозитории (для миграции данных)
 import 'package:fastable/repositories/weight_repository.dart';
@@ -76,11 +78,11 @@ class AuthService {
       _anonymousSignInFuture = _auth
           .signInAnonymously()
           .then((result) {
-            debugPrint("👻 Signed in anonymously: ${result.user?.uid}");
+            appLog("👻 Signed in anonymously: ${result.user?.uid}");
             return result.user;
           })
           .catchError((Object error, StackTrace stackTrace) {
-            debugPrint("❌ Anonymous sign in error: $error");
+            appLog("❌ Anonymous sign in error: $error");
             return null;
           })
           .whenComplete(() {
@@ -89,7 +91,7 @@ class AuthService {
 
       return await _anonymousSignInFuture;
     } catch (e) {
-      debugPrint("❌ Anonymous sign in error: $e");
+      appLog("❌ Anonymous sign in error: $e");
       return null;
     }
   }
@@ -119,7 +121,7 @@ class AuthService {
       // Если это наш DataConflictException, пробрасываем выше (в UI)
       if (e is DataConflictException) rethrow;
 
-      debugPrint("❌ Google Sign In Error: $e");
+      appLog("❌ Google Sign In Error: $e");
       throw const AuthFlowException(AuthFlowError.googleSignInFailed);
     }
   }
@@ -149,7 +151,7 @@ class AuthService {
     } catch (e) {
       if (e is DataConflictException) rethrow;
 
-      debugPrint("❌ Apple Sign In Error: $e");
+      appLog("❌ Apple Sign In Error: $e");
 
       // 🔥 ИСПРАВЛЕНИЕ 2: Безопасная проверка ошибки отмены Apple Sign In (Типизация вместо подстроки)
       if (e is SignInWithAppleAuthorizationException) {
@@ -201,7 +203,7 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'credential-already-in-use') {
         // СЦЕНАРИЙ В: Такой Google/Apple уже привязан к ДРУГОМУ аккаунту.
-        debugPrint("⚠️ Account exists. Switching users...");
+        appLog("⚠️ Account exists. Switching users...");
 
         // 1. Входим в старый аккаунт (Анонимный UID при этом сбрасывается, но мы сохранили oldUid!)
         final result = await _auth.signInWithCredential(credential);
@@ -269,7 +271,7 @@ class AuthService {
 
   // --- ХЕЛПЕР: Массовая миграция всех репозиториев ---
   Future<void> _migrateAllData(String uid) async {
-    debugPrint("🚀 Migrating ALL data to cloud for user $uid...");
+    appLog("🚀 Migrating ALL data to cloud for user $uid...");
 
     await Future.wait([
       getIt<WeightRepository>().migrateLocalToCloud(uid),
@@ -277,7 +279,7 @@ class AuthService {
       getIt<WaterRepository>().migrateLocalToCloud(uid),
     ]);
 
-    debugPrint("✅ Full migration complete");
+    appLog("✅ Full migration complete");
   }
 
   // ===========================================================================
@@ -286,7 +288,7 @@ class AuthService {
   // 🔥 ИСПРАВЛЕНИЕ: Очищаем локальные данные при выходе, чтобы не слить их другому юзеру!
   Future<void> signOut() async {
     try {
-      debugPrint("👋 Signing out and clearing local cache...");
+      appLog("👋 Signing out and clearing local cache...");
 
       final user = _auth.currentUser;
       if (user != null && !user.isAnonymous) {
@@ -305,9 +307,9 @@ class AuthService {
       await _googleSignIn.signOut();
       await _auth.signOut();
       _anonymousSignInFuture = null;
-      debugPrint("✅ Signed out successfully");
+      appLog("✅ Signed out successfully");
     } catch (e) {
-      debugPrint("❌ Sign out error: $e");
+      appLog("❌ Sign out error: $e");
     }
   }
 
@@ -319,7 +321,7 @@ class AuthService {
     if (user == null) return;
 
     try {
-      debugPrint("🗑 Deleting account and all data...");
+      appLog("🗑 Deleting account and all data...");
 
       if (!user.isAnonymous) {
         await _reauthenticateForAccountDeletion(user);
@@ -346,14 +348,14 @@ class AuthService {
       await activeUser.delete();
       _anonymousSignInFuture = null;
 
-      debugPrint("✅ Account deleted successfully");
+      appLog("✅ Account deleted successfully");
     } on AccountDeletionException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      debugPrint("❌ Delete account auth error: ${e.code}");
+      appLog("❌ Delete account auth error: ${e.code}");
       throw const AccountDeletionException(AccountDeletionError.deleteFailed);
     } catch (e) {
-      debugPrint("❌ Delete account error: $e");
+      appLog("❌ Delete account error: $e");
       throw const AccountDeletionException(AccountDeletionError.deleteFailed);
     }
   }
@@ -387,8 +389,7 @@ class AuthService {
   }
 
   Future<AppLocalizations> _loadAppLocalizations() async {
-    final prefs = await SharedPreferences.getInstance();
-    final localeCode = prefs.getString('locale_code') ?? 'en';
+    final localeCode = await getIt<StorageService>().getLocaleCode() ?? 'en';
     return lookupAppLocalizations(Locale(localeCode));
   }
 
@@ -432,12 +433,12 @@ class AuthService {
     } on AccountDeletionException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      debugPrint("❌ Google reauth error: ${e.code}");
+      appLog("❌ Google reauth error: ${e.code}");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );
     } catch (e) {
-      debugPrint("❌ Google reauth error: $e");
+      appLog("❌ Google reauth error: $e");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );
@@ -472,17 +473,17 @@ class AuthService {
         );
       }
 
-      debugPrint("❌ Apple reauth error: ${e.code}");
+      appLog("❌ Apple reauth error: ${e.code}");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );
     } on FirebaseAuthException catch (e) {
-      debugPrint("❌ Apple reauth auth error: ${e.code}");
+      appLog("❌ Apple reauth auth error: ${e.code}");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );
     } catch (e) {
-      debugPrint("❌ Apple reauth error: $e");
+      appLog("❌ Apple reauth error: $e");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );

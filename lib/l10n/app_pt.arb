@@ -122,6 +122,9 @@
   "notifyWeightDesc": "Lembrete diário para se pesar",
   "notifyFastingStart": "Início do jejum",
   "notifyFastingStartDesc": "Notificar quando a janela de jejum começar",
+  "simplifiedAnimation": "Animações Simplificadas",
+  "simplifiedAnimationDesc": "Reduz o desfoque e efeitos para melhorar bateria e desempenho",
+  "settingPerformance": "Desempenho",
 
   "privacyPolicy": "Política de privacidade",
   "termsOfService": "Termos de uso",

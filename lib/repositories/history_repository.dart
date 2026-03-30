@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -89,7 +90,7 @@ class HistoryRepository {
           return mergedList;
         }
       } catch (e) {
-        debugPrint("⚠️ History sync failed, using local: $e");
+        appLog("⚠️ History sync failed, using local: $e");
       }
     }
 
@@ -146,7 +147,7 @@ class HistoryRepository {
               'createdAt': FieldValue.serverTimestamp(),
             }, SetOptions(merge: true));
       } catch (e) {
-        debugPrint("❌ Sync error: $e");
+        appLog("❌ Sync error: $e");
       }
     }
   }
@@ -169,7 +170,7 @@ class HistoryRepository {
             .doc(docId)
             .delete();
       } catch (e) {
-        debugPrint("❌ Delete error: $e");
+        appLog("❌ Delete error: $e");
       }
     }
   }
@@ -340,7 +341,7 @@ class HistoryRepository {
       final List<dynamic> jsonList = jsonDecode(jsonString);
       return jsonList.map((e) => FastingRecord.fromMap(e)).toList();
     } catch (e) {
-      debugPrint("⚠️ JSON Decode Error: $e");
+      appLog("⚠️ JSON Decode Error: $e");
       return [];
     }
   }

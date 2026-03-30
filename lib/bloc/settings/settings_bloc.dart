@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +13,7 @@ import 'package:fastable/services/notification_service.dart';
 import 'package:fastable/l10n/app_localizations.dart';
 import 'package:fastable/models/fasting_plan.dart';
 import 'package:fastable/utils/health_sync_preferences.dart';
+import 'package:fastable/services/storage_service.dart';
 
 const String _legacyLocaleKey = 'app_locale';
 
@@ -19,8 +21,9 @@ const String _legacyLocaleKey = 'app_locale';
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final HealthService _healthService;
   final NotificationService _notificationService;
+  final StorageService _storageService;
 
-  SettingsBloc(this._healthService, this._notificationService)
+  SettingsBloc(this._healthService, this._notificationService, this._storageService)
     : super(const SettingsState()) {
     on<LoadSettings>(_onLoadSettings);
     on<ChangeTheme>(_onChangeTheme);
@@ -30,29 +33,29 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<ToggleWaterReminder>(_onToggleWaterReminder);
     on<ToggleWeightReminder>(_onToggleWeightReminder);
     on<ToggleFastingStartReminder>(_onToggleFastingStartReminder);
+    on<ToggleReducedAnimations>(_onToggleReducedAnimations);
   }
 
   Future<void> _onLoadSettings(
     LoadSettings event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _storageService.getPrefsInstance();
     await HealthSyncPreferences.migrateLegacy(prefs);
 
-    String themeStr = prefs.getString('theme_mode') ?? 'system';
+    String themeStr = await _storageService.getThemeMode();
     ThemeMode themeMode = ThemeMode.values.firstWhere(
       (e) => e.name == themeStr,
       orElse: () => ThemeMode.system,
     );
 
-    String? savedLang =
-        prefs.getString('locale_code') ?? prefs.getString(_legacyLocaleKey);
+    String? savedLang = await _storageService.getLocaleCode() ?? prefs.getString(_legacyLocaleKey);
     String langCode;
 
     if (savedLang != null) {
       langCode = savedLang;
       if (!prefs.containsKey('locale_code')) {
-        await prefs.setString('locale_code', savedLang);
+        await _storageService.setLocaleCode(savedLang);
       }
     } else {
       try {
@@ -67,16 +70,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       } catch (e) {
         langCode = 'en';
       }
-      await prefs.setString('locale_code', langCode);
+      await _storageService.setLocaleCode(langCode);
     }
 
     Locale locale = Locale(langCode);
 
     bool health = await HealthSyncPreferences.isEnabled(prefs);
-    bool notif = prefs.getBool('notifications_enabled') ?? true;
-    final notifyWater = prefs.getBool(kNotifyWaterKey) ?? false;
-    final notifyWeight = prefs.getBool(kNotifyWeightKey) ?? false;
-    final notifyFastingStart = prefs.getBool(kNotifyFastingStartKey) ?? false;
+    bool notif = await _storageService.getNotificationsEnabled();
+    final notifyWater = await _storageService.getNotifyWater();
+    final notifyWeight = await _storageService.getNotifyWeight();
+    final notifyFastingStart = await _storageService.getNotifyFastingStart();
+    final reducedAnimations = await _storageService.getReducedAnimations();
 
     emit(
       state.copyWith(
@@ -87,6 +91,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         notifyWater: notifyWater,
         notifyWeight: notifyWeight,
         notifyFastingStart: notifyFastingStart,
+        reducedAnimations: reducedAnimations,
       ),
     );
   }
@@ -95,8 +100,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     ChangeTheme event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('theme_mode', event.themeMode.name);
+    await _storageService.setThemeMode(event.themeMode.name);
     emit(state.copyWith(themeMode: event.themeMode));
   }
 
@@ -104,8 +108,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     ChangeLocale event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('locale_code', event.locale.languageCode);
+    await _storageService.setLocaleCode(event.locale.languageCode);
     emit(state.copyWith(locale: event.locale));
 
     // 🔥 ПЕРЕВОДИМ УВЕДОМЛЕНИЯ ТОЛЬКО ЕСЛИ ОНИ ВКЛЮЧЕНЫ
@@ -113,11 +116,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       try {
         final l10n = lookupAppLocalizations(event.locale);
         await _notificationService.rescheduleAll(l10n);
-        debugPrint(
+        appLog(
           "✅ Notifications rescheduled to language: ${event.locale.languageCode}",
         );
       } catch (e) {
-        debugPrint("⚠️ Failed to reschedule notifications: $e");
+        appLog("⚠️ Failed to reschedule notifications: $e");
       }
     }
   }
@@ -126,7 +129,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     ToggleHealthSync event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _storageService.getPrefsInstance();
     final wasEnabled = await HealthSyncPreferences.isEnabled(prefs);
 
     if (event.isEnabled && !wasEnabled && event.requestPermissions) {
@@ -142,8 +145,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     ToggleNotifications event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notifications_enabled', event.isEnabled);
+    await _storageService.setNotificationsEnabled(event.isEnabled);
     emit(state.copyWith(areNotificationsEnabled: event.isEnabled));
 
     // 🔥 ФИКС: РЕАЛЬНОЕ ВКЛЮЧЕНИЕ / ВЫКЛЮЧЕНИЕ ПУШЕЙ В СИСТЕМЕ
@@ -151,13 +153,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       try {
         final l10n = lookupAppLocalizations(state.locale);
         await _notificationService.rescheduleAll(l10n);
-        debugPrint("✅ Notifications turned ON and rescheduled.");
+        appLog("✅ Notifications turned ON and rescheduled.");
       } catch (e) {
-        debugPrint("⚠️ Failed to reschedule notifications: $e");
+        appLog("⚠️ Failed to reschedule notifications: $e");
       }
     } else {
       await _notificationService.cancelAllNotifications();
-      debugPrint("⏹ Notifications turned OFF. All scheduled pushes cancelled.");
+      appLog("⏹ Notifications turned OFF. All scheduled pushes cancelled.");
     }
   }
 
@@ -165,8 +167,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     ToggleWaterReminder event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kNotifyWaterKey, event.isEnabled);
+    await _storageService.setNotifyWater(event.isEnabled);
     emit(state.copyWith(notifyWater: event.isEnabled));
 
     if (event.isEnabled) {
@@ -183,8 +184,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     ToggleWeightReminder event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kNotifyWeightKey, event.isEnabled);
+    await _storageService.setNotifyWeight(event.isEnabled);
     emit(state.copyWith(notifyWeight: event.isEnabled));
 
     if (event.isEnabled) {
@@ -201,8 +201,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     ToggleFastingStartReminder event,
     Emitter<SettingsState> emit,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kNotifyFastingStartKey, event.isEnabled);
+    await _storageService.setNotifyFastingStart(event.isEnabled);
     emit(state.copyWith(notifyFastingStart: event.isEnabled));
 
     if (!event.isEnabled) {
@@ -212,8 +211,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     if (!state.areNotificationsEnabled) return;
 
-    final appState = prefs.getString('app_state');
-    final cycleStart = prefs.getString('cycle_start_time');
+    final appState = await _storageService.getAppState();
+    final cycleStart = await _storageService.getCycleStartTime();
     if (appState != FastingPhase.eating.name || cycleStart == null) {
       return;
     }
@@ -221,11 +220,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final startTime = DateTime.tryParse(cycleStart);
     if (startTime == null) return;
 
-    final planIndex = prefs.getInt('fast_plan_index') ?? 0;
-    final customHours = prefs.getInt('custom_target_hours') ?? 14;
-    final circadianMinutes =
-        prefs.getInt('circadian_target_minutes') ??
-        const Duration(hours: 14).inMinutes;
+    final planIndex = await _storageService.getFastPlanIndex();
+    final customHours = await _storageService.getCustomTargetHours();
+    final circadianMinutes = (await _storageService.getCircadianTargetMinutes()) ?? const Duration(hours: 14).inMinutes;
 
     final l10n = lookupAppLocalizations(state.locale);
     await _notificationService.scheduleEatingNotifications(
@@ -259,5 +256,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       FastingPlan.defaultPlans.length - 1,
     );
     return FastingPlan.defaultPlans[resolvedIndex].eatingDuration;
+  }
+
+  Future<void> _onToggleReducedAnimations(
+    ToggleReducedAnimations event,
+    Emitter<SettingsState> emit,
+  ) async {
+    await _storageService.setReducedAnimations(event.isEnabled);
+    emit(state.copyWith(reducedAnimations: event.isEnabled));
   }
 }

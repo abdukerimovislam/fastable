@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -67,7 +68,7 @@ class WaterRepository {
           return mergedList;
         }
       } catch (e) {
-        debugPrint("⚠️ Water sync failed, using local: $e");
+        appLog("⚠️ Water sync failed, using local: $e");
       }
     }
 
@@ -92,7 +93,7 @@ class WaterRepository {
     }
 
     await _saveToLocal(entries);
-    debugPrint("💧 Water saved locally: $cupCount cups");
+    appLog("💧 Water saved locally: $cupCount cups");
 
     final user = _auth.currentUser;
     if (user != null) {
@@ -111,9 +112,9 @@ class WaterRepository {
             'cupCount': cupCount,
           });
         }
-        debugPrint("☁️ Water synced to cloud");
+        appLog("☁️ Water synced to cloud");
       } catch (e) {
-        debugPrint("❌ Water cloud sync error: $e");
+        appLog("❌ Water cloud sync error: $e");
       }
     }
   }
@@ -135,7 +136,7 @@ class WaterRepository {
     final localData = await _getLocalHistory();
     if (localData.isEmpty) return;
 
-    debugPrint("🚀 Migrating ${localData.length} water entries...");
+    appLog("🚀 Migrating ${localData.length} water entries...");
     final batch = _db.batch();
 
     for (var entry in localData) {
@@ -153,7 +154,7 @@ class WaterRepository {
     }
 
     await batch.commit();
-    debugPrint("✅ Water history migration complete");
+    appLog("✅ Water history migration complete");
   }
 
   Future<void> clearAllData() async {
@@ -172,7 +173,7 @@ class WaterRepository {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      debugPrint("🔥 Water history cleared from cloud");
+      appLog("🔥 Water history cleared from cloud");
     }
   }
 
@@ -204,7 +205,7 @@ class WaterRepository {
       final List<dynamic> jsonList = jsonDecode(jsonString);
       return jsonList.map((e) => WaterEntry.fromMap(e)).toList();
     } catch (e) {
-      debugPrint("Error parsing local water history: $e");
+      appLog("Error parsing local water history: $e");
       return [];
     }
   }

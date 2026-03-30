@@ -62,3 +62,11 @@ class ToggleFastingStartReminder extends SettingsEvent {
   @override
   List<Object?> get props => [isEnabled];
 }
+
+class ToggleReducedAnimations extends SettingsEvent {
+  final bool isEnabled;
+  const ToggleReducedAnimations(this.isEnabled);
+
+  @override
+  List<Object?> get props => [isEnabled];
+}

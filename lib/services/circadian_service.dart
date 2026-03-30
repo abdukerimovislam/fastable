@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sunrise_sunset_calc/sunrise_sunset_calc.dart';
@@ -33,7 +34,7 @@ class CircadianService {
 
       return {'sunrise': sunrise, 'sunset': sunset};
     } catch (e) {
-      debugPrint("CircadianService Error: $e");
+      appLog("CircadianService Error: $e");
       return null;
     }
   }

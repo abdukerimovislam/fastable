@@ -1,3 +1,4 @@
+import 'package:fastable/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 import 'package:injectable/injectable.dart';
@@ -37,7 +38,7 @@ class HealthService {
       );
       return requested;
     } catch (e) {
-      debugPrint("HealthService: Auth Error: $e");
+      appLog("HealthService: Auth Error: $e");
       return false;
     }
   }
@@ -52,7 +53,7 @@ class HealthService {
         endTime: DateTime.now(),
       );
     } catch (e) {
-      debugPrint("HealthService: Error writing weight: $e");
+      appLog("HealthService: Error writing weight: $e");
       return false;
     }
   }
@@ -73,7 +74,7 @@ class HealthService {
       final val = data.first.value as NumericHealthValue;
       return val.numericValue.toDouble();
     } catch (e) {
-      debugPrint("HealthService: Error reading weight: $e");
+      appLog("HealthService: Error reading weight: $e");
       return null;
     }
   }
@@ -88,7 +89,7 @@ class HealthService {
         endTime: DateTime.now(),
       );
     } catch (e) {
-      debugPrint("HealthService: Error writing water: $e");
+      appLog("HealthService: Error writing water: $e");
       return false;
     }
   }
@@ -113,7 +114,7 @@ class HealthService {
       }
       return totalLiters;
     } catch (e) {
-      debugPrint("HealthService: Error reading water: $e");
+      appLog("HealthService: Error reading water: $e");
       return 0.0;
     }
   }
@@ -150,7 +151,7 @@ class HealthService {
 
       return Duration(minutes: totalMinutes);
     } catch (e) {
-      debugPrint("HealthService: Error reading sleep: $e");
+      appLog("HealthService: Error reading sleep: $e");
       return Duration.zero;
     }
   }
@@ -174,7 +175,7 @@ class HealthService {
 
       return now.difference(lastPeriodDate).inDays;
     } catch (e) {
-      debugPrint("HealthService: Error reading menstruation: $e");
+      appLog("HealthService: Error reading menstruation: $e");
       return null;
     }
   }

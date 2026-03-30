@@ -122,6 +122,9 @@
   "notifyWeightDesc": "Daily reminder to weigh in",
   "notifyFastingStart": "Fasting Start",
   "notifyFastingStartDesc": "Notify when fasting window starts",
+  "simplifiedAnimation": "Simplified Animations",
+  "simplifiedAnimationDesc": "Reduces blur and effects to improve battery and performance",
+  "settingPerformance": "Performance",
 
   "privacyPolicy": "Privacy Policy",
   "termsOfService": "Terms of Service",

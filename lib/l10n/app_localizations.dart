@@ -717,6 +717,24 @@ abstract class AppLocalizations {
   /// **'Notify when fasting window starts'**
   String get notifyFastingStartDesc;
 
+  /// No description provided for @simplifiedAnimation.
+  ///
+  /// In en, this message translates to:
+  /// **'Simplified Animations'**
+  String get simplifiedAnimation;
+
+  /// No description provided for @simplifiedAnimationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduces blur and effects to improve battery and performance'**
+  String get simplifiedAnimationDesc;
+
+  /// No description provided for @settingPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get settingPerformance;
+
   /// No description provided for @privacyPolicy.
   ///
   /// In en, this message translates to:
@@ -4245,48 +4263,228 @@ abstract class AppLocalizations {
   /// **'Great'**
   String get moodGreat;
 
-  // --- Medical Disclaimer ---
+  /// No description provided for @disclaimerCheckboxPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the '**
   String get disclaimerCheckboxPrefix;
+
+  /// No description provided for @disclaimerCheckboxLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer & Privacy Policy'**
   String get disclaimerCheckboxLink;
 
-  // --- PDF Medical Report ---
+  /// No description provided for @pdfReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Report'**
   String get pdfReportTitle;
+
+  /// No description provided for @pdfReportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermittent Fasting Summary'**
   String get pdfReportSubtitle;
+
+  /// No description provided for @pdfReportGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating your report...'**
   String get pdfReportGenerating;
+
+  /// No description provided for @pdfReportGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate PDF Report'**
   String get pdfReportGenerate;
+
+  /// No description provided for @pdfReportShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Report'**
   String get pdfReportShare;
+
+  /// No description provided for @pdfReportPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Report'**
   String get pdfReportPreview;
+
+  /// No description provided for @pdfReportPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Report Period'**
   String get pdfReportPeriod;
+
+  /// No description provided for @pdfReportPeriod7.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
   String get pdfReportPeriod7;
+
+  /// No description provided for @pdfReportPeriod30.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
   String get pdfReportPeriod30;
+
+  /// No description provided for @pdfReportPeriodAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
   String get pdfReportPeriodAll;
+
+  /// No description provided for @pdfReportProOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Reports are a PRO feature'**
   String get pdfReportProOnly;
+
+  /// No description provided for @pdfReportProDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to PRO to generate and share your personalized fasting reports.'**
   String get pdfReportProDesc;
+
+  /// No description provided for @pdfReportSectionProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Profile'**
   String get pdfReportSectionProfile;
+
+  /// No description provided for @pdfReportSectionStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Statistics'**
   String get pdfReportSectionStats;
+
+  /// No description provided for @pdfReportSectionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting History'**
   String get pdfReportSectionHistory;
+
+  /// No description provided for @pdfReportSectionDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer'**
   String get pdfReportSectionDisclaimer;
+
+  /// No description provided for @pdfReportLabelAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
   String get pdfReportLabelAge;
+
+  /// No description provided for @pdfReportLabelGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
   String get pdfReportLabelGender;
+
+  /// No description provided for @pdfReportLabelWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
   String get pdfReportLabelWeight;
+
+  /// No description provided for @pdfReportLabelHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
   String get pdfReportLabelHeight;
+
+  /// No description provided for @pdfReportLabelBmi.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI'**
   String get pdfReportLabelBmi;
+
+  /// No description provided for @pdfReportLabelTotalFasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Fasts'**
   String get pdfReportLabelTotalFasts;
+
+  /// No description provided for @pdfReportLabelTotalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Hours'**
   String get pdfReportLabelTotalHours;
+
+  /// No description provided for @pdfReportLabelAvgDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Duration'**
   String get pdfReportLabelAvgDuration;
+
+  /// No description provided for @pdfReportLabelLongest.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest Fast'**
   String get pdfReportLabelLongest;
+
+  /// No description provided for @pdfReportLabelStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Streak'**
   String get pdfReportLabelStreak;
+
+  /// No description provided for @pdfReportLabelDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
   String get pdfReportLabelDate;
+
+  /// No description provided for @pdfReportLabelDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
   String get pdfReportLabelDuration;
+
+  /// No description provided for @pdfReportLabelCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
   String get pdfReportLabelCompleted;
+
+  /// No description provided for @pdfReportDisclaimerText.
+  ///
+  /// In en, this message translates to:
+  /// **'This report is generated by Fastable and is intended for personal tracking purposes only. It does not constitute medical advice. Please consult a qualified healthcare professional before making any health decisions.'**
   String get pdfReportDisclaimerText;
+
+  /// No description provided for @pdfReportGeneratedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated by Fastable'**
   String get pdfReportGeneratedBy;
+
+  /// No description provided for @pdfReportGenderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
   String get pdfReportGenderMale;
+
+  /// No description provided for @pdfReportGenderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
   String get pdfReportGenderFemale;
+
+  /// No description provided for @pdfReportNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No fasting records found for the selected period.'**
   String get pdfReportNoData;
+
+  /// No description provided for @pdfReportHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
   String pdfReportHours(int hours, int minutes);
 }
-
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
