@@ -29,46 +29,51 @@ class FastingTimerRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final clampedPercent = percentComplete.clamp(0.0, 1.0);
 
     return CircularPercentIndicator(
-      radius: 140.0,
-      lineWidth: 16.0, // Чуть толще для премиальности
-      percent: percentComplete,
-      backgroundColor: backgroundColor.withValues(
-        alpha: 0.05,
-      ), // Менее заметный фон кольца
-      // 🔥 ГРАДИЕНТ ДЛЯ КОЛЬЦА
-      linearGradient: LinearGradient(
-        colors: [
-          progressColor.withValues(alpha: 0.4),
-          progressColor,
-          progressColor.withValues(alpha: 0.8),
-        ],
-        stops: const [0.0, 0.7, 1.0],
-      ),
-      circularStrokeCap: CircularStrokeCap.round,
+      radius: 160.0,            // немного увеличенный радиус
+      lineWidth: 20.0,          // толщина активного кольца
+      backgroundWidth: 8.0,     // тонкое кольцо для фона
+      percent: clampedPercent,
       animation: true,
       animateFromLastPercent: true,
-      animationDuration: 1000,
+      animationDuration: 1200,
+      startAngle: -90,          // начинаем сверху по часовой стрелке
+      circularStrokeCap: CircularStrokeCap.round,
+      // полу‑прозрачный фон, связанный с цветом прогресса
+      backgroundColor: backgroundColor.withOpacity(0.08),
+      // плавная ease‑out анимация
+      curve: Curves.easeOutCubic,
+      // градиент от светлого к насыщенному цвету прогресса
+      linearGradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          progressColor.withOpacity(0.2),
+          progressColor.withOpacity(0.6),
+          progressColor,
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ),
+      // содержимое в центре кольца
       center: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              final bool isNewChild = (child.key == ValueKey<String>(title));
-              final int direction = isNewChild
-                  ? planChangeDirection
-                  : -planChangeDirection;
+            transitionBuilder: (child, animation) {
+              final isNewChild = (child.key == ValueKey<String>(title));
+              final direction = isNewChild ? planChangeDirection : -planChangeDirection;
               final slideAnimation = Tween<Offset>(
                 begin: Offset(direction.toDouble(), 0.0),
-                end: const Offset(0.0, 0.0),
+                end: Offset.zero,
               ).animate(animation);
 
               if (!isNewChild) {
                 return SlideTransition(
                   position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.0),
+                    begin: Offset.zero,
                     end: Offset(-direction.toDouble(), 0.0),
                   ).animate(animation),
                   child: child,
@@ -82,10 +87,10 @@ class FastingTimerRing extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: progressColor, // Цвет текста теперь совпадает с кольцом!
+                color: progressColor,
                 shadows: [
                   Shadow(
-                    color: progressColor.withValues(alpha: 0.5),
+                    color: progressColor.withOpacity(0.5),
                     blurRadius: 10,
                   ),
                 ],
@@ -94,28 +99,28 @@ class FastingTimerRing extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // ВРЕМЯ (Светящееся)
+          // Время (белое свечение)
           Text(
             timeElapsed,
             style: TextStyle(
-              fontSize: 42, // Крупнее
+              fontSize: 42,
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: primaryTextColor,
               letterSpacing: 2.0,
               shadows: [
                 Shadow(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: primaryTextColor.withOpacity(0.15),
                   blurRadius: 15,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 8),
-          // ОСТАЛОСЬ ВРЕМЕНИ
+          // Осталось времени
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: progressColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -123,7 +128,7 @@ class FastingTimerRing extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: secondaryTextColor.withValues(alpha: 0.8),
+                color: secondaryTextColor.withOpacity(0.8),
               ),
             ),
           ),

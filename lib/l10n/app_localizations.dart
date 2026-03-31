@@ -4484,6 +4484,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{hours}h {minutes}m'**
   String pdfReportHours(int hours, int minutes);
+
+  /// No description provided for @bodyMetricsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Metrics'**
+  String get bodyMetricsTitle;
+
+  /// No description provided for @bodyMetricsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap cards to update'**
+  String get bodyMetricsHint;
+
+  /// No description provided for @bodyMetricsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get bodyMetricsAdd;
+
+  /// No description provided for @bodyMetricsTapToSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to set'**
+  String get bodyMetricsTapToSet;
+
+  /// No description provided for @nextStageUpper.
+  ///
+  /// In en, this message translates to:
+  /// **'NEXT STAGE'**
+  String get nextStageUpper;
+
+  /// No description provided for @maxBenefitsReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum Benefits Reached!'**
+  String get maxBenefitsReached;
+
+  /// No description provided for @holdToComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'HOLD TO COMPLETE'**
+  String get holdToComplete;
+
+  /// No description provided for @heroActiveSession.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE SESSION'**
+  String get heroActiveSession;
+
+  /// No description provided for @heroEatingWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'EATING WINDOW'**
+  String get heroEatingWindow;
+
+  /// No description provided for @heroNextFast.
+  ///
+  /// In en, this message translates to:
+  /// **'NEXT FAST'**
+  String get heroNextFast;
+
+  /// No description provided for @insightsAndTrends.
+  ///
+  /// In en, this message translates to:
+  /// **'INSIGHTS & TRENDS'**
+  String get insightsAndTrends;
+
+  /// No description provided for @bmiLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI'**
+  String get bmiLabel;
+
+  /// No description provided for @liveTrackerChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Timer'**
+  String get liveTrackerChannelName;
+
+  /// No description provided for @liveTrackerChannelDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ongoing fasting timer'**
+  String get liveTrackerChannelDesc;
+
+  /// No description provided for @liveTrackerSubtextFasting.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Fastable Stage'**
+  String get liveTrackerSubtextFasting;
+
+  /// No description provided for @liveTrackerSubtextEating.
+  ///
+  /// In en, this message translates to:
+  /// **'🍽 Fastable Window'**
+  String get liveTrackerSubtextEating;
+
+  /// No description provided for @liveTrackerActionEndFast.
+  ///
+  /// In en, this message translates to:
+  /// **'🏁 END FAST'**
+  String get liveTrackerActionEndFast;
+
+  /// No description provided for @liveTrackerActionStopWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'🛑 STOP WINDOW'**
+  String get liveTrackerActionStopWindow;
+
+  /// No description provided for @liveTrackerGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {time}'**
+  String liveTrackerGoal(String time);
+
+  /// No description provided for @liveTrackerWindowEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'Window ends: {time}'**
+  String liveTrackerWindowEnds(String time);
+
+  /// No description provided for @liveTrackerTimeRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining: '**
+  String get liveTrackerTimeRemaining;
+
+  /// No description provided for @elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Elapsed'**
+  String get elapsed;
+
+  /// No description provided for @status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
+
+  /// No description provided for @complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get complete;
+
+  /// No description provided for @fastingStages.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Stages'**
+  String get fastingStages;
+
+  /// No description provided for @statusNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get statusNow;
+
+  /// No description provided for @statusNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get statusNext;
+
+  /// No description provided for @statusDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get statusDone;
+
+  /// No description provided for @chartFastingVsWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting vs Weight'**
+  String get chartFastingVsWeight;
+
+  /// No description provided for @chartTrackMetabolic.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your metabolic correlation over time.'**
+  String get chartTrackMetabolic;
+
+  /// No description provided for @chart1W.
+  ///
+  /// In en, this message translates to:
+  /// **'1W'**
+  String get chart1W;
+
+  /// No description provided for @chart1M.
+  ///
+  /// In en, this message translates to:
+  /// **'1M'**
+  String get chart1M;
+
+  /// No description provided for @chart3M.
+  ///
+  /// In en, this message translates to:
+  /// **'3M'**
+  String get chart3M;
+
+  /// No description provided for @chartSmartInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Insight'**
+  String get chartSmartInsight;
+
+  /// No description provided for @chartGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {value}'**
+  String chartGoal(String value);
+
+  /// No description provided for @chartHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get chartHours;
+
+  /// No description provided for @chartWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get chartWeight;
+
+  /// No description provided for @chartLegendFasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Hours'**
+  String get chartLegendFasting;
+
+  /// No description provided for @chartLegendWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Trend'**
+  String get chartLegendWeight;
+
+  /// No description provided for @chartInsight1W.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fasting windows are consistent this week! Maintaining a 16h+ average correlates with faster fat burn.'**
+  String get chartInsight1W;
+
+  /// No description provided for @chartInsight1M.
+  ///
+  /// In en, this message translates to:
+  /// **'Over the last month, we noticed a steady drop in your weight when you complete fasts after 6 PM.'**
+  String get chartInsight1M;
+
+  /// No description provided for @chartInsight3M.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-term data shows incredible progress! Your body is adapting perfectly to metabolic switching.'**
+  String get chartInsight3M;
+
+  /// No description provided for @statsUnlockChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro Analytics'**
+  String get statsUnlockChartTitle;
+
+  /// No description provided for @statsUnlockChartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch a short video ad to unlock your metabolic correlation chart for this session.'**
+  String get statsUnlockChartDesc;
+
+  /// No description provided for @statsBtnWatchAd.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Ad'**
+  String get statsBtnWatchAd;
+
+  /// No description provided for @adNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad is not ready yet. Please try again in a few seconds.'**
+  String get adNotReady;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

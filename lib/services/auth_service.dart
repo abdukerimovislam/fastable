@@ -55,6 +55,9 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   Future<User?>? _anonymousSignInFuture;
 
+  // 🔐 Конкурентный блокировщик для любых входов (Google/Apple)
+  Future<User?>? _signInInProgress;
+
   // Стрим состояния (слушаем в main.dart для роутинга)
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
@@ -78,16 +81,16 @@ class AuthService {
       _anonymousSignInFuture = _auth
           .signInAnonymously()
           .then((result) {
-            appLog("👻 Signed in anonymously: ${result.user?.uid}");
-            return result.user;
-          })
+        appLog("👻 Signed in anonymously: \${result.user?.uid}");
+        return result.user;
+      })
           .catchError((Object error, StackTrace stackTrace) {
-            appLog("❌ Anonymous sign in error: $error");
-            return null;
-          })
+        appLog("❌ Anonymous sign in error: $error");
+        return null;
+      })
           .whenComplete(() {
-            _anonymousSignInFuture = null;
-          });
+        _anonymousSignInFuture = null;
+      });
 
       return await _anonymousSignInFuture;
     } catch (e) {
@@ -101,6 +104,11 @@ class AuthService {
   // ===========================================================================
   Future<User?> signInWithGoogle() async {
     try {
+      // 🔐 Защита: если идёт другая операция входа, возвращаем её будущий результат
+      if (_signInInProgress != null) {
+        return _signInInProgress;
+      }
+
       // Запускаем нативный флоу Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
@@ -110,18 +118,25 @@ class AuthService {
       }
 
       final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      return await _signInOrLink(credential);
+      // Создаём future для входа и сохраняем как текущую операцию
+      final signInFuture = _signInOrLink(credential).whenComplete(() {
+        // Сбрасываем флаг после завершения, независимо от результата
+        _signInInProgress = null;
+      });
+      _signInInProgress = signInFuture;
+      return await signInFuture;
     } catch (e) {
       // Если это наш DataConflictException, пробрасываем выше (в UI)
       if (e is DataConflictException) rethrow;
-
       appLog("❌ Google Sign In Error: $e");
+      // Очищаем флаг в случае ошибки
+      _signInInProgress = null;
       throw const AuthFlowException(AuthFlowError.googleSignInFailed);
     }
   }
@@ -135,6 +150,10 @@ class AuthService {
     }
 
     try {
+      // 🔐 Защита: если идёт другая операция входа, возвращаем её будущий результат
+      if (_signInInProgress != null) {
+        return _signInInProgress;
+      }
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
@@ -147,19 +166,24 @@ class AuthService {
         accessToken: appleCredential.authorizationCode,
       );
 
-      return await _signInOrLink(credential);
+      final signInFuture = _signInOrLink(credential).whenComplete(() {
+        _signInInProgress = null;
+      });
+      _signInInProgress = signInFuture;
+      return await signInFuture;
     } catch (e) {
       if (e is DataConflictException) rethrow;
-
       appLog("❌ Apple Sign In Error: $e");
 
       // 🔥 ИСПРАВЛЕНИЕ 2: Безопасная проверка ошибки отмены Apple Sign In (Типизация вместо подстроки)
       if (e is SignInWithAppleAuthorizationException) {
         if (e.code == AuthorizationErrorCode.canceled) {
+          _signInInProgress = null;
           return null;
         }
       }
 
+      _signInInProgress = null;
       throw const AuthFlowException(AuthFlowError.appleSignInFailed);
     }
   }
@@ -352,7 +376,7 @@ class AuthService {
     } on AccountDeletionException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      appLog("❌ Delete account auth error: ${e.code}");
+      appLog("❌ Delete account auth error: \${e.code}");
       throw const AccountDeletionException(AccountDeletionError.deleteFailed);
     } catch (e) {
       appLog("❌ Delete account error: $e");
@@ -395,7 +419,7 @@ class AuthService {
 
   Future<void> _reauthenticateForAccountDeletion(User user) async {
     final providerIds = user.providerData.map(
-      (provider) => provider.providerId,
+          (provider) => provider.providerId,
     );
 
     if (providerIds.contains(GoogleAuthProvider.PROVIDER_ID)) {
@@ -433,7 +457,7 @@ class AuthService {
     } on AccountDeletionException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      appLog("❌ Google reauth error: ${e.code}");
+      appLog("❌ Google reauth error: \${e.code}");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );
@@ -473,12 +497,12 @@ class AuthService {
         );
       }
 
-      appLog("❌ Apple reauth error: ${e.code}");
+      appLog("❌ Apple reauth error: \${e.code}");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );
     } on FirebaseAuthException catch (e) {
-      appLog("❌ Apple reauth auth error: ${e.code}");
+      appLog("❌ Apple reauth auth error: \${e.code}");
       throw const AccountDeletionException(
         AccountDeletionError.reauthenticationFailed,
       );

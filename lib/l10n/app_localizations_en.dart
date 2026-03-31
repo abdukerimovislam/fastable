@@ -2256,4 +2256,148 @@ class AppLocalizationsEn extends AppLocalizations {
   String pdfReportHours(int hours, int minutes) {
     return '${hours}h ${minutes}m';
   }
+
+  @override
+  String get bodyMetricsTitle => 'Body Metrics';
+
+  @override
+  String get bodyMetricsHint => 'Tap cards to update';
+
+  @override
+  String get bodyMetricsAdd => 'Add';
+
+  @override
+  String get bodyMetricsTapToSet => 'Tap to set';
+
+  @override
+  String get nextStageUpper => 'NEXT STAGE';
+
+  @override
+  String get maxBenefitsReached => 'Maximum Benefits Reached!';
+
+  @override
+  String get holdToComplete => 'HOLD TO COMPLETE';
+
+  @override
+  String get heroActiveSession => 'ACTIVE SESSION';
+
+  @override
+  String get heroEatingWindow => 'EATING WINDOW';
+
+  @override
+  String get heroNextFast => 'NEXT FAST';
+
+  @override
+  String get insightsAndTrends => 'INSIGHTS & TRENDS';
+
+  @override
+  String get bmiLabel => 'BMI';
+
+  @override
+  String get liveTrackerChannelName => 'Fasting Timer';
+
+  @override
+  String get liveTrackerChannelDesc => 'Ongoing fasting timer';
+
+  @override
+  String get liveTrackerSubtextFasting => '🔥 Fastable Stage';
+
+  @override
+  String get liveTrackerSubtextEating => '🍽 Fastable Window';
+
+  @override
+  String get liveTrackerActionEndFast => '🏁 END FAST';
+
+  @override
+  String get liveTrackerActionStopWindow => '🛑 STOP WINDOW';
+
+  @override
+  String liveTrackerGoal(String time) {
+    return 'Goal: $time';
+  }
+
+  @override
+  String liveTrackerWindowEnds(String time) {
+    return 'Window ends: $time';
+  }
+
+  @override
+  String get liveTrackerTimeRemaining => 'Time remaining: ';
+
+  @override
+  String get elapsed => 'Elapsed';
+
+  @override
+  String get status => 'Status';
+
+  @override
+  String get complete => 'Complete';
+
+  @override
+  String get fastingStages => 'Fasting Stages';
+
+  @override
+  String get statusNow => 'Now';
+
+  @override
+  String get statusNext => 'Next';
+
+  @override
+  String get statusDone => 'Done';
+
+  @override
+  String get chartFastingVsWeight => 'Fasting vs Weight';
+
+  @override
+  String get chartTrackMetabolic => 'Track your metabolic correlation over time.';
+
+  @override
+  String get chart1W => '1W';
+
+  @override
+  String get chart1M => '1M';
+
+  @override
+  String get chart3M => '3M';
+
+  @override
+  String get chartSmartInsight => 'Smart Insight';
+
+  @override
+  String chartGoal(String value) {
+    return 'Goal: $value';
+  }
+
+  @override
+  String get chartHours => 'Hours';
+
+  @override
+  String get chartWeight => 'Weight';
+
+  @override
+  String get chartLegendFasting => 'Fasting Hours';
+
+  @override
+  String get chartLegendWeight => 'Weight Trend';
+
+  @override
+  String get chartInsight1W => 'Your fasting windows are consistent this week! Maintaining a 16h+ average correlates with faster fat burn.';
+
+  @override
+  String get chartInsight1M => 'Over the last month, we noticed a steady drop in your weight when you complete fasts after 6 PM.';
+
+  @override
+  String get chartInsight3M => 'Long-term data shows incredible progress! Your body is adapting perfectly to metabolic switching.';
+
+  @override
+  String get statsUnlockChartTitle => 'Pro Analytics';
+
+  @override
+  String get statsUnlockChartDesc => 'Watch a short video ad to unlock your metabolic correlation chart for this session.';
+
+  @override
+  String get statsBtnWatchAd => 'Watch Ad';
+
+  @override
+  String get adNotReady => 'Ad is not ready yet. Please try again in a few seconds.';
 }

@@ -1,8 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:fastable/bloc/fasting/fasting_bloc.dart';
+import 'package:fastable/bloc/fasting/fasting_state.dart';
 
 class MeshBackground extends StatefulWidget {
-  final bool isFasting;
+  final bool isFasting; // Оставлено для обратной совместимости, если нет BLoC
   final Widget child;
 
   const MeshBackground({
@@ -36,19 +40,50 @@ class _MeshBackgroundState extends State<MeshBackground>
 
   @override
   Widget build(BuildContext context) {
-    final Color primaryBlob = widget.isFasting
-        ? const Color(0xFFFF8A3D)
-        : const Color(0xFF52E7C4);
+    // 🔥 АПГРЕЙД: Читаем стейт из BLoC для умных цветов
+    FastingState? fastingState;
+    try {
+      fastingState = context.watch<FastingBloc>().state;
+    } catch (_) {
+      // Игнорируем, если виджет используется вне провайдера
+    }
 
-    final Color secondaryBlob = widget.isFasting
-        ? const Color(0xFFB53A2D)
-        : const Color(0xFF2D9CDB);
-    final Color tertiaryBlob = widget.isFasting
-        ? const Color(0xFFFFD36E)
-        : const Color(0xFF7AB6FF);
+    Color primaryBlob;
+    Color secondaryBlob;
+    Color tertiaryBlob;
+
+    if (fastingState != null) {
+      final phase = fastingState.phase;
+      final isCircadian = fastingState.planIndex == FastingState.circadianPlanIndex;
+
+      if (phase == FastingPhase.eating) {
+        primaryBlob = const Color(0xFF52E7C4); // Mint
+        secondaryBlob = const Color(0xFF2D9CDB); // Blue
+        tertiaryBlob = const Color(0xFF7AB6FF); // Light Blue
+      } else if (isCircadian && phase == FastingPhase.fasting) {
+        primaryBlob = const Color(0xFF6A5ACD); // Slate Blue (Ночь)
+        secondaryBlob = const Color(0xFFFF00FF); // Magenta
+        tertiaryBlob = const Color(0xFFFF8C00); // Dark Orange (Закат)
+      } else if (phase == FastingPhase.fasting) {
+        primaryBlob = const Color(0xFFFF8A3D); // Orange
+        secondaryBlob = const Color(0xFFB53A2D); // Red
+        tertiaryBlob = const Color(0xFFFFD36E); // Yellow
+      } else {
+        // Stopped
+        primaryBlob = const Color(0xFF4169E1); // Royal Blue
+        secondaryBlob = const Color(0xFF483D8B); // Dark Slate Blue
+        tertiaryBlob = const Color(0xFF1E90FF); // Dodger Blue
+      }
+    } else {
+      // Фолбек на старую логику
+      primaryBlob = widget.isFasting ? const Color(0xFFFF8A3D) : const Color(0xFF52E7C4);
+      secondaryBlob = widget.isFasting ? const Color(0xFFB53A2D) : const Color(0xFF2D9CDB);
+      tertiaryBlob = widget.isFasting ? const Color(0xFFFFD36E) : const Color(0xFF7AB6FF);
+    }
 
     return Stack(
       children: [
+        // Базовый темный фон
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -58,8 +93,11 @@ class _MeshBackgroundState extends State<MeshBackground>
             ),
           ),
         ),
+
+        // Фоновое свечение (завернуто в AnimatedContainer для плавного перетекания)
         Positioned.fill(
-          child: DecoratedBox(
+          child: AnimatedContainer(
+            duration: const Duration(seconds: 2),
             decoration: BoxDecoration(
               gradient: RadialGradient(
                 center: const Alignment(-0.75, -0.9),
@@ -73,6 +111,7 @@ class _MeshBackgroundState extends State<MeshBackground>
           ),
         ),
 
+        // Анимация плавания сфер
         AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
@@ -110,10 +149,13 @@ class _MeshBackgroundState extends State<MeshBackground>
           },
         ),
 
+        // Жесткий блюр, смешивающий всё в мягкий градиент
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 72, sigmaY: 72),
           child: Container(color: Colors.transparent),
         ),
+
+        // Верхний затемняющий слой для глубины
         Positioned.fill(
           child: IgnorePointer(
             child: DecoratedBox(
@@ -132,13 +174,17 @@ class _MeshBackgroundState extends State<MeshBackground>
           ),
         ),
 
+        // Контент экрана
         widget.child,
       ],
     );
   }
 
+  // 🔥 АПГРЕЙД: AnimatedContainer плавно меняет цвет за 2 секунды при смене стейта
   Widget _buildBlob(Color color, {double size = 300}) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(seconds: 2),
+      curve: Curves.easeInOutSine,
       width: size,
       height: size,
       decoration: BoxDecoration(

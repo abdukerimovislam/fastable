@@ -1,6 +1,11 @@
+import 'dart:ui';
+import 'dart:io';
+import 'package:fastable/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // --- DI & BLOCS ---
 import 'package:fastable/injection.dart';
@@ -8,6 +13,8 @@ import 'package:fastable/bloc/history/history_bloc.dart';
 import 'package:fastable/bloc/history/history_state.dart';
 import 'package:fastable/bloc/weight/weight_bloc.dart';
 import 'package:fastable/bloc/weight/weight_state.dart';
+import 'package:fastable/bloc/pro/pro_bloc.dart';
+import 'package:fastable/bloc/pro/pro_state.dart';
 
 // --- SERVICES ---
 import 'package:fastable/services/haptic_service.dart';
@@ -15,11 +22,128 @@ import 'package:fastable/services/haptic_service.dart';
 // --- WIDGETS ---
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/l10n/app_localizations.dart';
-import 'package:fastable/widgets/pro_correlation_chart.dart'; // 🔥 ИМПОРТ НАШЕГО ГРАФИКА
+import 'package:fastable/widgets/pro_correlation_chart.dart';
 import 'package:fastable/ui/app_layout.dart';
+import 'package:fastable/app_theme.dart';
 
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
+
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  // --- РЕКЛАМА ---
+  BannerAd? _bannerAd;
+  bool _isBannerReady = false;
+
+  RewardedAd? _rewardedAd;
+  bool _isRewardedReady = false;
+
+  // Состояние разблокировки графика после просмотра
+  bool _isChartUnlocked = false;
+
+  final String _bannerId = Platform.isAndroid
+      ? dotenv.env['ANDROID_BANNER_AD_ID'] ?? ''
+      : dotenv.env['IOS_BANNER_AD_ID'] ?? '';
+
+  final String _rewardedId = Platform.isAndroid
+      ? dotenv.env['ANDROID_REWARDED_AD_ID'] ?? ''
+      : dotenv.env['IOS_REWARDED_AD_ID'] ?? '';
+
+  @override
+  void initState() {
+    super.initState();
+    _initAds();
+  }
+
+  void _initAds() {
+    final isPro = context.read<ProBloc>().state.isPro;
+    if (isPro) return; // PRO юзерам не грузим рекламу
+
+    if (Platform.isAndroid) {
+      // 1. Загружаем баннер
+      _bannerAd = BannerAd(
+        adUnitId: _bannerId,
+        size: AdSize.banner,
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (_) {
+            if (mounted) setState(() => _isBannerReady = true);
+          },
+          onAdFailedToLoad: (ad, err) {
+            appLog('Stats Banner failed: $err');
+            ad.dispose();
+            _bannerAd = null;
+            _isBannerReady = false;
+          },
+        ),
+      )..load();
+
+      // 2. Загружаем Rewarded Video (видео за вознаграждение)
+      _loadRewardedAd();
+    }
+  }
+
+  void _loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId: _rewardedId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+          _isRewardedReady = true;
+        },
+        onAdFailedToLoad: (err) {
+          appLog('Stats Rewarded Ad failed: $err');
+          _rewardedAd = null;
+          _isRewardedReady = false;
+        },
+      ),
+    );
+  }
+
+  void _showRewardedAd(AppLocalizations l10n) {
+    if (_rewardedAd != null && _isRewardedReady) {
+      _rewardedAd!.show(
+        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+          // УСПЕХ: Юзер досмотрел рекламу
+          getIt<HapticService>().success();
+          setState(() {
+            _isChartUnlocked = true;
+          });
+        },
+      );
+
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _loadRewardedAd(); // Грузим следующую на будущее
+        },
+        onAdFailedToShowFullScreenContent: (ad, err) {
+          ad.dispose();
+          _loadRewardedAd();
+        },
+      );
+    } else {
+      // Реклама еще не успела загрузиться
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.adNotReady),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      _loadRewardedAd(); // Пробуем загрузить снова
+    }
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    _rewardedAd?.dispose();
+    super.dispose();
+  }
 
   // Хелпер для перевода пола
   String _getGenderName(Gender gender, AppLocalizations l10n) {
@@ -31,6 +155,11 @@ class StatsScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final haptic = getIt<HapticService>();
     final sectionGap = AppLayout.sectionGap(context);
+
+    final isPro = context.watch<ProBloc>().state.isPro;
+    final showAds = Platform.isAndroid && !isPro;
+    final showBannerAds = showAds && _isBannerReady && _bannerAd != null;
+    final isChartVisible = isPro || _isChartUnlocked; // Видно, если ПРО или юзер посмотрел рекламу
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -50,47 +179,138 @@ class StatsScreen extends StatelessWidget {
                   child: FadeInAnimation(child: widget),
                 ),
                 children: [
-              // ЗАГОЛОВОК
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 20),
-                child: Text(
-                  l10n.navStats,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
+                  // ЗАГОЛОВОК
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                    child: Text(
+                      l10n.navStats,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                   ),
-                ),
+
+                  // 🔥 НОВЫЙ БАННЕР СВЕРХУ (Если не PRO)
+                  if (showBannerAds) ...[
+                    Container(
+                      width: double.infinity,
+                      height: _bannerAd!.size.height.toDouble(),
+                      alignment: Alignment.center,
+                      child: AdWidget(
+                        key: ObjectKey(_bannerAd),
+                        ad: _bannerAd!,
+                      ),
+                    ),
+                    SizedBox(height: sectionGap),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                  ],
+
+                  // 1. ГЛАВНАЯ КАРТОЧКА: BMI & ВЕС
+                  _buildBodyCompositionCard(context, l10n, haptic),
+
+                  SizedBox(height: sectionGap),
+
+                  // 2. ЭНЕРГИЯ (BMR / TDEE)
+                  _buildEnergyCard(context, l10n),
+
+                  SizedBox(height: sectionGap + 10),
+
+                  // АНАЛИТИКА И ТРЕНДЫ
+                  _sectionHeader(l10n.insightsAndTrends),
+
+                  // 🔥 3. НАШ НОВЫЙ PRO-ГРАФИК (Заблокированный под рекламу)
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Сам график (Размыт, если не доступен)
+                      ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: isChartVisible ? 0 : 8,
+                          sigmaY: isChartVisible ? 0 : 8,
+                        ),
+                        child: const ProCorrelationChart(),
+                      ),
+
+                      // Оверлей блокировки
+                      if (!isChartVisible)
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              color: Colors.black.withValues(alpha: 0.5),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.heroPrimary.withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                        Icons.lock_rounded,
+                                        color: AppTheme.heroPrimary,
+                                        size: 32
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    l10n.statsUnlockChartTitle,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    l10n.statsUnlockChartDesc,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.7),
+                                        fontSize: 13
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  ElevatedButton.icon(
+                                    onPressed: () => _showRewardedAd(l10n),
+                                    icon: const Icon(Icons.play_circle_fill_rounded, size: 20),
+                                    label: Text(l10n.statsBtnWatchAd),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.heroPrimary,
+                                      foregroundColor: AppTheme.darkBackground,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  SizedBox(height: sectionGap + 10),
+
+                  // Заголовок для колец
+                  _sectionHeader(l10n.fastingPhase),
+
+                  // 4. СТАТИСТИКА ГОЛОДАНИЯ
+                  BlocBuilder<HistoryBloc, HistoryState>(
+                    builder: (context, state) {
+                      return _buildFastingRingsCard(context, state, l10n);
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+                ],
               ),
-
-              // 1. ГЛАВНАЯ КАРТОЧКА: BMI & ВЕС
-              _buildBodyCompositionCard(context, l10n, haptic),
-
-              SizedBox(height: sectionGap),
-
-              // 2. ЭНЕРГИЯ (BMR / TDEE)
-              _buildEnergyCard(context, l10n),
-
-              SizedBox(height: sectionGap + 10),
-              _sectionHeader("INSIGHTS & TRENDS"),
-
-              // 🔥 3. НАШ НОВЫЙ PRO-ГРАФИК (Advanced Charts)
-              const ProCorrelationChart(),
-
-              SizedBox(height: sectionGap + 10),
-              _sectionHeader(l10n.fastingPhase),
-
-              // 4. СТАТИСТИКА ГОЛОДАНИЯ
-              BlocBuilder<HistoryBloc, HistoryState>(
-                builder: (context, state) {
-                  return _buildFastingRingsCard(context, state, l10n);
-                },
-              ),
-
-              const SizedBox(height: 12),
-              ],
-             ),
             ),
           ),
         ),
@@ -101,10 +321,10 @@ class StatsScreen extends StatelessWidget {
   // --- WIDGETS ---
 
   Widget _buildBodyCompositionCard(
-    BuildContext context,
-    AppLocalizations l10n,
-    HapticService haptic,
-  ) {
+      BuildContext context,
+      AppLocalizations l10n,
+      HapticService haptic,
+      ) {
     return BlocBuilder<WeightBloc, WeightState>(
       builder: (context, state) {
         Color bmiColor = const Color(0xFF43C6AC); // Green/Teal
@@ -140,7 +360,7 @@ class StatsScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "${state.age} y.o • ${_getGenderName(state.gender, l10n).toUpperCase()}",
+                        "${l10n.ageYears(state.age)} • ${_getGenderName(state.gender, l10n).toUpperCase()}",
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12,
@@ -198,7 +418,7 @@ class StatsScreen extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "BMI",
+                            l10n.pdfReportLabelBmi,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 10,
@@ -329,12 +549,12 @@ class StatsScreen extends StatelessWidget {
   }
 
   Widget _buildEnergyItem(
-    String title,
-    String value,
-    String unit,
-    Color color,
-    IconData icon,
-  ) {
+      String title,
+      String value,
+      String unit,
+      Color color,
+      IconData icon,
+      ) {
     return Expanded(
       child: Row(
         children: [
@@ -425,7 +645,7 @@ class StatsScreen extends StatelessWidget {
                 SizedBox(width: 130, height: 130, child: CircularProgressIndicator(value: 1, strokeWidth: 12, color: c1.withValues(alpha: 0.15))),
                 SizedBox(width: 98, height: 98, child: CircularProgressIndicator(value: 1, strokeWidth: 12, color: c2.withValues(alpha: 0.15))),
                 SizedBox(width: 66, height: 66, child: CircularProgressIndicator(value: 1, strokeWidth: 12, color: c3.withValues(alpha: 0.15))),
-                
+
                 // Foreground rings
                 SizedBox(
                   width: 130, height: 130,
@@ -443,7 +663,7 @@ class StatsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 28),
-          
+
           // LEGEND
           Expanded(
             child: Column(
@@ -454,7 +674,7 @@ class StatsScreen extends StatelessWidget {
                   color: c1,
                   title: l10n.fastingStatsCurrentStreak,
                   value: "$streak",
-                  unit: l10n.valStreakDays(streak).replaceAll(RegExp(r'[0-9]'), '').trim(),
+                  unit: l10n.fastingStatsDays,
                 ),
                 const SizedBox(height: 16),
                 _buildRingLegend(

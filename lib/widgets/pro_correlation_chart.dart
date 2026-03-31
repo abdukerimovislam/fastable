@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:fastable/widgets/glass_card.dart';
 import 'package:fastable/services/haptic_service.dart';
 import 'package:fastable/injection.dart';
+import 'package:fastable/app_theme.dart';
+import 'package:fastable/l10n/app_localizations.dart';
 
 import 'package:fastable/bloc/history/history_bloc.dart';
 import 'package:fastable/bloc/history/history_state.dart';
@@ -25,6 +27,8 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -34,20 +38,20 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Fasting vs Weight",
-                style: TextStyle(
+              Text(
+                l10n.chartFastingVsWeight,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              _buildTimeframeSelector(),
+              _buildTimeframeSelector(l10n),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            "Track your metabolic correlation over time.",
+            l10n.chartTrackMetabolic,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 13,
@@ -56,7 +60,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
           const SizedBox(height: 30),
 
           // --- ГРАФИК ---
-          _buildChart(context),
+          _buildChart(context, l10n),
 
           const SizedBox(height: 24),
 
@@ -64,16 +68,16 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.05),
+              color: AppTheme.premiumGold.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.1)),
+              border: Border.all(color: AppTheme.premiumGold.withValues(alpha: 0.1)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(
                   Icons.lightbulb_circle_rounded,
-                  color: Colors.amber,
+                  color: AppTheme.premiumGold,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -81,10 +85,10 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Smart Insight",
-                        style: TextStyle(
-                          color: Colors.amber,
+                      Text(
+                        l10n.chartSmartInsight.toUpperCase(),
+                        style: const TextStyle(
+                          color: AppTheme.premiumGold,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.0,
@@ -92,7 +96,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _getDynamicInsight(),
+                        _getDynamicInsight(l10n),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 13,
@@ -111,7 +115,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
   }
 
   // --- ВИДЖЕТ: ПЕРЕКЛЮЧАТЕЛЬ ВРЕМЕНИ ---
-  Widget _buildTimeframeSelector() {
+  Widget _buildTimeframeSelector(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -120,9 +124,9 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
       ),
       child: Row(
         children: [
-          _buildTimeButton("1W", 7),
-          _buildTimeButton("1M", 30),
-          _buildTimeButton("3M", 90),
+          _buildTimeButton(l10n.chart1W, 7),
+          _buildTimeButton(l10n.chart1M, 30),
+          _buildTimeButton(l10n.chart3M, 90),
         ],
       ),
     );
@@ -141,7 +145,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blueAccent : Colors.transparent,
+          color: isSelected ? AppTheme.heroSecondary : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Text(
@@ -159,7 +163,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
   }
 
   // --- ВИДЖЕТ: ГРАФИК ---
-  Widget _buildChart(BuildContext context) {
+  Widget _buildChart(BuildContext context, AppLocalizations l10n) {
     return BlocBuilder<HistoryBloc, HistoryState>(
       builder: (context, historyState) {
         return BlocBuilder<WeightBloc, WeightState>(
@@ -168,7 +172,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
             final now = DateTime.now();
             final dates = List.generate(
               _selectedDays,
-              (i) => now.subtract(Duration(days: _selectedDays - 1 - i)),
+                  (i) => now.subtract(Duration(days: _selectedDays - 1 - i)),
             );
 
             List<FlSpot> fastingSpots = [];
@@ -179,8 +183,8 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
 
               // Ищем голодания
               final recordsForDay = historyState.records.where(
-                (r) =>
-                    r.startTime.year == date.year &&
+                    (r) =>
+                r.startTime.year == date.year &&
                     r.startTime.month == date.month &&
                     r.startTime.day == date.day,
               );
@@ -192,26 +196,23 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                     .reduce((a, b) => a > b ? a : b);
               }
 
-              // Ищем вес
-              final weightEntries = weightState.history
-                  .where(
-                    (w) =>
-                        w.date.year == date.year &&
-                        w.date.month == date.month &&
-                        w.date.day == date.day,
-                  )
-                  .toList();
-
+              // 🔥 ИСПРАВЛЕНИЕ: Оптимизированный поиск веса без sort()
               double weightOfDay = weightState.currentWeight;
-              if (weightEntries.isNotEmpty) {
-                weightOfDay = weightEntries.last.weight;
+              final weightEntriesForDay = weightState.history.where(
+                    (w) =>
+                w.date.year == date.year &&
+                    w.date.month == date.month &&
+                    w.date.day == date.day,
+              );
+
+              if (weightEntriesForDay.isNotEmpty) {
+                weightOfDay = weightEntriesForDay.last.weight;
               } else {
-                final pastWeights = weightState.history
-                    .where((w) => w.date.isBefore(date))
-                    .toList();
+                // Если за этот день записи нет, берем самую свежую ПЕРЕД этой датой
+                final pastWeights = weightState.history.where((w) => w.date.isBefore(date));
                 if (pastWeights.isNotEmpty) {
-                  pastWeights.sort((a, b) => a.date.compareTo(b.date));
-                  weightOfDay = pastWeights.last.weight;
+                  // reduce находит элемент с самой поздней датой за один проход O(N) вместо сортировки O(N log N)
+                  weightOfDay = pastWeights.reduce((a, b) => a.date.isAfter(b.date) ? a : b).weight;
                 }
               }
 
@@ -219,10 +220,8 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
               weightSpots.add(FlSpot(i.toDouble(), weightOfDay));
             }
 
-            // Целевой вес (Симулируем, если нет в стейте, например -5 кг от текущего)
-            double targetWeight = weightState.currentWeight > 50
-                ? weightState.currentWeight - 5.0
-                : 50.0;
+            // 🔥 ИСПРАВЛЕНИЕ: Целевой вес (Безопасная динамическая цель: -5% от текущего веса)
+            double targetWeight = weightState.currentWeight * 0.95;
 
             return Column(
               children: [
@@ -230,14 +229,14 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                   height: 220,
                   child: LineChart(
                     LineChartData(
-                      // 🔥 ПУНКТИРНАЯ ЛИНИЯ ЦЕЛИ (Target Weight)
+                      // ПУНКТИРНАЯ ЛИНИЯ ЦЕЛИ (Target Weight)
                       extraLinesData: ExtraLinesData(
                         horizontalLines: [
                           HorizontalLine(
                             y: targetWeight,
-                            color: Colors.greenAccent.withValues(alpha: 0.5),
+                            color: AppTheme.heroPrimary.withValues(alpha: 0.5),
                             strokeWidth: 2,
-                            dashArray: [5, 5], // Делаем линию пунктирной
+                            dashArray: [5, 5],
                             label: HorizontalLineLabel(
                               show: true,
                               alignment: Alignment.topRight,
@@ -246,14 +245,12 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                                 bottom: 5,
                               ),
                               style: TextStyle(
-                                color: Colors.greenAccent.withValues(
-                                  alpha: 0.8,
-                                ),
+                                color: AppTheme.heroPrimary.withValues(alpha: 0.8),
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
                               labelResolver: (line) =>
-                                  'Goal: ${line.y.toStringAsFixed(1)}kg',
+                                  l10n.chartGoal("${line.y.toStringAsFixed(1)}${l10n.unitKg}"),
                             ),
                           ),
                         ],
@@ -274,10 +271,10 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                           sideTitles: SideTitles(showTitles: false),
                         ),
                         leftTitles: AxisTitles(
-                          axisNameWidget: const Text(
-                            "Hours",
-                            style: TextStyle(
-                              color: Colors.blueAccent,
+                          axisNameWidget: Text(
+                            l10n.chartHours,
+                            style: const TextStyle(
+                              color: AppTheme.heroSecondary,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -287,19 +284,19 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                             showTitles: true,
                             reservedSize: 30,
                             getTitlesWidget: (value, meta) => Text(
-                              "${value.toInt()}h",
+                              "${value.toInt()}${l10n.unitHoursShort}",
                               style: TextStyle(
-                                color: Colors.blueAccent.withValues(alpha: 0.7),
+                                color: AppTheme.heroSecondary.withValues(alpha: 0.7),
                                 fontSize: 10,
                               ),
                             ),
                           ),
                         ),
                         rightTitles: AxisTitles(
-                          axisNameWidget: const Text(
-                            "Weight",
-                            style: TextStyle(
-                              color: Colors.greenAccent,
+                          axisNameWidget: Text(
+                            l10n.chartWeight,
+                            style: const TextStyle(
+                              color: AppTheme.heroPrimary,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -311,9 +308,7 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                             getTitlesWidget: (value, meta) => Text(
                               value.toStringAsFixed(1),
                               style: TextStyle(
-                                color: Colors.greenAccent.withValues(
-                                  alpha: 0.7,
-                                ),
+                                color: AppTheme.heroPrimary.withValues(alpha: 0.7),
                                 fontSize: 10,
                               ),
                             ),
@@ -356,32 +351,30 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                         LineChartBarData(
                           spots: fastingSpots,
                           isCurved: true,
-                          color: Colors.blueAccent,
+                          color: AppTheme.heroSecondary,
                           barWidth: 3,
                           isStrokeCapRound: true,
                           dotData: const FlDotData(show: false),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: Colors.blueAccent.withValues(alpha: 0.15),
+                            color: AppTheme.heroSecondary.withValues(alpha: 0.15),
                           ),
                         ),
                         // Линия Веса
                         LineChartBarData(
                           spots: weightSpots,
                           isCurved: true,
-                          color: Colors.greenAccent,
+                          color: AppTheme.heroPrimary,
                           barWidth: 3,
                           isStrokeCapRound: true,
                           dotData: FlDotData(
-                            show:
-                                _selectedDays ==
-                                7, // Показываем точки только на масштабе 1 недели, чтобы не было "каши"
+                            show: _selectedDays == 7,
                             getDotPainter: (spot, percent, barData, index) =>
                                 FlDotCirclePainter(
                                   radius: 4,
-                                  color: Colors.greenAccent,
+                                  color: AppTheme.heroPrimary,
                                   strokeWidth: 2,
-                                  strokeColor: const Color(0xFF1E1E1E),
+                                  strokeColor: AppTheme.premiumSurface,
                                 ),
                           ),
                           belowBarData: BarAreaData(show: false),
@@ -395,9 +388,9 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildLegendItem(Colors.blueAccent, "Fasting Hours"),
+                    _buildLegendItem(AppTheme.heroSecondary, l10n.chartLegendFasting),
                     const SizedBox(width: 24),
-                    _buildLegendItem(Colors.greenAccent, "Weight Trend"),
+                    _buildLegendItem(AppTheme.heroPrimary, l10n.chartLegendWeight),
                   ],
                 ),
               ],
@@ -431,13 +424,13 @@ class _ProCorrelationChartState extends State<ProCorrelationChart> {
     );
   }
 
-  String _getDynamicInsight() {
+  String _getDynamicInsight(AppLocalizations l10n) {
     if (_selectedDays == 7) {
-      return "Your fasting windows are consistent this week! Maintaining a 16h+ average correlates with faster fat burn.";
+      return l10n.chartInsight1W;
     } else if (_selectedDays == 30) {
-      return "Over the last month, we noticed a steady drop in your weight when you complete fasts after 6 PM.";
+      return l10n.chartInsight1M;
     } else {
-      return "Long-term data shows incredible progress! Your body is adapting perfectly to metabolic switching.";
+      return l10n.chartInsight3M;
     }
   }
 }

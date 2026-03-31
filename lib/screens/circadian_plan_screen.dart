@@ -16,6 +16,8 @@ import 'package:fastable/bloc/fasting/fasting_bloc.dart';
 import 'package:fastable/bloc/fasting/fasting_event.dart';
 import 'package:fastable/bloc/fasting/fasting_state.dart';
 
+import '../utils/logger.dart';
+
 class CircadianPlanScreen extends StatefulWidget {
   const CircadianPlanScreen({super.key});
 
@@ -40,21 +42,36 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
       _hasError = false;
     });
 
-    final times = await getIt<CircadianService>().getAccurateSunTimes();
+    try {
+      final times = await getIt<CircadianService>().getAccurateSunTimes();
 
-    if (mounted) {
-      setState(() {
-        _sunTimes = times;
-        _isLoading = false;
-        _hasError = times == null;
-      });
+      if (mounted) {
+        setState(() {
+          _sunTimes = times;
+          _isLoading = false;
+          _hasError = times == null; // Ошибка, если вернулся null
+        });
+      }
+    } catch (e) {
+      // 🔥 ИСПРАВЛЕНИЕ: Перехватываем сбой интернета/геолокации
+      appLog("Error fetching sun times: $e");
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true; // Покажет твой красивый _buildErrorState()
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isPro = context.select<ProBloc, bool>((bloc) => bloc.state.isPro);
+
+    // 🔥 ВРЕМЕННО РАЗБЛОКИРОВАНО ДЛЯ ТЕСТИРОВАНИЯ
+    // final isPro = context.select<ProBloc, bool>((bloc) => bloc.state.isPro);
+    const isPro = true;
+
     final intro = _parseIntroDescription(l10n.circadianIntroDesc);
     double theoreticalHours = 14.0;
     Duration exactDurationToSunrise = const Duration(hours: 14);
@@ -136,25 +153,25 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
                           padding: EdgeInsets.all(cardPadding),
                           child: _isLoading
                               ? const SizedBox(
-                                  height: 220,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: Colors.amber,
-                                    ),
-                                  ),
-                                )
+                            height: 220,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.amber,
+                              ),
+                            ),
+                          )
                               : _hasError
                               ? Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                  child: _buildErrorState(),
-                                )
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                            ),
+                            child: _buildErrorState(),
+                          )
                               : _buildSunWindowCard(
-                                  sunrise: displaySunrise,
-                                  sunset: displaySunset,
-                                  theoreticalHours: theoreticalHours,
-                                ),
+                            sunrise: displaySunrise,
+                            sunset: displaySunset,
+                            theoreticalHours: theoreticalHours,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         _buildHowItWorksCard(l10n: l10n, intro: intro),
@@ -169,10 +186,10 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
                   onPressed: _isLoading || _hasError
                       ? null
                       : () => _handlePrimaryAction(
-                          isPro: isPro,
-                          isDaytime: isDaytime,
-                          exactDurationToSunrise: exactDurationToSunrise,
-                        ),
+                    isPro: isPro,
+                    isDaytime: isDaytime,
+                    exactDurationToSunrise: exactDurationToSunrise,
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isPro ? Colors.amber : Colors.purpleAccent,
                     foregroundColor: Colors.black,
@@ -345,7 +362,7 @@ class _CircadianPlanScreenState extends State<CircadianPlanScreen> {
     final l10n = AppLocalizations.of(context)!;
     final format = DateFormat('HH:mm');
     final totalHoursLabel =
-        theoreticalHours.truncateToDouble() == theoreticalHours
+    theoreticalHours.truncateToDouble() == theoreticalHours
         ? theoreticalHours.toStringAsFixed(0)
         : theoreticalHours.toStringAsFixed(1);
 

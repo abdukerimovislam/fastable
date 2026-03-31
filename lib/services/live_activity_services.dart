@@ -5,6 +5,12 @@ import 'package:injectable/injectable.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:intl/intl.dart';
+
+// 🔥 ДОБАВЛЕНЫ ИМПОРТЫ ДЛЯ ЛОКАЛИЗАЦИИ
+import 'package:fastable/l10n/app_localizations.dart';
+import 'package:fastable/services/storage_service.dart';
+import 'package:fastable/injection.dart';
 
 @lazySingleton
 class LiveActivityService {
@@ -25,19 +31,14 @@ class LiveActivityService {
       await _initIos();
     } else if (Platform.isAndroid) {
       try {
-        const androidInit = AndroidInitializationSettings(
-          '@mipmap/ic_launcher',
-        );
+        const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
         const initSettings = InitializationSettings(android: androidInit);
 
         await _localNotifications.initialize(
           initSettings,
-          // Обработчик нажатий на шторку и кнопки внутри неё
           onDidReceiveNotificationResponse: (NotificationResponse response) {
             if (response.actionId == 'end_fast_action') {
-              appLog("User tapped END FAST from Android notification!");
-              // Приложение выйдет на передний план, где пользователь
-              // сможет нажать кнопку завершения и выбрать настроение (Mood)
+              appLog("User tapped Action Button from Android notification!");
             }
           },
         );
@@ -90,11 +91,16 @@ class LiveActivityService {
     required String phaseName,
   }) async {
     final endTime = startTime.add(goalDuration);
+    final isFasting = phaseName.toLowerCase().contains("fast");
+
+    // 🔥 ПОДГРУЖАЕМ ПРАВИЛЬНЫЙ ЯЗЫК В ФОНЕ
+    final storage = getIt<StorageService>();
+    final localeCode = await storage.getLocaleCode() ?? 'en';
+    final l10n = await AppLocalizations.delegate.load(Locale(localeCode));
 
     if (Platform.isIOS) {
       if (!_isIosReady) return;
 
-      // --- 🍏 ЛОГИКА ДЛЯ IOS (Dynamic Island) ---
       try {
         if (_currentIosActivityId != null) await stopActivity();
 
@@ -103,7 +109,7 @@ class LiveActivityService {
           'startTime': startTime.millisecondsSinceEpoch ~/ 1000,
           'endTime': endTime.millisecondsSinceEpoch ~/ 1000,
           'progress': 0.0,
-          'isFasting': phaseName.toLowerCase().contains("fast"),
+          'isFasting': isFasting,
         };
         final String customId =
             'fasting_timer_${DateTime.now().millisecondsSinceEpoch}';
@@ -116,7 +122,6 @@ class LiveActivityService {
         _disableIosLiveActivities("LiveActivityService iOS start error: $e");
       }
     } else if (Platform.isAndroid) {
-      // --- 🤖 ЛОГИКА ДЛЯ ANDROID (Закрепленное уведомление) ---
       try {
         final status = await Permission.notification.status;
         if (!status.isGranted) {
@@ -124,50 +129,41 @@ class LiveActivityService {
           if (!request.isGranted) return;
         }
 
-        // --- ПРОКАЧАННЫЙ ДИЗАЙН УВЕДОМЛЕНИЯ ---
         final androidDetails = AndroidNotificationDetails(
           'fasting_timer_channel',
-          'Fasting Timer',
-          channelDescription: 'Ongoing fasting timer',
+          l10n.liveTrackerChannelName, // 🔥 Локализовано
+          channelDescription: l10n.liveTrackerChannelDesc, // 🔥 Локализовано
           importance: Importance.low,
           priority: Priority.low,
-          ongoing: true, // Делаем несмахиваемым
+          ongoing: true,
           autoCancel: false,
-          usesChronometer: true, // Включаем нативный таймер
-          when: startTime.millisecondsSinceEpoch,
+          usesChronometer: true,
+          chronometerCountDown: true,
+          when: endTime.millisecondsSinceEpoch,
           showWhen: true,
-          color: const Color(0xFF00FA9A),
+          color: isFasting ? const Color(0xFFFFC107) : const Color(0xFF00D289),
           icon: '@mipmap/ic_launcher',
-
-          // 🔥 НОВЫЕ ФИЧИ СТИЛИЗАЦИИ:
-          largeIcon: const DrawableResourceAndroidBitmap(
-            '@mipmap/ic_launcher',
-          ), // Логотип справа
-          subText: '🔥 Fastable', // Премиальный подзаголовок
-          category: AndroidNotificationCategory.stopwatch, // Хинт для системы
+          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+          subText: isFasting ? l10n.liveTrackerSubtextFasting : l10n.liveTrackerSubtextEating, // 🔥 Локализовано
+          category: AndroidNotificationCategory.stopwatch,
           onlyAlertOnce: true,
-
-          // 🔥 ИНТЕРАКТИВНАЯ КНОПКА
           actions: <AndroidNotificationAction>[
-            const AndroidNotificationAction(
+            AndroidNotificationAction(
               'end_fast_action',
-              '🏁 END FAST',
+              isFasting ? l10n.liveTrackerActionEndFast : l10n.liveTrackerActionStopWindow, // 🔥 Локализовано
               cancelNotification: false,
-              showsUserInterface:
-                  true, // Мгновенно открывает приложение при нажатии
+              showsUserInterface: true,
             ),
           ],
         );
 
         final details = NotificationDetails(android: androidDetails);
-
-        final timeStr =
-            '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
+        final timeStr = DateFormat.jm().format(endTime);
 
         await _localNotifications.show(
           _androidNotificationId,
-          '$phaseName Phase', // Заголовок
-          'Goal ends at $timeStr', // Описание
+          isFasting ? l10n.liveTrackerGoal(timeStr) : l10n.liveTrackerWindowEnds(timeStr), // 🔥 Локализовано
+          l10n.liveTrackerTimeRemaining, // 🔥 Локализовано
           details,
         );
         appLog("✅ Android Ongoing Notification Started!");
@@ -200,9 +196,7 @@ class LiveActivityService {
       }
     } else if (Platform.isAndroid) {
       try {
-        await _localNotifications.cancel(
-          _androidNotificationId,
-        ); // Убираем шторку
+        await _localNotifications.cancel(_androidNotificationId);
         appLog("⏹ Android Notification Stopped");
       } catch (e) {
         appLog("LiveActivityService Android stop error: $e");

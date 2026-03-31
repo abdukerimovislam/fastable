@@ -66,12 +66,14 @@ class CircadianService {
       date.timeZoneOffset,
       date,
     );
+    final sr = sun.sunrise; // учитываем секунды
     return DateTime(
       date.year,
       date.month,
       date.day,
-      sun.sunrise.hour,
-      sun.sunrise.minute,
+      sr.hour,
+      sr.minute,
+      sr.second,
     );
   }
 
@@ -82,12 +84,14 @@ class CircadianService {
       date.timeZoneOffset,
       date,
     );
+    final ss = sun.sunset; // учитываем секунды
     return DateTime(
       date.year,
       date.month,
       date.day,
-      sun.sunset.hour,
-      sun.sunset.minute,
+      ss.hour,
+      ss.minute,
+      ss.second,
     );
   }
 }

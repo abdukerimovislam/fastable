@@ -26,6 +26,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _hasAttachedToHistoryBloc = false;
 
+  // Контроллер для скролла к графику
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _chartKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -33,11 +37,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _selectedDate = DateTime(now.year, now.month, now.day);
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _onDateSelected(DateTime date) {
     setState(() {
       _selectedDate = DateTime(date.year, date.month, date.day);
     });
     getIt<HapticService>().lightImpact();
+  }
+
+  // Метод для плавного скролла к аналитике
+  void _scrollToAnalytics() {
+    getIt<HapticService>().selectionClick();
+    final context = _chartKey.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
   @override
@@ -99,208 +122,215 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
             return AnimationLimiter(
               child: CustomScrollView(
+                controller: _scrollController, // Привязали контроллер
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                // --- ЗАГОЛОВОК ---
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    edgePadding,
-                    18,
-                    edgePadding,
-                    sectionGap + 4,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          l10n.navHistory,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.analytics_rounded,
-                            color: Colors.white54,
-                            size: 22,
-                          ),
-                        ),
-                      ],
+                  // --- ЗАГОЛОВОК ---
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      edgePadding,
+                      18,
+                      edgePadding,
+                      sectionGap + 4,
                     ),
-                  ),
-                ),
-
-                // --- КАЛЕНДАРЬ ---
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: edgePadding),
-                  sliver: SliverToBoxAdapter(
-                    child: GlassCard(
-                      padding: EdgeInsets.symmetric(
-                        vertical: cardPadding,
-                        horizontal: 8,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      child: _ModernCalendar(
-                        selectedDate: _selectedDate,
-                        fastingDays: fastingDatesSet,
-                        onDateSelected: _onDateSelected,
-                        locale: l10n.localeName,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // --- ГРАФИК КОНСИСТЕНТНОСТИ ---
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    edgePadding,
-                    sectionGap + 8,
-                    edgePadding,
-                    8,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: GlassCard(
-                      padding: EdgeInsets.all(cardPadding),
-                      borderRadius: BorderRadius.circular(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.bar_chart_rounded,
-                                color: Color(0xFF43C6AC),
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                l10n.lblConsistency,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            l10n.navHistory,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
                           ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            height: 140,
-                            child: BarChart(
-                              _buildWeeklyChartData(state.records, l10n),
+                          // 🔥 ИСПРАВЛЕНИЕ: Теперь кнопка кликабельна и ведет к графику
+                          GestureDetector(
+                            onTap: _scrollToAnalytics,
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                              ),
+                              child: const Icon(
+                                Icons.analytics_rounded,
+                                color: Color(0xFF43C6AC), // Подкрасили в цвет аналитики
+                                size: 22,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                ),
 
-                // --- ЗАГОЛОВОК СПИСКА ---
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    edgePadding,
-                    sectionGap + 12,
-                    edgePadding,
-                    sectionGap,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: Row(
-                      children: [
-                        Text(
-                          DateFormat(
-                            'EEEE, d MMMM',
-                            l10n.localeName,
-                          ).format(_selectedDate).toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
+                  // --- КАЛЕНДАРЬ ---
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: edgePadding),
+                    sliver: SliverToBoxAdapter(
+                      child: GlassCard(
+                        padding: EdgeInsets.symmetric(
+                          vertical: cardPadding,
+                          horizontal: 8,
                         ),
-                        const Spacer(),
-                        Text(
-                          "${filteredRecords.length} sessions",
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        borderRadius: BorderRadius.circular(24),
+                        child: _ModernCalendar(
+                          selectedDate: _selectedDate,
+                          fastingDays: fastingDatesSet,
+                          onDateSelected: _onDateSelected,
+                          locale: l10n.localeName,
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
 
-                // --- СПИСОК ИЛИ ЗАГЛУШКА ---
-                if (filteredRecords.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 30, bottom: 60),
-                      child: Center(
+                  // --- ГРАФИК КОНСИСТЕНТНОСТИ ---
+                  SliverPadding(
+                    key: _chartKey, // Привязали ключ для скролла
+                    padding: EdgeInsets.fromLTRB(
+                      edgePadding,
+                      sectionGap + 8,
+                      edgePadding,
+                      8,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: GlassCard(
+                        padding: EdgeInsets.all(cardPadding),
+                        borderRadius: BorderRadius.circular(24),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.03),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.calendar_view_day_rounded,
-                                color: Colors.white.withValues(alpha: 0.1),
-                                size: 40,
-                              ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.bar_chart_rounded,
+                                  color: Color(0xFF43C6AC),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.lblConsistency,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.lblNoRecordsForDay,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              height: 140,
+                              child: BarChart(
+                                _buildWeeklyChartData(state.records, l10n),
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final record = filteredRecords[index];
-                      return AnimationConfiguration.staggeredList(
-                        position: index,
-                        duration: const Duration(milliseconds: 375),
-                        child: SlideAnimation(
-                          verticalOffset: 50.0,
-                          child: FadeInAnimation(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: _buildHistoryItem(context, record, haptic, l10n),
-                            ),
-                          ),
-                        ),
-                      );
-                    }, childCount: filteredRecords.length),
                   ),
 
-                SliverPadding(
-                  padding: EdgeInsets.only(
-                    bottom: 120 + MediaQuery.of(context).padding.bottom,
+                  // --- ЗАГОЛОВОК СПИСКА ---
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      edgePadding,
+                      sectionGap + 12,
+                      edgePadding,
+                      sectionGap,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        children: [
+                          Text(
+                            DateFormat(
+                              'EEEE, d MMMM',
+                              l10n.localeName,
+                            ).format(_selectedDate).toUpperCase(),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            "${filteredRecords.length} sessions",
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+
+                  // --- СПИСОК ИЛИ ЗАГЛУШКА ---
+                  if (filteredRecords.isEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 30, bottom: 60),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.03),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.calendar_view_day_rounded,
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  size: 40,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.lblNoRecordsForDay,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final record = filteredRecords[index];
+                        return AnimationConfiguration.staggeredList(
+                          position: index,
+                          duration: const Duration(milliseconds: 375),
+                          child: SlideAnimation(
+                            verticalOffset: 50.0,
+                            child: FadeInAnimation(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: _buildHistoryItem(context, record, haptic, l10n),
+                              ),
+                            ),
+                          ),
+                        );
+                      }, childCount: filteredRecords.length),
+                    ),
+
+                  SliverPadding(
+                    padding: EdgeInsets.only(
+                      bottom: 120 + MediaQuery.of(context).padding.bottom,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -312,9 +342,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   // --- ГРАФИК ---
   BarChartData _buildWeeklyChartData(
-    List<FastingRecord> records,
-    AppLocalizations l10n,
-  ) {
+      List<FastingRecord> records,
+      AppLocalizations l10n,
+      ) {
     Map<int, double> last7DaysDuration = {for (int i = 0; i < 7; i++) i: 0};
     Map<int, List<FastingRecord>> last7DaysRecords = {
       for (int i = 0; i < 7; i++) i: [],
@@ -352,9 +382,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 colors: value >= 16
                     ? [const Color(0xFF43C6AC), const Color(0xFF191654)]
                     : [
-                        Colors.blueAccent.withValues(alpha: 0.8),
-                        Colors.purpleAccent.withValues(alpha: 0.6),
-                      ],
+                  Colors.blueAccent.withValues(alpha: 0.8),
+                  Colors.purpleAccent.withValues(alpha: 0.6),
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -377,7 +407,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
           getTooltipColor: (group) => const Color(0xFF2A2A2A),
-          // 🔥 ИСПРАВЛЕНИЕ: Убрали tooltipRoundedRadius
           tooltipPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 12,
@@ -460,11 +489,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   // --- КАРТОЧКА ИСТОРИИ ---
   Widget _buildHistoryItem(
-    BuildContext context,
-    FastingRecord record,
-    HapticService haptic,
-    AppLocalizations l10n,
-  ) {
+      BuildContext context,
+      FastingRecord record,
+      HapticService haptic,
+      AppLocalizations l10n,
+      ) {
     final duration = record.duration;
     final timeFormat = DateFormat('HH:mm');
     final type = _getFastingType(duration.inHours, l10n);
@@ -839,7 +868,7 @@ class _ModernCalendarState extends State<_ModernCalendar> {
         final isSelected = DateUtils.isSameDay(date, widget.selectedDate);
         final isToday = DateUtils.isSameDay(date, DateTime.now());
         final hasFasting = widget.fastingDays.any(
-          (d) => DateUtils.isSameDay(d, date),
+              (d) => DateUtils.isSameDay(d, date),
         );
 
         return GestureDetector(
@@ -851,11 +880,11 @@ class _ModernCalendarState extends State<_ModernCalendar> {
   }
 
   Widget _buildDayItem(
-    int day,
-    bool isSelected,
-    bool isToday,
-    bool hasFasting,
-  ) {
+      int day,
+      bool isSelected,
+      bool isToday,
+      bool hasFasting,
+      ) {
     return Center(
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -864,25 +893,25 @@ class _ModernCalendarState extends State<_ModernCalendar> {
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-                  colors: [Colors.blueAccent, Color(0xFF43C6AC)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
+            colors: [Colors.blueAccent, Color(0xFF43C6AC)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
               : null,
           color: isSelected
               ? null
               : (isToday
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : Colors.transparent),
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.transparent),
           shape: BoxShape.circle,
           boxShadow: isSelected
               ? [
-                  BoxShadow(
-                    color: const Color(0xFF43C6AC).withValues(alpha: 0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
+            BoxShadow(
+              color: const Color(0xFF43C6AC).withValues(alpha: 0.4),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ]
               : [],
           border: (isToday && !isSelected)
               ? Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1)
@@ -897,8 +926,8 @@ class _ModernCalendarState extends State<_ModernCalendar> {
                 color: isSelected
                     ? Colors.white
                     : (isToday
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.8)),
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.8)),
                 fontWeight: (isSelected || isToday)
                     ? FontWeight.w800
                     : FontWeight.w500,

@@ -24,7 +24,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final StorageService _storageService;
 
   SettingsBloc(this._healthService, this._notificationService, this._storageService)
-    : super(const SettingsState()) {
+      : super(const SettingsState()) {
     on<LoadSettings>(_onLoadSettings);
     on<ChangeTheme>(_onChangeTheme);
     on<ChangeLocale>(_onChangeLocale);
@@ -37,15 +37,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onLoadSettings(
-    LoadSettings event,
-    Emitter<SettingsState> emit,
-  ) async {
+      LoadSettings event,
+      Emitter<SettingsState> emit,
+      ) async {
     final prefs = await _storageService.getPrefsInstance();
     await HealthSyncPreferences.migrateLegacy(prefs);
 
     String themeStr = await _storageService.getThemeMode();
     ThemeMode themeMode = ThemeMode.values.firstWhere(
-      (e) => e.name == themeStr,
+          (e) => e.name == themeStr,
       orElse: () => ThemeMode.system,
     );
 
@@ -97,24 +97,24 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onChangeTheme(
-    ChangeTheme event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ChangeTheme event,
+      Emitter<SettingsState> emit,
+      ) async {
     await _storageService.setThemeMode(event.themeMode.name);
     emit(state.copyWith(themeMode: event.themeMode));
   }
 
   Future<void> _onChangeLocale(
-    ChangeLocale event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ChangeLocale event,
+      Emitter<SettingsState> emit,
+      ) async {
     await _storageService.setLocaleCode(event.locale.languageCode);
     emit(state.copyWith(locale: event.locale));
 
-    // 🔥 ПЕРЕВОДИМ УВЕДОМЛЕНИЯ ТОЛЬКО ЕСЛИ ОНИ ВКЛЮЧЕНЫ
+    // 🔥 ПЕРЕВОДИМ УВЕДОМЛЕНИЯ: Безопасная загрузка локализации через делегат
     if (state.areNotificationsEnabled) {
       try {
-        final l10n = lookupAppLocalizations(event.locale);
+        final l10n = await AppLocalizations.delegate.load(event.locale);
         await _notificationService.rescheduleAll(l10n);
         appLog(
           "✅ Notifications rescheduled to language: ${event.locale.languageCode}",
@@ -126,9 +126,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onToggleHealthSync(
-    ToggleHealthSync event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ToggleHealthSync event,
+      Emitter<SettingsState> emit,
+      ) async {
     final prefs = await _storageService.getPrefsInstance();
     final wasEnabled = await HealthSyncPreferences.isEnabled(prefs);
 
@@ -142,16 +142,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onToggleNotifications(
-    ToggleNotifications event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ToggleNotifications event,
+      Emitter<SettingsState> emit,
+      ) async {
     await _storageService.setNotificationsEnabled(event.isEnabled);
     emit(state.copyWith(areNotificationsEnabled: event.isEnabled));
 
-    // 🔥 ФИКС: РЕАЛЬНОЕ ВКЛЮЧЕНИЕ / ВЫКЛЮЧЕНИЕ ПУШЕЙ В СИСТЕМЕ
+    // 🔥 Безопасная загрузка локализации
     if (event.isEnabled) {
       try {
-        final l10n = lookupAppLocalizations(state.locale);
+        final l10n = await AppLocalizations.delegate.load(state.locale);
         await _notificationService.rescheduleAll(l10n);
         appLog("✅ Notifications turned ON and rescheduled.");
       } catch (e) {
@@ -164,15 +164,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onToggleWaterReminder(
-    ToggleWaterReminder event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ToggleWaterReminder event,
+      Emitter<SettingsState> emit,
+      ) async {
     await _storageService.setNotifyWater(event.isEnabled);
     emit(state.copyWith(notifyWater: event.isEnabled));
 
     if (event.isEnabled) {
       if (!state.areNotificationsEnabled) return;
-      final l10n = lookupAppLocalizations(state.locale);
+      final l10n = await AppLocalizations.delegate.load(state.locale);
       await _notificationService.scheduleDailyWaterReminders(l10n);
       return;
     }
@@ -181,15 +181,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onToggleWeightReminder(
-    ToggleWeightReminder event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ToggleWeightReminder event,
+      Emitter<SettingsState> emit,
+      ) async {
     await _storageService.setNotifyWeight(event.isEnabled);
     emit(state.copyWith(notifyWeight: event.isEnabled));
 
     if (event.isEnabled) {
       if (!state.areNotificationsEnabled) return;
-      final l10n = lookupAppLocalizations(state.locale);
+      final l10n = await AppLocalizations.delegate.load(state.locale);
       await _notificationService.scheduleDailyWeightReminder(l10n);
       return;
     }
@@ -198,9 +198,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onToggleFastingStartReminder(
-    ToggleFastingStartReminder event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ToggleFastingStartReminder event,
+      Emitter<SettingsState> emit,
+      ) async {
     await _storageService.setNotifyFastingStart(event.isEnabled);
     emit(state.copyWith(notifyFastingStart: event.isEnabled));
 
@@ -224,7 +224,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final customHours = await _storageService.getCustomTargetHours();
     final circadianMinutes = (await _storageService.getCircadianTargetMinutes()) ?? const Duration(hours: 14).inMinutes;
 
-    final l10n = lookupAppLocalizations(state.locale);
+    final l10n = await AppLocalizations.delegate.load(state.locale);
     await _notificationService.scheduleEatingNotifications(
       startTime: startTime,
       duration: _resolveEatingDuration(
@@ -259,9 +259,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onToggleReducedAnimations(
-    ToggleReducedAnimations event,
-    Emitter<SettingsState> emit,
-  ) async {
+      ToggleReducedAnimations event,
+      Emitter<SettingsState> emit,
+      ) async {
     await _storageService.setReducedAnimations(event.isEnabled);
     emit(state.copyWith(reducedAnimations: event.isEnabled));
   }

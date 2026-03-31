@@ -2,6 +2,7 @@ import 'package:fastable/utils/logger.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart'; // 🔥 Для compute
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +13,12 @@ import 'package:fastable/repositories/water_repository.dart';
 import 'package:fastable/services/health_service.dart';
 import 'package:fastable/models/drink_record.dart';
 import 'package:fastable/utils/health_sync_preferences.dart';
+
+// 🔥 ИСПРАВЛЕНИЕ: Глобальная функция для фонового парсинга JSON
+// Теперь compute() четко понимает типы и не выдает ошибку
+List<dynamic> _parseDrinksJson(String jsonStr) {
+  return jsonDecode(jsonStr) as List<dynamic>;
+}
 
 @injectable
 class WaterBloc extends Bloc<WaterEvent, WaterState>
@@ -38,9 +45,9 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
   }
 
   Future<void> _onLoadData(
-    LoadWaterData event,
-    Emitter<WaterState> emit,
-  ) async {
+      LoadWaterData event,
+      Emitter<WaterState> emit,
+      ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastDate = prefs.getString('water_last_date');
@@ -51,13 +58,12 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
       if (lastDate != today) {
         await prefs.setString('water_last_date', today);
         await prefs.setString('today_drinks_json', '[]');
-        await prefs.setDouble('health_water_last_liters', 0.0);
       } else {
         final String drinksJsonStr =
             prefs.getString('today_drinks_json') ?? '[]';
-        // 🔥 ФИКС: Защита от битого JSON, если приложение крашнулось во время сохранения
         try {
-          final List<dynamic> decodedList = jsonDecode(drinksJsonStr);
+          // Выполняем парсинг в фоне без подвисаний UI
+          final List<dynamic> decodedList = await compute(_parseDrinksJson, drinksJsonStr);
           currentDrinks = decodedList
               .map((item) => DrinkRecord.fromJson(item))
               .toList();
@@ -72,10 +78,10 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
 
       int goal =
           prefs.getInt('water_goal_ml') ??
-          ((prefs.getInt('water_goal') ?? 8) * 250);
+              ((prefs.getInt('water_goal') ?? 8) * 250);
       int recommended =
           prefs.getInt('water_recommended_ml') ??
-          ((prefs.getInt('water_recommended') ?? 8) * 250);
+              ((prefs.getInt('water_recommended') ?? 8) * 250);
       bool isAuto = prefs.getBool('water_is_auto') ?? true;
 
       emit(
@@ -95,51 +101,45 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
 
   Future<void> _onAddDrink(AddDrink event, Emitter<WaterState> emit) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastDate = prefs.getString('water_last_date');
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+
+      // 🔥 ИСПРАВЛЕНИЕ: Сначала очищаем базовый список, если наступил новый день!
+      List<DrinkRecord> baseList = state.todayDrinks;
+      if (lastDate != today) {
+        baseList = [];
+        await prefs.setString('water_last_date', today);
+        await prefs.setDouble('health_water_last_liters', 0.0);
+      }
+
       final newDrink = DrinkRecord(
         time: DateTime.now(),
         volumeMl: event.volumeMl,
         type: event.type,
       );
 
-      final updatedList = List<DrinkRecord>.from(state.todayDrinks)
-        ..add(newDrink);
+      final updatedList = List<DrinkRecord>.from(baseList)..add(newDrink);
+
+      // Обновляем UI правильным списком
       emit(state.copyWith(todayDrinks: updatedList));
 
       if (event.type.breaksFast) {
-        appLog(
-          "⚠️ WARNING: User drank ${event.type.name}. This breaks the fast!",
-        );
+        appLog("⚠️ WARNING: User drank ${event.type.name}. This breaks the fast!");
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      final lastDate = prefs.getString('water_last_date');
-      final today = DateTime.now().toIso8601String().substring(0, 10);
+      // Сохраняем в память
+      final jsonList = updatedList.map((d) => d.toJson()).toList();
+      await prefs.setString('today_drinks_json', jsonEncode(jsonList));
 
-      if (lastDate != today) {
-        await prefs.setString('water_last_date', today);
-        await prefs.setString(
-          'today_drinks_json',
-          jsonEncode([newDrink.toJson()]),
-        );
-        emit(state.copyWith(todayDrinks: [newDrink]));
-      } else {
-        final jsonList = updatedList.map((d) => d.toJson()).toList();
-        await prefs.setString('today_drinks_json', jsonEncode(jsonList));
-      }
-
+      // Синхронизация с Health
       final isHealthSyncEnabled = await HealthSyncPreferences.isEnabled(prefs);
-      if (isHealthSyncEnabled && newDrink.effectiveHydration > 0) {
-        double litersToAdd = newDrink.effectiveHydration / 1000.0;
-        _healthService.writeWater(litersToAdd).then((success) async {
-          if (success) {
-            final lastHealthLiters =
-                prefs.getDouble('health_water_last_liters') ?? 0.0;
-            await prefs.setDouble(
-              'health_water_last_liters',
-              lastHealthLiters + litersToAdd,
-            );
-          }
-        });
+      if (isHealthSyncEnabled) {
+        double totalLiters = updatedList.fold<double>(
+            0.0,
+                (sum, drink) => sum + (drink.effectiveHydration / 1000.0)
+        );
+        _healthService.syncTodayWater(totalLiters);
       }
 
       await _repository.saveEntry(DateTime.now(), _toCupCount(updatedList));
@@ -149,9 +149,9 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
   }
 
   Future<void> _onRemoveLastDrink(
-    RemoveLastDrink event,
-    Emitter<WaterState> emit,
-  ) async {
+      RemoveLastDrink event,
+      Emitter<WaterState> emit,
+      ) async {
     try {
       if (state.todayDrinks.isEmpty) return;
 
@@ -164,17 +164,25 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
       await prefs.setString('today_drinks_json', jsonEncode(jsonList));
       await _repository.saveEntry(DateTime.now(), _toCupCount(updatedList));
 
-      // 🔥 Tech Debt: Undo does not remove records from Apple Health.
-      // Needs HealthKit UUID mapping in the future.
+      // 🔥 ИСПРАВЛЕНИЕ: Теперь "Undo" удаляет ошибочную воду из Apple Health!
+      final isHealthSyncEnabled = await HealthSyncPreferences.isEnabled(prefs);
+      if (isHealthSyncEnabled) {
+        double totalLiters = updatedList.fold<double>(
+            0.0,
+                (sum, drink) => sum + (drink.effectiveHydration / 1000.0)
+        );
+        _healthService.syncTodayWater(totalLiters);
+      }
+
     } catch (e) {
       appLog("WaterBloc Error in _onRemoveLastDrink: $e");
     }
   }
 
   Future<void> _onUpdateGoal(
-    UpdateWaterGoal event,
-    Emitter<WaterState> emit,
-  ) async {
+      UpdateWaterGoal event,
+      Emitter<WaterState> emit,
+      ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('water_goal_ml', event.newGoal);
@@ -188,9 +196,9 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
   }
 
   Future<void> _onToggleAutoGoal(
-    ToggleAutoGoal event,
-    Emitter<WaterState> emit,
-  ) async {
+      ToggleAutoGoal event,
+      Emitter<WaterState> emit,
+      ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('water_is_auto', event.isEnabled);
@@ -209,9 +217,9 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
   }
 
   Future<void> _onUpdateRecommendedGoal(
-    UpdateRecommendedGoal event,
-    Emitter<WaterState> emit,
-  ) async {
+      UpdateRecommendedGoal event,
+      Emitter<WaterState> emit,
+      ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('water_recommended_ml', event.cups);
@@ -238,15 +246,15 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
   int _toCupCount(List<DrinkRecord> drinks) {
     final totalVolumeMl = drinks.fold<int>(
       0,
-      (sum, drink) => sum + drink.volumeMl,
+          (sum, drink) => sum + drink.volumeMl,
     );
     return (totalVolumeMl / 250).round();
   }
 
   Future<List<DrinkRecord>> _restoreTodayFromHistory(
-    String today,
-    SharedPreferences prefs,
-  ) async {
+      String today,
+      SharedPreferences prefs,
+      ) async {
     try {
       await _repository.getHistory();
       final cups = await _repository.getWaterForDay(DateTime.now());
@@ -257,7 +265,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState>
       final now = DateTime.now();
       final restored = List<DrinkRecord>.generate(
         cups,
-        (index) => DrinkRecord(
+            (index) => DrinkRecord(
           time: DateTime(now.year, now.month, now.day, 9, index),
           volumeMl: 250,
           type: DrinkType.allTypes.first,

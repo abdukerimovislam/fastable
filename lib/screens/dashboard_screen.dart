@@ -51,6 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   BannerAd? _bannerAd;
   bool _isBannerReady = false;
   InterstitialAd? _interstitialAd;
+  int _interstitialRetryAttempt = 0;
 
   final String _bannerId = Platform.isAndroid
       ? dotenv.env['ANDROID_BANNER_AD_ID'] ?? ''
@@ -123,6 +124,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
+          _interstitialRetryAttempt = 0; // Сбрасываем счетчик при успехе!
+
           _interstitialAd = ad;
           _interstitialAd!.fullScreenContentCallback =
               FullScreenContentCallback(
@@ -136,7 +139,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               );
         },
-        onAdFailedToLoad: (err) => appLog('Interstitial failed: $err'),
+        onAdFailedToLoad: (err) {
+          appLog('Interstitial failed: $err');
+
+          // 🔥 ФИКС: Умная экспоненциальная задержка (Exponential backoff)
+          _interstitialRetryAttempt++;
+          int delaySec = (1 << _interstitialRetryAttempt).clamp(1, 64);
+
+          Future.delayed(Duration(seconds: delaySec), () {
+            if (mounted && _interstitialAd == null) {
+              appLog('Retrying Interstitial Load (Attempt $_interstitialRetryAttempt)');
+              _loadInterstitial();
+            }
+          });
+        },
       ),
     );
   }
@@ -157,12 +173,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final onboardingProfile = context
         .select<OnboardingProfileCubit, OnboardingProfileState>(
           (cubit) => cubit.state,
-        );
+    );
     final fastingState = context.select<FastingBloc, FastingState>(
-      (bloc) => bloc.state,
+          (bloc) => bloc.state,
     );
     final weightState = context.select<WeightBloc, WeightState>(
-      (bloc) => bloc.state,
+          (bloc) => bloc.state,
     );
     final localeCode = Localizations.localeOf(context).languageCode;
     final insightHistoryKey = context.select<HistoryBloc, String>((bloc) {
@@ -215,11 +231,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final showAds = isAndroid || !proState.isPro;
         final showBannerAds =
             Platform.isAndroid &&
-            showAds &&
-            _isBannerReady &&
-            _bannerAd != null;
+                showAds &&
+                _isBannerReady &&
+                _bannerAd != null;
+
+        // 🔥 ИСПРАВЛЕНИЕ: Возвращаем логику, блокирующую PRO на Android
         final showProBanner = !isAndroid && !proState.isPro;
         final showProFeatures = !isAndroid;
+
         final insightProviderKey = ValueKey(
           'insight:$localeCode:$insightHistoryKey:$insightWeightKey',
         );
@@ -298,17 +317,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) =>
-                                          const MedicalDisclaimerScreen(),
+                                      const MedicalDisclaimerScreen(),
                                     ),
                                   ),
                                 ),
+                                // 🔥 ИСПРАВЛЕНИЕ: Кнопка AI-чата видна только если showProFeatures (не Android)
                                 if (showProFeatures) ...[
                                   const SizedBox(width: 8),
                                   GestureDetector(
-                                    onTap: () => Navigator.push(
-                                      context,
-                                      CoachScreen.route(),
-                                    ),
+                                    onTap: () {
+                                      if (proState.isPro) {
+                                        Navigator.push(context, CoachScreen.route());
+                                      } else {
+                                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProScreen()));
+                                      }
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
@@ -363,6 +386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               crossAxisCellCount: 4,
                               child: FastingTimerCard(
                                 onStartFasting: showAds ? _showInterstitialAd : null,
+                                onEndFasting: showAds ? _showInterstitialAd : null,
                               ),
                             ),
 
@@ -382,7 +406,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             StaggeredGridTile.fit(
                               crossAxisCellCount: 4,
                               child: SmartStrategyCard(
-                                l10n: l10n, personalization: personalization
+                                  l10n: l10n, personalization: personalization
                               ),
                             ),
 
@@ -405,7 +429,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: BentoHealthCards(
                                 builder: (context, isLoading, isConnected, sleep, cycle, onRefresh) {
                                   return BentoSleepCard(
-                                    isLoading: isLoading, isConnected: isConnected, sleepDuration: sleep, onTap: onRefresh
+                                      isLoading: isLoading, isConnected: isConnected, sleepDuration: sleep, onTap: onRefresh
                                   );
                                 },
                               ),
@@ -413,26 +437,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                             // CYCLE (Full width - 4 columns)
                             StaggeredGridTile.fit(
-                              crossAxisCellCount: 4, 
+                              crossAxisCellCount: 4,
                               child: BentoHealthCards(
                                 builder: (context, isLoading, isConnected, sleep, cycle, onRefresh) {
                                   return BentoCycleCard(
-                                    isLoading: isLoading, isConnected: isConnected, cycleDays: cycle, onTap: onRefresh
+                                      isLoading: isLoading, isConnected: isConnected, cycleDays: cycle, onTap: onRefresh
                                   );
                                 },
                               ),
                             ),
 
-                            // AI INSIGHT CARD (4 cols - if Pro)
+                            // 🔥 ИСПРАВЛЕНИЕ: AI INSIGHT CARD (Показываем только если showProFeatures)
                             if (showProFeatures)
                               StaggeredGridTile.fit(
                                 crossAxisCellCount: 4,
                                 child: proState.isPro
                                     ? BlocProvider(
-                                        key: insightProviderKey,
-                                        create: (_) => getIt<InsightBloc>(),
-                                        child: const InsightCard(isPro: true),
-                                      )
+                                  key: insightProviderKey,
+                                  create: (_) => getIt<InsightBloc>(),
+                                  child: const InsightCard(isPro: true),
+                                )
                                     : const InsightCard(isPro: false),
                               ),
 

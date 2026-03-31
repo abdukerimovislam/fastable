@@ -1,5 +1,6 @@
 import 'package:fastable/utils/logger.dart';
 import 'package:flutter/foundation.dart'; // Для debugPrint
+import 'package:flutter/material.dart'; // Для Color
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -22,7 +23,7 @@ const String kDailyInsightEnabledKey = AppPrefsKeys.dailyInsightEnabled;
 @lazySingleton
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   static const int _idWeight = 400;
   static const int _idDailyInsight = 888;
@@ -31,6 +32,9 @@ class NotificationService {
 
   bool _isInitialized = false;
 
+  /// Флаг, позволяющий избежать одновременных вызовов [rescheduleAll].
+  bool _isRescheduling = false;
+
   // --- INITIALIZATION ---
   Future<void> init() async {
     if (_isInitialized) return;
@@ -38,7 +42,6 @@ class NotificationService {
     tz.initializeTimeZones();
     try {
       final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
-      // Вытаскиваем IANA идентификатор из объекта TimezoneInfo
       final String timeZoneName = timeZoneInfo.identifier;
       tz.setLocalLocation(tz.getLocation(timeZoneName));
       appLog("✅ Timezone set to: $timeZoneName");
@@ -47,32 +50,32 @@ class NotificationService {
     }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
+    DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
 
     const InitializationSettings initializationSettings =
-        InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
+    InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
     await _notificationsPlugin.initialize(initializationSettings);
     _isInitialized = true;
   }
 
-  // 🔥 ИСПРАВЛЕНИЕ: Правильный запрос прав на Уведомления для ОБЕИХ платформ (iOS и Android)
+  // --- REQUEST PERMISSIONS ---
   Future<void> requestPermissions() async {
     if (Platform.isIOS) {
       final iosImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >();
+          IOSFlutterLocalNotificationsPlugin
+      >();
       if (iosImplementation != null) {
         await iosImplementation.requestPermissions(
           alert: true,
@@ -84,8 +87,8 @@ class NotificationService {
     } else if (Platform.isAndroid) {
       final androidImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
+          AndroidFlutterLocalNotificationsPlugin
+      >();
       if (androidImplementation != null) {
         await androidImplementation.requestNotificationsPermission();
         appLog("✅ Android Notification Permissions Requested");
@@ -93,12 +96,11 @@ class NotificationService {
     }
   }
 
-  // --- 🥑 DAILY AI INSIGHT NOTIFICATIONS ---
-
+  // --- DAILY AI INSIGHT NOTIFICATIONS ---
   Future<void> scheduleDailyInsight(
-    AppLocalizations l10n, {
-    bool markEnabled = true,
-  }) async {
+      AppLocalizations l10n, {
+        bool markEnabled = true,
+      }) async {
     await init();
     final prefs = await SharedPreferences.getInstance();
     if (markEnabled) {
@@ -114,7 +116,7 @@ class NotificationService {
       _idDailyInsight,
       l10n.notifyAiInsightTitle,
       l10n.notifyAiInsightBody,
-      _nextInstanceOfTime(9), // 9:00 AM Локального времени
+      _nextInstanceOfTime(9),
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_insight_channel',
@@ -127,7 +129,7 @@ class NotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -140,45 +142,52 @@ class NotificationService {
     }
   }
 
-  // --- SMART & CARING NOTIFICATIONS (FASTING) ---
+  // --- SMART & CARING NOTIFICATIONS ---
 
-  // --- 🔥 МЕТОД ДЛЯ ПЕРЕВОДА УВЕДОМЛЕНИЙ ПРИ СМЕНЕ ЯЗЫКА ---
+  /// 🔥 ФИКС: Мгновенно обновляет язык висящих в фоне пушей при смене языка в Настройках
+  Future<void> refreshScheduledNotificationsLocale(AppLocalizations l10n) async {
+    appLog("🌐 Refreshing all notifications for new locale...");
+    await rescheduleAll(l10n);
+  }
+
   Future<void> rescheduleAll(AppLocalizations l10n) async {
+    if (_isRescheduling) {
+      appLog("⏭️ RescheduleAll skipped because another operation is running");
+      return;
+    }
+    _isRescheduling = true;
+
     await init();
     final prefs = await SharedPreferences.getInstance();
     final shouldRestoreDailyInsight =
         prefs.getBool(kDailyInsightEnabledKey) ?? false;
     final shouldRestoreWeightReminder =
         prefs.getBool(kNotifyWeightKey) ?? false;
-    final shouldRestoreWaterReminders = prefs.getBool(kNotifyWaterKey) ?? false;
+    final shouldRestoreWaterReminders =
+        prefs.getBool(kNotifyWaterKey) ?? false;
 
-    // 1. Отменяем всё старое
     await cancelAllFastingNotifications();
     await cancelDailyInsight();
     await cancelWeightReminder();
     await cancelWaterReminders();
 
     if (!await _areNotificationsEnabled(prefs)) {
+      _isRescheduling = false;
       return;
     }
 
-    // 2. Восстанавливаем только реально активные ежедневные уведомления
     if (shouldRestoreDailyInsight) {
       await scheduleDailyInsight(l10n, markEnabled: false);
     }
-
     if (shouldRestoreWeightReminder) {
       await scheduleDailyWeightReminder(l10n);
     }
-
     if (shouldRestoreWaterReminders) {
       await scheduleDailyWaterReminders(l10n);
     }
 
-    // 3. Восстанавливаем таймеры голодания/окна еды (если они активны)
     final stateStr = prefs.getString(AppPrefsKeys.appState) ?? 'stopped';
     final startStr = prefs.getString(AppPrefsKeys.cycleStartTime);
-
     if (stateStr != 'stopped' && startStr != null) {
       final startTime = DateTime.tryParse(startStr) ?? DateTime.now();
       final phase = stateStr == FastingPhase.fasting.name
@@ -188,7 +197,7 @@ class NotificationService {
       final customHours = prefs.getInt(AppPrefsKeys.customTargetHours) ?? 14;
       final circadianTargetMinutes =
           prefs.getInt(AppPrefsKeys.circadianTargetMinutes) ??
-          const Duration(hours: 14).inMinutes;
+              const Duration(hours: 14).inMinutes;
       final goal = _resolvePhaseDuration(
         phase: phase,
         planIndex: planIdx,
@@ -196,14 +205,13 @@ class NotificationService {
         circadianTargetMinutes: circadianTargetMinutes,
       );
 
-      // Планируем заново с новым языком!
       if (phase == FastingPhase.fasting) {
         await scheduleFastingNotifications(
           startTime: startTime,
           duration: goal,
           l10n: l10n,
         );
-      } else if (stateStr == 'eating') {
+      } else {
         await scheduleEatingNotifications(
           startTime: startTime,
           duration: goal,
@@ -211,6 +219,8 @@ class NotificationService {
         );
       }
     }
+
+    _isRescheduling = false;
   }
 
   Future<void> scheduleFastingNotifications({
@@ -238,7 +248,7 @@ class NotificationService {
       if (stageTime.isAfter(now) &&
           stageTime.isBefore(endTime.add(const Duration(minutes: 15)))) {
         await _scheduleOneShot(
-          id: 1000 + hour, // ID от 1000 до 1024
+          id: 1000 + hour,
           title: content.title,
           body: content.body,
           scheduledTime: stageTime,
@@ -277,8 +287,6 @@ class NotificationService {
       );
     }
   }
-
-  // --- SMART NOTIFICATIONS (EATING) ---
 
   Future<void> scheduleEatingNotifications({
     required DateTime startTime,
@@ -320,8 +328,44 @@ class NotificationService {
     }
   }
 
-  // --- OTHER REMINDERS ---
+  // --- ANDROID LIVE TRACKER (ОТВЕТ DYNAMIC ISLAND) ---
 
+  /// 🔥 НОВОЕ: Показывает несвахиваемое уведомление с живым тикающим таймером на Android
+  Future<void> showAndroidFastingTracker(DateTime startTime, String title, String body) async {
+    if (!Platform.isAndroid) return;
+    await init();
+
+    final androidDetails = AndroidNotificationDetails(
+      'live_fasting_tracker',
+      'Live Fasting Tracker',
+      channelDescription: 'Persistent notification tracking your fast',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true,
+      autoCancel: false,
+      showWhen: true,
+      when: startTime.millisecondsSinceEpoch,
+      usesChronometer: true, // 🔥 Android САМ будет тикать каждую секунду
+      chronometerCountDown: false,
+      icon: '@mipmap/ic_launcher',
+      color: const Color(0xFFFFC107), // Amber
+    );
+
+    await _notificationsPlugin.show(
+      9999,
+      title,
+      body,
+      NotificationDetails(android: androidDetails),
+    );
+  }
+
+  /// 🔥 НОВОЕ: Убирает трекер из шторки при остановке
+  Future<void> cancelAndroidFastingTracker() async {
+    if (!Platform.isAndroid) return;
+    await _notificationsPlugin.cancel(9999);
+  }
+
+  // --- OTHER REMINDERS ---
   Future<void> scheduleDailyWeightReminder(AppLocalizations l10n) async {
     await init();
     final prefs = await SharedPreferences.getInstance();
@@ -336,7 +380,7 @@ class NotificationService {
       _idWeight,
       l10n.notifyWeightTitle,
       l10n.notifyWeightBody,
-      _nextInstanceOfTime(8), // 8:00 AM Локального времени
+      _nextInstanceOfTime(8),
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_channel',
@@ -347,7 +391,7 @@ class NotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -381,15 +425,13 @@ class NotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
       );
     }
   }
 
   // --- CANCELLATION ---
-
-  // 🔥 НОВЫЙ МЕТОД ДЛЯ ПОЛНОЙ ОТМЕНЫ УВЕДОМЛЕНИЙ (Вызывается из SettingsBloc)
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
   }
@@ -460,7 +502,6 @@ class NotificationService {
   }
 
   // --- HELPERS ---
-
   Future<void> _scheduleOneShot({
     required int id,
     required String title,
@@ -492,7 +533,7 @@ class NotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
       appLog("Error scheduling notification $id: $e");
@@ -515,10 +556,9 @@ class NotificationService {
   }
 
   // --- DATA MAPPING (LOCALIZED) ---
-
   Map<int, ({String title, String body})> _getLocalizedStages(
-    AppLocalizations l10n,
-  ) {
+      AppLocalizations l10n,
+      ) {
     return {
       2: (title: l10n.stage2Title, body: l10n.stage2Body),
       4: (title: l10n.stage4Title, body: l10n.stage4Body),
@@ -532,6 +572,7 @@ class NotificationService {
     };
   }
 
+  // Заглушки для быстрого завершения цикла (не используется в основной логике)
   Future<void> scheduleFastCompletion(DateTime time, String text) async {}
   Future<void> scheduleEatingCompletion(DateTime time) async {}
 }

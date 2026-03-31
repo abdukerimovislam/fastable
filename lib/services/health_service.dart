@@ -119,6 +119,41 @@ class HealthService {
     }
   }
 
+  /// Умная синхронизация воды (Apple Health / Health Connect)
+  /// Удаляет все наши старые записи за сегодня и записывает новую сумму
+  Future<bool> syncTodayWater(double totalLiters) async {
+    try {
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+
+      // 1. Очищаем старые записи нашего приложения за сегодня
+      try {
+        // 🔥 ИСПРАВЛЕНИЕ: Используем именованные параметры, как требует новая версия пакета health
+        await Health().delete(
+          type: HealthDataType.WATER,
+          startTime: startOfDay,
+          endTime: now,
+        );
+      } catch (e) {
+        appLog("Normal health warning: No old water records to delete or unsupported: $e");
+      }
+
+      // 2. Если есть что записывать — пушим одной записью
+      if (totalLiters > 0) {
+        return await Health().writeHealthData(
+          value: totalLiters,
+          type: HealthDataType.WATER,
+          startTime: startOfDay,
+          endTime: now,
+        );
+      }
+      return true;
+    } catch (e) {
+      appLog("HealthService Sync Error: $e");
+      return false;
+    }
+  }
+
   // --- СОН ---
   Future<Duration> getLastNightSleep() async {
     try {

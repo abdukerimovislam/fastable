@@ -1037,6 +1037,66 @@
       "hours": { "type": "int" },
       "minutes": { "type": "int" }
     }
-  }
+  },
+  "bodyMetricsTitle": "Body Metrics",
+  "bodyMetricsHint": "Tap cards to update",
+  "bodyMetricsAdd": "Add",
+  "bodyMetricsTapToSet": "Tap to set",
+  "nextStageUpper": "NEXT STAGE",
+  "maxBenefitsReached": "Maximum Benefits Reached!",
+  "holdToComplete": "HOLD TO COMPLETE",
+  "heroActiveSession": "ACTIVE SESSION",
+  "heroEatingWindow": "EATING WINDOW",
+  "heroNextFast": "NEXT FAST",
+  "insightsAndTrends": "INSIGHTS & TRENDS",
+  "bmiLabel": "BMI",
+  "liveTrackerChannelName": "Fasting Timer",
+  "liveTrackerChannelDesc": "Ongoing fasting timer",
+  "liveTrackerSubtextFasting": "🔥 Fastable Stage",
+  "liveTrackerSubtextEating": "🍽 Fastable Window",
+  "liveTrackerActionEndFast": "🏁 END FAST",
+  "liveTrackerActionStopWindow": "🛑 STOP WINDOW",
+  "liveTrackerGoal": "Goal: {time}",
+  "@liveTrackerGoal": { "placeholders": { "time": { "type": "String" } } },
+  "liveTrackerWindowEnds": "Window ends: {time}",
+  "@liveTrackerWindowEnds": { "placeholders": { "time": { "type": "String" } } },
+  "liveTrackerTimeRemaining": "Time remaining: ",
+  "elapsed": "Elapsed",
+  "status": "Status",
+  "complete": "Complete",
+  "fastingStages": "Fasting Stages",
+  "statusNow": "Now",
+  "statusNext": "Next",
+  "statusDone": "Done",
+  "fastingStats": "Fasting Stats",
+  "ageYears": "{age} y.o.",
+  "@ageYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "fastingStatsDays": "Days",
+  "pdfReportLabelBmi": "BMI",
+  "chartFastingVsWeight": "Fasting vs Weight",
+  "chartTrackMetabolic": "Track your metabolic correlation over time.",
+  "chart1W": "1W",
+  "chart1M": "1M",
+  "chart3M": "3M",
+  "chartSmartInsight": "Smart Insight",
+  "chartGoal": "Goal: {value}",
+  "@chartGoal": { "placeholders": { "value": { "type": "String" } } },
+  "chartHours": "Hours",
+  "chartWeight": "Weight",
+  "chartLegendFasting": "Fasting Hours",
+  "chartLegendWeight": "Weight Trend",
+  "chartInsight1W": "Your fasting windows are consistent this week! Maintaining a 16h+ average correlates with faster fat burn.",
+  "chartInsight1M": "Over the last month, we noticed a steady drop in your weight when you complete fasts after 6 PM.",
+  "chartInsight3M": "Long-term data shows incredible progress! Your body is adapting perfectly to metabolic switching.",
+  "statsUnlockChartTitle": "Pro Analytics",
+  "statsUnlockChartDesc": "Watch a short video ad to unlock your metabolic correlation chart for this session.",
+  "statsBtnWatchAd": "Watch Ad",
+  "adNotReady": "Ad is not ready yet. Please try again in a few seconds."
 
 }
